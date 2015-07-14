@@ -16,7 +16,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 @SuppressWarnings("deprecation")
-@Plugin(menu = {@Menu(label = "DeveloperPlugins"), @Menu(label = "Nearest Neighbours")}, description = "Gets the Neighbours of Nodes which are connected by a pixel line. Takes a skeleton BitType Image and a Labeling with the Nodes.", headless = true, type = Command.class)
+@Plugin(menu = {@Menu(label = "PointExtraction"), @Menu(label = "Nearest Neighbours")}, description = "Gets the Neighbours of Nodes which are connected by a pixel line. Takes a skeleton BitType Image and a Labeling with the Nodes.", headless = true, type = Command.class)
 public class GetNearestNeighbours<BitType extends RealType<BitType>> implements Command {
 
         @Parameter(type = ItemIO.INPUT)

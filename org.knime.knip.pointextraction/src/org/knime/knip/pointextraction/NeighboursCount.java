@@ -16,8 +16,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-@SuppressWarnings("deprecation")
-@Plugin(menu = {@Menu(label = "DeveloperPlugins"), @Menu(label = "Neighbours Count")}, description = "Counts the Neighbours of a white Pixel in a BitType Image and returns them in a ByteTypeImage.", headless = true, type = Command.class)
+@Plugin(menu = {@Menu(label = "PointExtraction"), @Menu(label = "Neighbours Count")}, description = "Counts the Neighbours of a white Pixel in a BitType Image and returns them in a ByteTypeImage.", headless = true, type = Command.class)
 public class NeighboursCount<BitType extends RealType<BitType>> implements Command {
 
         @Parameter(type = ItemIO.INPUT)
