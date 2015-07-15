@@ -1,11 +1,12 @@
 package org.knime.knip.pointextraction;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 import net.imagej.ImgPlus;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.labeling.Labeling;
-import net.imglib2.labeling.LabelingType;
-import net.imglib2.roi.IterableRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
@@ -23,7 +24,7 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
         private ImgPlus<BitType> input;
 
         @Parameter(type = ItemIO.INPUT)
-        private Labeling<BitType> labeling;
+        private Labeling<Integer> labeling;
 
         @Parameter(type = ItemIO.OUTPUT)
         private ImgPlus<UnsignedByteType> output;
@@ -31,90 +32,55 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
         @Override
         public void run() {
 
-                Cursor<BitType> inCursor = input.localizingCursor();
-                RandomAccess<LabelingType<BitType>> labelingAccess = labeling.randomAccess();
+                // javadoc.imagej.net/ImgLib2/net/imglib2/labeling/Labeling.html
+                Iterator<Integer> nodes = labeling.getLabels().iterator();
 
                 RandomAccess<BitType> inRndAccess = input.randomAccess();
 
-                IterableRegionOfInterest labelingROI = labeling.getIterableRegionOfInterest(input.firstElement());
-
                 long[] posi = new long[labeling.numDimensions()];
+                Integer node = 0;
 
-                while (inCursor.hasNext()) {
-                        inCursor.fwd();
-                        inCursor.localize(posi);
+                // Iteration über alle Knoten
+                while (nodes.hasNext()) {
+                        node = nodes.next();
 
-                        labelingAccess.localize(posi);
+                        // Cursor über Knotenpixel
+                        Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
 
-                        labelingAccess.get();
-                        inCursor.get();
+                        // Iteration über Knotenpixel
+                        while (nodeCur.hasNext()) {
+                                nodeCur.fwd();
+
+                                // Inputposition auf labelpixel setzen
+                                nodeCur.localize(posi);
+                                inRndAccess.setPosition(posi);
+
+                                System.out.println("Labelpixel: " + nodeCur.get());
+                                System.out.println("Inputpixel: " + inRndAccess.get());
+                                System.out.println("Position: " + Arrays.toString(posi));
+                                System.out.println("Area: " + labeling.getArea(node));
+                        }
 
                 }
 
                 System.out.println("feadsch");
 
-                /*
-                                // create empty output image (arrayimg of type bittype)
-                                output = new ImgPlus<UnsignedByteType>(new ArrayImgFactory<UnsignedByteType>().create(input, new UnsignedByteType()));
-
-                                // Hack um die Dimensionsbenamsung richtig zu setzen
-                                for (int d = 0; d < input.numDimensions(); d++) {
-                                        output.setAxis(input.axis(d), d);
-
-                                }
-
-                                // access the pixels of the output image
-                                final RandomAccess<UnsignedByteType> outAccess = output.randomAccess();
-
-                                // cursor over input image
-                                final Cursor<BitType> inCursor = input.localizingCursor();
-
-                                // ROI generieren mit Fenstergröße um den Ursprung 0^d
-                                double[] extend = new double[inCursor.numDimensions()];
-                                Arrays.fill(extend, windowSize);
-                                double[] displacement = new double[inCursor.numDimensions()];
-                                Arrays.fill(displacement, -windowSize / 2.0);
-                                final RectangleRegionOfInterest roi = new RectangleRegionOfInterest(new double[inCursor.numDimensions()], extend);
-
-                                while (inCursor.hasNext()) {
-                                        // weitergehen
-                                        inCursor.fwd();
-
-                                        // position setzen
-                                        int[] posi = new int[inCursor.numDimensions()];
-                                        inCursor.localize(posi);
-
-                                        // nicht tun, wenn Pixel selbst schwarz TODO: als option einbauen?
-                                        if (inCursor.get().getRealDouble() == 0) {
-                                                continue;
-                                        }
-
-                                        // set outaccess on position of incursor
-                                        outAccess.setPosition(inCursor);
-
-                                        // Fenster um den aktuellen Ort legen (Origin ist im linken oberen Eck)
-                                        roi.setOrigin(inCursor);
-                                        roi.move(displacement);
-
-                                        // Cursor im ROI bekommen
-                                        final Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
-
-                                        // Nachbarn zusammenzählen und aufaddieren (sich selbst nicht mitzählen)
-                                        byte neighbours = -1;
-                                        while (roiCursor.hasNext()) {
-                                                roiCursor.fwd();
-
-                                                //outAccess.setPosition(roiCursor);
-                                                //outAccess.get().set((byte) 50);
-
-                                                if (roiCursor.get().getRealDouble() != 0)
-                                                        neighbours += 1;
-
-                                        }
-                                        outAccess.get().set(neighbours);
-                                        
-                                }
-                                */
+                /* From new node Wizard (https://tech.knime.org/execute-0):
+                int nrRows = ...; 
+                int nrColumns = ...;
+                BufferedDataContainer buf = exec.createBufferedDataContainer(spec);
+                for (int j = 0; j < nrRows; j++) {
+                DataCell[] cells = new DataCell[nrColumns];
+                for (int i = 0; i < nrColumns; i++) {
+                cells[i] = new DoubleCell(i * Math.PI);
+                }
+                DataRow row = new DefaultRow(
+                new StringCell(“RowKey_” + j, cells);
+                buf.addRowToTable(row);
+                }
+                buf.close();
+                BufferedDataTable table = buf.getTable();
+                 */
 
         }
 }
