@@ -7,6 +7,8 @@ import net.imagej.ImgPlus;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.labeling.Labeling;
+import net.imglib2.labeling.LabelingType;
+import net.imglib2.roi.RectangleRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
@@ -40,6 +42,13 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                 long[] posi = new long[labeling.numDimensions()];
                 Integer node = 0;
 
+                // ROI generieren mit Fenstergröße um den Ursprung 0^d
+                double[] extend = new double[labeling.numDimensions()];
+                Arrays.fill(extend, 3);
+                double[] displacement = new double[labeling.numDimensions()];
+                Arrays.fill(displacement, -3.0 / 2.0);
+                final RectangleRegionOfInterest roi = new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
+
                 // Iteration über alle Knoten
                 while (nodes.hasNext()) {
                         node = nodes.next();
@@ -59,6 +68,11 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                                 System.out.println("Inputpixel: " + inRndAccess.get());
                                 System.out.println("Position: " + Arrays.toString(posi));
                                 System.out.println("Area: " + labeling.getArea(node));
+
+                                RandomAccess<LabelingType<Integer>> labelingCur = labeling.randomAccess(input);
+                                labelingCur.setPosition(posi);
+
+                                System.out.println("LabelingCur: " + labelingCur.get());
                         }
 
                 }

@@ -16,6 +16,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+@SuppressWarnings("deprecation")
 @Plugin(menu = {@Menu(label = "PointExtraction"), @Menu(label = "Neighbours Count")}, description = "Counts the Neighbours of a white Pixel in a BitType Image and returns them in a ByteTypeImage.", headless = true, type = Command.class)
 public class NeighboursCount<BitType extends RealType<BitType>> implements Command {
 
@@ -36,7 +37,6 @@ public class NeighboursCount<BitType extends RealType<BitType>> implements Comma
                 // Hack um die Dimensionsbenamsung richtig zu setzen
                 for (int d = 0; d < input.numDimensions(); d++) {
                         output.setAxis(input.axis(d), d);
-
                 }
 
                 // access the pixels of the output image
