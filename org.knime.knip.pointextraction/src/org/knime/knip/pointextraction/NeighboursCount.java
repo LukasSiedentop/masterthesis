@@ -31,6 +31,8 @@ public class NeighboursCount<BitType extends RealType<BitType>> implements Comma
 
         @Override
         public void run() {
+                // TODO: Knoten als Labeling ausgeben, wenn mal langweilig ist...
+
                 // create empty output image (arrayimg of type bittype)
                 output = new ImgPlus<UnsignedByteType>(new ArrayImgFactory<UnsignedByteType>().create(input, new UnsignedByteType()));
 

@@ -30,25 +30,25 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
         @Parameter(type = ItemIO.OUTPUT)
         private ImgPlus<UnsignedByteType> output;
 
+        // geht nicht
+        //@Parameter(type = ItemIO.OUTPUT)
+        //private BufferedDataTable output;
+
         @Override
         public void run() {
-
-                // javadoc.imagej.net/ImgLib2/net/imglib2/labeling/Labeling.html
-                Iterator<Integer> nodes = labeling.getLabels().iterator();
-
                 RandomAccess<BitType> inRndAccess = input.randomAccess();
 
-                int[] nodePixelPosition = new int[labeling.numDimensions()];
-                int[] nextOnLine = new int[labeling.numDimensions()];
-
+                Iterator<Integer> nodes = labeling.getLabels().iterator();
                 Integer node = 0;
 
-                // ROI generieren mit Fenstergröße um den Ursprung 0^d
-                double[] extend = new double[labeling.numDimensions()];
-                Arrays.fill(extend, 3);
+                // 3^n ROI generieren
+                final RectangleRegionOfInterest roi = getROI();
                 double[] displacement = new double[labeling.numDimensions()];
                 Arrays.fill(displacement, -1);
-                final RectangleRegionOfInterest roi = new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
+
+                // Positionsarrays
+                int[] nodePixelPosition = new int[labeling.numDimensions()];
+                int[] nextOnLine = new int[labeling.numDimensions()];
 
                 // Iteration über alle Knoten
                 while (nodes.hasNext()) {
@@ -81,26 +81,19 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                                                 if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
 
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition);
-                                                        System.out.println("Nachbar von " + node + " ist " + nextNode);
+                                                        if (nextNode != null) {
+                                                                System.out.println("Nachbar von " + node + " ist " + nextNode);
+                                                        }
+
                                                 }
                                         }
                                 }
-                                /*
-                                                                System.out.println("Labelpixel: " + nodeCur.get());
-                                                                System.out.println("Inputpixel: " + inRndAccess.get());
-                                                                System.out.println("Position: " + Arrays.toString(posi));
-                                                                System.out.println("Area: " + labeling.getArea(node));
-
-                                                                RandomAccess<LabelingType<Integer>> labelingCur = labeling.randomAccess(input);
-                                                                labelingCur.setPosition(posi);
-
-                                                                System.out.println("LabelingCur: " + labelingCur.get());
-                                                                */
                         }
 
-                }
+                        // TODO: Ausgabe in Tabelle
+                        // Nodelabel    Position XYZ    Neighbours  Distances   Angles
 
-                System.out.println("feadsch");
+                }
 
                 /* From new node Wizard (https://tech.knime.org/execute-0):
                 int nrRows = ...; 
@@ -121,18 +114,16 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
 
         }
 
+        // Läuft solange auf einer Linie weiter, bis der nächste Schritt gelabelt ist, gibt diesen Knoten zurück oder -99 wenn es eine Sackgasse ist
         private Integer walk(int[] current, int[] last) {
 
                 // den nächsten Schritt ermitteln
                 int[] next = new int[labeling.numDimensions()];
 
-                // ROI generieren mit Fenstergröße um den Ursprung 0^d
-                double[] extend = new double[labeling.numDimensions()];
-                Arrays.fill(extend, 3);
+                // 3^n ROI generieren und um current legen
+                final RectangleRegionOfInterest roi = getROI();
                 double[] displacement = new double[labeling.numDimensions()];
                 Arrays.fill(displacement, -1);
-                final RectangleRegionOfInterest roi = new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
-                // ROI um current legen
                 roi.setOrigin(copyFromIntArray(current));
                 roi.move(displacement);
 
@@ -142,15 +133,17 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                 while (roiCursor.hasNext()) {
                         roiCursor.fwd();
 
+                        // Wenn der Pixel weiß ist...
                         if (roiCursor.get().getRealDouble() != 0) {
                                 roiCursor.localize(next);
 
                                 // Abbruchbedingungen checken
+
                                 // Abbruchbedingung: wenn der nächste Schritt nicht zurückgeht...
                                 if (!Arrays.equals(next, last) && !Arrays.equals(next, current)) {
                                         Iterator<Integer> nodesIter = labeling.getLabels().iterator();
                                         Integer node = 0;
-                                        // über alle Knoten iterieren, und wenn next gelabelt ist diesen Knoten zurückgeben
+                                        // ...über alle Knoten iterieren, und wenn next gelabelt ist diesen Knoten zurückgeben
                                         while (nodesIter.hasNext()) {
                                                 node = nodesIter.next();
                                                 if (labeling.getRegionOfInterest(node).contains(copyFromIntArray(next))) {
@@ -166,11 +159,11 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                 }
 
                 // Abbruchbedingung: kein Pixel um current außer last ist mehr weiß: kein Nachbar
-                return -99;
+                return null;
 
         }
 
-        // Hack: convert to int[] double[], damit roi.contains funktioniert. Diskussion:
+        // Hack: convert to int[] double[], damit roi.contains und roi.setOrigin funktioniert. Diskussion:
         // http://stackoverflow.com/questions/12729139/copy-contents-of-an-int-array-to-a-double-array-in-java
         private static double[] copyFromIntArray(int[] source) {
                 double[] dest = new double[source.length];
@@ -178,5 +171,12 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                         dest[i] = source[i];
                 }
                 return dest;
+        }
+
+        // returns a rectangle roi of extend 3^d 
+        private final RectangleRegionOfInterest getROI() {
+                double[] extend = new double[labeling.numDimensions()];
+                Arrays.fill(extend, 3);
+                return new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
         }
 }
