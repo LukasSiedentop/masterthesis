@@ -1,5 +1,6 @@
 package org.knime.knip.pointextraction;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -11,6 +12,7 @@ import net.imglib2.roi.RectangleRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
+import org.knime.core.data.def.IntCell;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
@@ -27,12 +29,15 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
         @Parameter(type = ItemIO.INPUT)
         private Labeling<Integer> labeling;
 
-        @Parameter(type = ItemIO.OUTPUT)
-        private ImgPlus<UnsignedByteType> output;
-
         // geht nicht
+        //@Parameter(type = ItemIO.INPUT)
+        //private ExecutionContext exec;
+
         //@Parameter(type = ItemIO.OUTPUT)
         //private BufferedDataTable output;
+
+        @Parameter(type = ItemIO.OUTPUT)
+        private ImgPlus<UnsignedByteType> output;
 
         @Override
         public void run() {
@@ -50,9 +55,14 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                 int[] nodePixelPosition = new int[labeling.numDimensions()];
                 int[] nextOnLine = new int[labeling.numDimensions()];
 
+                // Datenstruktur um Ergebnis aufzunehmen
+                ArrayList<IntCell>[] nodeArray = (ArrayList<IntCell>[]) new ArrayList[labeling.getLabels().size() + 1];
+
                 // Iteration über alle Knoten
                 while (nodes.hasNext()) {
                         node = nodes.next();
+
+                        nodeArray[node] = new ArrayList<IntCell>(0);
 
                         // Cursor über Knotenpixel
                         Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
@@ -82,7 +92,8 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
 
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition);
                                                         if (nextNode != null) {
-                                                                System.out.println("Nachbar von " + node + " ist " + nextNode);
+                                                                nodeArray[node].add(new IntCell(nextNode));
+                                                                //System.out.println("Nachbar von " + node + " ist " + nextNode);
                                                         }
 
                                                 }
@@ -90,28 +101,34 @@ public class GetNearestNeighbours<BitType extends RealType<BitType>> implements 
                                 }
                         }
 
-                        // TODO: Ausgabe in Tabelle
-                        // Nodelabel    Position XYZ    Neighbours  Distances   Angles
-
                 }
 
-                /* From new node Wizard (https://tech.knime.org/execute-0):
-                int nrRows = ...; 
-                int nrColumns = ...;
-                BufferedDataContainer buf = exec.createBufferedDataContainer(spec);
-                for (int j = 0; j < nrRows; j++) {
-                DataCell[] cells = new DataCell[nrColumns];
-                for (int i = 0; i < nrColumns; i++) {
-                cells[i] = new DoubleCell(i * Math.PI);
+                System.out.println("Node\tNumber next Neighbours\tNeighbours");
+                for (int i = 1; i < nodeArray.length; i++) {
+                        System.out.println(i + "\t" + nodeArray[i].size() + "\t" + nodeArray[i]);
                 }
-                DataRow row = new DefaultRow(
-                new StringCell(“RowKey_” + j, cells);
-                buf.addRowToTable(row);
+
+                // TODO: Ausgabe in Tabelle: ExecutionContext - woher? Wie die outTable rausgeben?
+                // the DataTableSpec of the final table
+                // From new node Wizard (https://tech.knime.org/execute-0):
+                /*
+                DataTableSpec spec = new DataTableSpec(new DataColumnSpecCreator("Node", IntCell.TYPE).createSpec(), new DataColumnSpecCreator(
+                                "Number Next Neighbours", IntCell.TYPE).createSpec(), new DataColumnSpecCreator("Next Neighbours",
+                                ListCell.getCollectionType(IntCell.TYPE)).createSpec());
+
+                BufferedDataContainer buf = exec.createDataContainer(spec);
+
+                DataCell[] cells = new DataCell[3];
+
+                for (int i = 1; i < nodeArray.length; i++) {
+                        cells[0] = new IntCell(i);
+                        cells[1] = new IntCell(nodeArray[i].size());
+                        cells[2] = CollectionCellFactory.createListCell(nodeArray[i]);
+                        buf.addRowToTable(new DefaultRow(("Node " + i), cells));
                 }
                 buf.close();
-                BufferedDataTable table = buf.getTable();
+                BufferedDataTable outTable = buf.getTable();
                  */
-
         }
 
         // Läuft solange auf einer Linie weiter, bis der nächste Schritt gelabelt ist, gibt diesen Knoten zurück oder -99 wenn es eine Sackgasse ist
