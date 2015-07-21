@@ -11,8 +11,7 @@ Counts the direct neighbours of each white Pixel in a BitType Image (assuming 8-
 ### Connected Neighbours
 Given a (skeleton) BitType Image and a Labeling labeling the intersections, this node evaluates the connected neighbours of each intersection. An intersection is neighbouring another if it's "connected" via a white pixel trail.
 
-Example (1-6 = nodes; - / \ = connections):
-
+The example skelleton (1-6 = nodes; - / \ = connections)
 ```
        5---6
       / \
@@ -20,17 +19,15 @@ Example (1-6 = nodes; - / \ = connections):
     /     3--4
 1--2
 ```
-
-Would result in a table:
-
+would result in this table:
 ```
 Node	Number of Connections	Connected Nodes
-1		1		[2]
-2		2		[1, 5]
-3		2		[5, 4]
-4		1		[3]
-5		3		[2, 3, 6]
-6		1		[5]
+1               1               [2]
+2               2               [1, 5]
+3               2               [5, 4]
+4               1               [3]
+5               3               [2, 3, 6]
+6               1               [5]
 ```
 
 ## Shapes
