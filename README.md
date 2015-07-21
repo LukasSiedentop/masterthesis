@@ -25,12 +25,12 @@ Would result in a table:
 
 ```
 Node	Number of Connections	Connected Nodes
-1		1		\[2\]
-2		2		\[1, 5\]
-3		2		\[5, 4\]
-4		1		\[3\]
-5		3		\[2, 3, 6\]
-6		1		\[5\]
+1		1		[2]
+2		2		[1, 5]
+3		2		[5, 4]
+4		1		[3]
+5		3		[2, 3, 6]
+6		1		[5]
 ```
 
 ## Shapes
