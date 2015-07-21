@@ -13,15 +13,17 @@ Given a (skeleton) BitType Image and a Labeling labeling the intersections, this
 
 Example (1-6 = nodes; - / \ = connections):
 
+```
        5---6
       / \
      /   \
     /     3--4
 1--2
-
+```
 
 Would result in a table:
 
+```
 Node	Number of Connections	Connected Nodes
 1		1		\[2\]
 2		2		\[1, 5\]
@@ -29,6 +31,7 @@ Node	Number of Connections	Connected Nodes
 4		1		\[3\]
 5		3		\[2, 3, 6\]
 6		1		\[5\]
+```
 
 ## Shapes
 Little python script that generates `.gwl` files containing coordinates representing a structure (e.g. a woodpile, trampoline, ...) which can be fed to the NanoScribe unit.
