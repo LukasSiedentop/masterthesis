@@ -33,4 +33,8 @@ Node	Number of Connections	Connected Nodes
 ## Shapes
 Little python script that generates `.gwl` files containing coordinates representing a structure (e.g. a woodpile, trampoline, ...) which can be fed to the NanoScribe unit.
 
+## Spectrometer
+Little python script that enables a measurement on our optical table. Basically, it controls a monochromator (SpectraPro-2150i), a stage motor (ESP100) and reads out the amplified signal of a photodiode via a data acquisition device (NI USB-6211).
 
+## Point Pattern Tool
+Our c++ tool that generates statistics of point patterns.
