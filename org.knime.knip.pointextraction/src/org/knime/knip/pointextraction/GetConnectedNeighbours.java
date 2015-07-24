@@ -52,7 +52,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 double[] displacement = new double[labeling.numDimensions()];
                 Arrays.fill(displacement, -1);
 
-                // Positionsarrays
+                // Positichonsarrays
                 int[] nodePixelPosition = new int[labeling.numDimensions()];
                 int[] nextOnLine = new int[labeling.numDimensions()];
 
