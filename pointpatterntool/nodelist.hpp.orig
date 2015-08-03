@@ -16,12 +16,23 @@
 #include <iostream>
 #include <cmath>
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 /**
  * Kopf der Liste. Hier stecken Daten wie Listenlänge, erstes Element, letztes Element drin, die sonst jedesmal in jedem Knoten der Liste geändert werden müssten.
  */
 class NodeHead {
 private:
 	/* Listenspezifisches */
+<<<<<<< HEAD
+	class Node * first, *last;
+	int size;
+
+	/* Datenspezifisches */
+	//... ?
+=======
 	// Zeiger auf das erste und letzte Element
 	class Node *first, *last;
 	// Länge der Liste, mit 0 initialisiert
@@ -29,6 +40,7 @@ private:
 
 	/* Datenspezifisches */
 	double minX, minY, minZ, maxX, maxY, maxZ;
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 public:
 	NodeHead();
 	~NodeHead();
@@ -40,6 +52,12 @@ public:
 	void add(Node * node);
 	// löscht das Element node
 	void remove(Node * node);
+<<<<<<< HEAD
+	//...
+
+	/* Datenspezifisches */
+	//... ?
+=======
 	// zeigt die Liste an.
 	void display();
 	// den ersten Knoten geben
@@ -48,6 +66,7 @@ public:
 	/* Datenspezifisches */
 	// überprüft ob ein Knoten an einem Punkt exisitiert
 	Node * getAt(double x, double y, double z);
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 };
 
 /**
@@ -56,6 +75,16 @@ public:
 class Node {
 private:
 	/* Listenspezifisches */
+<<<<<<< HEAD
+	class NodeHead * head;
+	Node * prev, *next;
+
+
+	/* Datenspezifisches */
+	// Position
+	double x, y, z;
+	// Verbundene Nachbarn, Distanz zu Nachbarn, Winkel zu Nachbarn, Voronoi Nachbarn,...
+=======
 	// Zeiger auf den Listenkopf
 	class NodeHead *head;
 	// Zeiger auf Vorgänger und Nachfolger, mit NULL initialisiert
@@ -70,6 +99,7 @@ private:
 
 	// prüft ob der gegebene Knoten schon ein Nachbar ist
 	bool isNeighbour(Node * node);
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 public:
 	Node();
 	Node(double x, double y, double z);
@@ -78,7 +108,11 @@ public:
 	/* Listenspezifisches */
 	// vertauscht diesen Knoten mit node.
 	void swap(Node * node);
+<<<<<<< HEAD
+	// getter und setter (warum nochmal? brauchen wir wirklich private und so?)
+=======
 	// getter und setter
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 	void setHead(NodeHead * newHead);
 	void setNext(Node * node);
 	void setPrev(Node * node);
@@ -87,13 +121,21 @@ public:
 	Node * getNext();
 	Node * getPrev();
 	double getX();
+<<<<<<< HEAD
+	//...
+=======
 	double getY();
 	double getZ();
 	Neighbour* getNeighbours();
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 
 	/* Datenspezifisches */
 	// Gibt die Euklidsche Distanz zu node zurück.
 	double euklidian(Node * node);
+<<<<<<< HEAD
+};
+
+=======
 	// berechnet den Winkel zwischen diesem und den zwei gegebenen Knoten
 	double angle(Node * nodeA, Node * nodeB);
 	// fügt der Nachbarnliste einen weiteren Nachbarn hinzu
@@ -127,5 +169,6 @@ public:
 /**
  * Position?
  */
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 
 #endif /* NODELIST_HPP_ */

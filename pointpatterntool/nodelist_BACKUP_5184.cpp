@@ -5,11 +5,18 @@
  *      Author: lukas
  */
 
+<<<<<<< HEAD
+#include "nodelist.hpp"
+
+NodeHead::NodeHead() :
+		first(NULL), last(NULL), size(-1) {
+=======
 #include <math.h>
 #include "nodelist.hpp"
 
 NodeHead::NodeHead() :
 		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(0), maxZ(0) {
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 }
 
 int NodeHead::length() {
@@ -30,6 +37,12 @@ void NodeHead::add(Node * node) {
 		last = node;
 	} else { // Liste ist leer
 		// Zeiger setzen
+<<<<<<< HEAD
+		first = node;
+		last = node;
+	}
+
+=======
 		first = last = node;
 	}
 
@@ -79,15 +92,24 @@ void NodeHead::display() {
 		nodesIter = nodesIter->getNext();
 		i++;
 	}
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 
 }
 
 Node::Node() :
+<<<<<<< HEAD
+		head(NULL), prev(NULL), next(NULL), x(0), y(0), z(0) {
+}
+
+Node::Node(double x, double y, double z) :
+		head (NULL), prev(NULL), next(NULL), x(x), y(y), z(z) {
+=======
 		head(NULL), prev(NULL), next(NULL), x(0), y(0), z(0), neighbours(NULL) {
 }
 
 Node::Node(double x, double y, double z) :
 		head(NULL), prev(NULL), next(NULL), x(x), y(y), z(z), neighbours(NULL) {
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 }
 
 void Node::setHead(NodeHead * newHead) {
@@ -102,7 +124,11 @@ void Node::setPrev(Node * node) {
 	prev = node;
 }
 
+<<<<<<< HEAD
+void Node::setX(double newX){
+=======
 void Node::setX(double newX) {
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 	x = newX;
 }
 
@@ -118,6 +144,11 @@ Node * Node::getPrev() {
 	return prev;
 }
 
+<<<<<<< HEAD
+double Node::getX(){
+	return x;
+}
+=======
 double Node::getX() {
 	return x;
 }
@@ -242,3 +273,4 @@ void Neighbour::add(Node * newNode) {
 		next = new Neighbour(newNode);
 	}
 }
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266

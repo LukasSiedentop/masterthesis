@@ -6,7 +6,11 @@
  */
 
 #include <iostream>
+<<<<<<< HEAD
+#include "nodelist.hpp"
+=======
 #include <fstream>
+>>>>>>> 8c44c62822241421bedf5ec48c67ff453b159266
 
 #include "nodelist.hpp"
 
@@ -214,6 +218,17 @@ int main(int argc, char *argv[]) {
 			cout << "Und nun?" << endl;
 		}
 	}
+
+
+	Node * node = new Node(1, 2, 3);
+	std::cout << "Node X: " << node->getX() << std::endl;
+
+	NodeHead * list = new NodeHead();
+	std::cout << "Listsize: " << list->length() << std::endl;
+	list->add(node);
+	std::cout << "Listsize: " << list->length() << std::endl;
+
+
 
 	return 0;
 }
