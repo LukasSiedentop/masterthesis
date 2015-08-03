@@ -63,24 +63,38 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 
 	}
 
-	cout << "Dateien eingelesen und Liste mit " << list->length() << " Knoten erstellt." << endl;
+	cout << "Dateien eingelesen und Liste mit " << list->length()
+			<< " Knoten erstellt." << endl;
 	return list;
 }
 
 /**
  * Schreibt die Optionen auf die Koinsole und wartet auf einen Input.
  */
-int gui(){
-	cout << char(9) << "Statistiken" << char(9) << char(9) << char(9) << "Sortier- und Arrangieroptionen" << endl;
-	cout << "1 - Vert. der Anzahl der Nachbarn." << char (9) << "10 - " << endl;
-	cout << "2 - Vert. der Abstände zu den Nachbarn." << char (9) << "11 - " << endl;
-	cout << "3 - Vert. der Winkel der Nachbarn." << char (9) << "12 - " << endl;
-	cout << "4 - Grad der Hyperuniformity." << char (9) << "13 - " << endl;
-	cout << "0 - Nichts." << endl;
-	cout << "Was möchtest du über die Punkte wissen? (1-4, 10-13, default: 0) >> ";
+int gui() {
+	cout << char(9) << "Statistiken" << char(9) << char(9) << char(9) << char(9)
+			<< "Sortier- und Arrangieroptionen" << endl;
+	cout << "1 - Vert. der Anzahl der Nachbarn." << char(9) << "5 - " << endl;
+	cout << "2 - Vert. der Abstände zu den Nachbarn." << char(9) << "6 - "
+			<< endl;
+	cout << "3 - Vert. der Winkel der Nachbarn." << char(9) << "7 - " << endl;
+	cout << "4 - Grad der Hyperuniformity." << char(9) << char(9) << "8 - "
+			<< endl << endl;
+	cout << "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
+	cout << "Was möchtest du über die Punkte wissen? (1-9, default: 0) >> ";
+
 	int option = 0;
-	// TODO: default bei Eingabe eines \n
-	cin >> option;
+
+	// Wenn das nächste Zeichen ein newline ist...
+	if (cin.peek() == '\n') {
+		// ...defaultwert setzen
+		option = 0;
+		// wenn kein int eingegeben wurde...
+	} else if (!(cin >> option)) {
+		// ...Fehler schmeißen
+		cout << "Das war keine Zahl!" << endl;
+	}
+
 	return option;
 }
 
@@ -124,77 +138,82 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
 
-		// Outfile
-		ofstream outfile;
-		outfile.open(outfileName);
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
 
-		// Iterationsvariablen
-		Node * nodeIter = list->getFirst();
-		Neighbour * neighIter;
+	// Iterationsvariablen
+	Node * nodeIter = list->getFirst();
+	Neighbour * neighIter;
 
-		// Iteration über jeden Knoten
-		while (nodeIter) {
-			neighIter = nodeIter->getNeighbours();
-			// über Nachbarn iterieren
-			while (neighIter) {
-				// Wert schreiben
-				outfile << nodeIter->euklidian(neighIter->getNode()) << endl;
-				// weiter gehts
-				neighIter = neighIter->getNextNeighbour();
-			}
-			nodeIter = nodeIter->getNext();
+	// Iteration über jeden Knoten
+	while (nodeIter) {
+		neighIter = nodeIter->getNeighbours();
+		// über Nachbarn iterieren
+		while (neighIter) {
+			// Wert schreiben
+			outfile << nodeIter->euklidian(neighIter->getNode()) << endl;
+			// weiter gehts
+			neighIter = neighIter->getNextNeighbour();
 		}
+		nodeIter = nodeIter->getNext();
+	}
 
-		// TODO: periodische Randbedingungen beachten
-		// TODO: doppelte Längen ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
-		// TODO: gnuplotscript hier ausführen
+	// TODO: periodische Randbedingungen beachten
+	// TODO: doppelte Längen ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
+	// TODO: gnuplotscript hier ausführen
 
-		cout << "Längendaten in " << outfileName << " geschrieben." << endl;
+	cout << "Längendaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
- * TODO Schreibt die Winkel zwischen den Nachbarn in eine Datei.
+ * Schreibt die Winkel zwischen den Nachbarn in eine Datei.
  */
 void angleDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
 
-		// Outfile
-		ofstream outfile;
-		outfile.open(outfileName);
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
 
-		// Iterationsvariablen
-		Node * nodeIter = list->getFirst();
-		Neighbour * neighIter;
+	// Iterationsvariablen
+	Node * nodeIter = list->getFirst();
+	Neighbour * neighIter;
 
-		// Iteration über jeden Knoten
-		while (nodeIter) {
-			neighIter = nodeIter->getNeighbours();
-			// über Nachbarn iterieren
-			while (neighIter) {
-				while (neighIter->getNextNeighbour()) {
-					// Wert schreiben
-					outfile << (180/3.141) * nodeIter->angle(neighIter->getNode(), neighIter->getNextNeighbour()->getNode()) << endl;
-					neighIter = neighIter->getNextNeighbour();
-				}
-
-				// weiter gehts
+	// Iteration über jeden Knoten
+	while (nodeIter) {
+		neighIter = nodeIter->getNeighbours();
+		// über Nachbarn iterieren
+		while (neighIter) {
+			while (neighIter->getNextNeighbour()) {
+				// Wert schreiben
+				outfile
+						<< (180 / 3.141)
+								* nodeIter->angle(neighIter->getNode(),
+										neighIter->getNextNeighbour()->getNode())
+						<< endl;
 				neighIter = neighIter->getNextNeighbour();
 			}
-			nodeIter = nodeIter->getNext();
+
+			// weiter gehts
+			neighIter = neighIter->getNextNeighbour();
 		}
+		nodeIter = nodeIter->getNext();
+	}
 
-		// TODO: periodische Randbedingungen beachten
-		// TODO: doppelte Winkel ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
-		// TODO: gnuplotscript hier ausführen
+	// TODO: periodische Randbedingungen beachten
+	// TODO: doppelte Winkel ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
+	// TODO: gnuplotscript hier ausführen
 
-		cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
+	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char *argv[]) {
-	cout << "Es giilt also ein Punktmuster zu charakterisieren. Also los!" << endl;
+	cout << "Es giilt also ein Punktmuster zu charakterisieren. Also los!"
+			<< endl;
 	NodeHead * list = readfile(argv[1], argv[2]);
 	//list->display();
 	int option = -1;
@@ -203,11 +222,25 @@ int main(int argc, char *argv[]) {
 		option = gui();
 
 		switch (option) {
-			case 0: cout << "Beende." << endl; break;
-			case 1: neighbourDistribution(list, "./data/statistics/neighbourDistribution.dat"); break;
-			case 2: lengthDistribution(list, "./data/statistics/lenghtDistribution.dat"); break;
-			case 3: angleDistribution(list, "./data/statistics/angleDistribution.dat"); break;
-			default: cout << "Das gibts leider (noch) nicht." << endl;
+		case 0:
+			cout << "Beende." << endl;
+			break;
+		case 1:
+			neighbourDistribution(list,
+					"./data/statistics/neighbourDistribution.dat");
+			break;
+		case 2:
+			lengthDistribution(list,
+					"./data/statistics/lenghtDistribution.dat");
+			break;
+		case 3:
+			angleDistribution(list, "./data/statistics/angleDistribution.dat");
+			break;
+		case 9:
+			list->display();
+			break;
+		default:
+			cout << "Das gibts leider (noch) nicht." << endl;
 		}
 
 		if (option != 0) {
