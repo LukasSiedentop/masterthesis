@@ -33,8 +33,11 @@ private:
 
 	/* Datenspezifisches */
 	double minX, minY, minZ, maxX, maxY, maxZ;
+	// Periodizität des Musters
+	bool periodic;
 public:
 	NodeHead();
+	NodeHead(bool periodicity);
 	~NodeHead();
 
 	/* Listenspezifisches */
@@ -50,8 +53,19 @@ public:
 	Node * getFirst();
 
 	/* Datenspezifisches */
+	// Minimalwerte setzen
+	void setMins(double xMin, double yMin, double zMin);
+	// Maximalwerte setzen
+	void setMaxs(double xMax, double yMax, double zMax);
+	// Periodizität
+	bool isPeriodic();
 	// überprüft ob ein Knoten an einem Punkt exisitiert
 	Node * getAt(double x, double y, double z);
+	// gibt die Größe der Box zurück
+	double lengthX();
+	double lengthY();
+	double lengthZ();
+
 };
 
 /**
@@ -98,6 +112,8 @@ public:
 	/* Datenspezifisches */
 	// Gibt die Euklidsche Distanz zu node zurück.
 	double euklidian(Node * node);
+	// Gibt die Euklidsche Distanz zu node zurück, mit periodische Randbedingungen angenommen
+	double euklidianPeriodic(Node * node);
 	// berechnet den Winkel zwischen diesem und den zwei gegebenen Knoten
 	double angle(Node * nodeA, Node * nodeB);
 	// fügt der Nachbarnliste einen weiteren Nachbarn hinzu
@@ -127,6 +143,5 @@ public:
 
 	void add(Node * node);
 };
-
 
 #endif /* NODELIST_HPP_ */

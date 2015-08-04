@@ -7,9 +7,40 @@
 
 #include <vector>
 
+#include <string>
+#include <sstream>
+
 #include "gnuplot-iostream.h"
 
 using namespace std;
+
+/*
+ * Holt den Input Typgerecht. Von http://www.cplusplus.com/forum/articles/6046/
+ * In muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
+ */
+template<typename T>
+T input(T in) {
+	string input = "";
+
+	while (true) {
+		// füllt den input-string mit der Eingabe
+		getline(cin, input);
+
+		// setzt den Defaultwert bei einem leeren String (getline löscht das letzte \n!)
+		if (input == "") {
+			return in;
+		}
+
+		// Konvertieren von string nach T
+		stringstream inputStream(input);
+		if (inputStream >> in) {
+			break;
+		}
+		cout << "Falscher Input! Nochmal." << endl;
+	}
+
+	return in;
+}
 
 /**
  * Templates um einen Vektor zu (merge-) sortieren. Geändert von http://www.bogotobogo.com/Algorithms/mergesort.php, code A
@@ -63,9 +94,9 @@ vector<T> mergeSort(vector<T> m) {
 	return result;
 }
 
-
 template<typename T>
-void plotHist(vector<T> data, double min, double max, int n, const char xlabel[]){
+void plotHist(vector<T> data, double min, double max, int n,
+		const char xlabel[]) {
 	Gnuplot gp;
 	// Don't forget to put "\n" at the end of each line!
 
@@ -74,15 +105,15 @@ void plotHist(vector<T> data, double min, double max, int n, const char xlabel[]
 	gp << "n=" << n << "\n";
 	gp << "max=" << max << "\n";
 	gp << "min=" << min << "\n";
-	gp << "width=" << (max-min)/n << "\n";
+	gp << "width=" << (max - min) / n << "\n";
 
 	gp << "hist(x,width)=width*floor(x/width) #+width/2.0\n";
 
 	gp << "set xrange [min:max]\n";
 	gp << "set yrange [0:]\n";
-	gp << "set offset graph 0.05,0.05,0.05,0.0\n";
+	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
 	// 10 x-tics
-	gp << "set xtics min," << (max-min)/10 << ",max\n";
+	gp << "set xtics min," << (max - min) / 10 << ",max\n";
 	gp << "set boxwidth width*0.9\n";
 	gp << "set style fill solid 0.5\n";
 	gp << "set tics out nomirror\n";
@@ -90,7 +121,7 @@ void plotHist(vector<T> data, double min, double max, int n, const char xlabel[]
 	gp << "set ylabel 'Häufigkeit'\n";
 
 	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-	gp << "plot '-' u ($1):(width) w boxes smooth freq lc rgb'blue' notitle\n";
+	gp << "plot '-' u (hist($1, width)):(1.0) w boxes smooth freq lc rgb'blue' notitle\n";
 	gp.send1d(data);
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that

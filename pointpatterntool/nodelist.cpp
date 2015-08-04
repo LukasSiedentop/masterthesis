@@ -14,7 +14,12 @@ using namespace std;
 
 NodeHead::NodeHead() :
 		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(
-				0), maxZ(0) {
+				0), maxZ(0), periodic(0) {
+}
+
+NodeHead::NodeHead(bool periodicity) :
+		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(
+				0), maxZ(0), periodic(periodicity) {
 }
 
 int NodeHead::length() {
@@ -44,6 +49,22 @@ Node * NodeHead::getFirst() {
 	return first;
 }
 
+void NodeHead::setMins(double xMin, double yMin, double zMin) {
+	minX = xMin;
+	minY = yMin;
+	minZ = zMin;
+}
+
+void NodeHead::setMaxs(double xMax, double yMax, double zMax) {
+	maxX = xMax;
+	maxY = yMax;
+	maxZ = zMax;
+}
+
+bool NodeHead::isPeriodic() {
+	return periodic;
+}
+
 Node * NodeHead::getAt(double x, double y, double z) {
 
 	// Toleranz
@@ -52,14 +73,38 @@ Node * NodeHead::getAt(double x, double y, double z) {
 	// Knoteniteration
 	Node* node = first;
 	while (node) {
-		if ((fabs(x - node->getX()) < t && fabs(y - node->getY()) < t
-				&& fabs(z - node->getZ()) < t)) {
+
+		double xDist = fabs(x - node->getX());
+		double yDist = fabs(y - node->getY());
+		double zDist = fabs(z - node->getZ());
+
+		// Minimalen Abstand finden, wenn das Muster periodisch fortsetzbar ist
+		if (periodic) {
+			xDist = min(xDist, fabs(xDist - lengthX()));
+			yDist = min(yDist, fabs(yDist - lengthY()));
+			zDist = min(zDist, fabs(zDist - lengthZ()));
+		}
+
+		// Distanzen mit der Toleranz vergleichen
+		if ((xDist < t && yDist < t && zDist < t)) {
 			return node;
 		}
 		node = node->getNext();
 	}
 
 	return NULL;
+}
+
+double NodeHead::lengthX() {
+	return maxX - minX;
+}
+
+double NodeHead::lengthY() {
+	return maxY - minY;
+}
+
+double NodeHead::lengthZ() {
+	return maxZ - minZ;
 }
 
 void NodeHead::display() {
@@ -139,22 +184,36 @@ Neighbour * Node::getNeighbours() {
 }
 
 double Node::euklidian(Node * node) {
-	return sqrt(
-			pow((x - node->getX()), 2) + pow((y - node->getY()), 2)
-					+ pow((z - node->getZ()), 2));
+
+	double xDist = fabs(x - node->getX());
+	double yDist = fabs(y - node->getY());
+	double zDist = fabs(z - node->getZ());
+
+	return sqrt(pow(xDist, 2) + pow(yDist, 2) + pow(zDist, 2));
+}
+
+double Node::euklidianPeriodic(Node * node) {
+	// Minimalen Abstand finden, wenn das Muster periodisch fortsetzbar ist
+	double xDist = min(fabs(x - node->getX()), fabs(fabs(x - node->getX()) - head->lengthX()));
+	double yDist = min(fabs(y - node->getY()), fabs(fabs(y - node->getY()) - head->lengthY()));
+	double zDist = min(fabs(z - node->getZ()), fabs(fabs(z - node->getZ()) - head->lengthZ()));
+
+	return sqrt(pow(xDist, 2) + pow(yDist, 2) + pow(zDist, 2));
 }
 
 double Node::angle(Node * nodeA, Node * nodeB) {
 	// cos alpha = skp(a,b) / |a|*|b|
+	// TODO: durchdenken, ob da Winkel zuviel oder zu wenig gezählt werden.
 
 	double vec1X = nodeA->getX() - x;
 	double vec1Y = nodeA->getY() - y;
 	double vec1Z = nodeA->getZ() - z;
-	double len1 = pow(vec1X, 2) + pow(vec1Y, 2) + pow(vec1Z, 2);
 
 	double vec2X = nodeB->getX() - x;
 	double vec2Y = nodeB->getY() - y;
 	double vec2Z = nodeB->getZ() - z;
+
+	double len1 = pow(vec1X, 2) + pow(vec1Y, 2) + pow(vec1Z, 2);
 	double len2 = pow(vec2X, 2) + pow(vec2Y, 2) + pow(vec2Z, 2);
 
 	double skp = vec1X * vec2X + vec1Y * vec2Y + vec1Z * vec2Z;
@@ -176,12 +235,12 @@ int Node::countNeighbours() {
 }
 
 void Node::addNeighbour(Node * node) {
-	// aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
+// aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
 	if (this->isNeighbour(node) || (this->equals(node))) {
 		return;
 	}
 
-	// wenn es schon einen Nachbarn zu diesem Knoten gibt...
+// wenn es schon einen Nachbarn zu diesem Knoten gibt...
 	if (neighbours) {
 		// ...diesen den neuen hinzufügen lassen
 		neighbours->add(node);
@@ -192,7 +251,7 @@ void Node::addNeighbour(Node * node) {
 }
 
 bool Node::isNeighbour(Node * node) {
-	// iteriert durch alle Nachbarn und vergleicht die Positionen der Knoten
+// iteriert durch alle Nachbarn und vergleicht die Positionen der Knoten
 	Neighbour *neighIter = neighbours;
 	if (neighIter) {
 		// TODO: besser ist ein wirklicher Vergleich der Speicherpositionen, nachschauen. sowas wie Pointer1 == Pointer2
@@ -203,13 +262,13 @@ bool Node::isNeighbour(Node * node) {
 		neighIter = neighIter->getNext();
 	}
 
-	// wenn kein gleicher gefunden ist, ists kein Nachbar
+// wenn kein gleicher gefunden ist, ists kein Nachbar
 	return false;
 }
 
 bool Node::equals(Node * node) {
-	// node == this, wenn die Positionen gleich sind.
-	// Toleranz
+// node == this, wenn die Positionen gleich sind.
+// Toleranz
 	double t = 0.000001;
 	return (fabs(x - node->getX()) < t && fabs(y - node->getY()) < t
 			&& fabs(z - node->getZ()) < t);
@@ -232,12 +291,12 @@ Node * Neighbour::getNode() {
 }
 
 void Neighbour::add(Node * newNode) {
-	// wenn der neue Knoten mit diesem übereinstimmt, abbrechen
+// wenn der neue Knoten mit diesem übereinstimmt, abbrechen
 	if (newNode->equals(node)) {
 		return;
 	}
 
-	// wenn dieser Nachbar einen nächsten Nachbarn hat....
+// wenn dieser Nachbar einen nächsten Nachbarn hat....
 	if (next) {
 		// ...den Nächsten Nachbarn den Knoten hinzufügen lassen
 		next->add(newNode);

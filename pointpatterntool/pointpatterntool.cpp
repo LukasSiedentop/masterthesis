@@ -12,7 +12,6 @@
 #include <cmath>
 #include <boost/tuple/tuple.hpp>
 
-
 #include "nodelist.hpp"
 #include "templates.cpp"
 
@@ -31,13 +30,24 @@ using namespace std;
 NodeHead * readfile(const char * nodes, const char * neighbours) {
 	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
 			<< " ein..." << endl;
+
 	// input filestream beider Dateien
 	ifstream nodeFile, neighbourFile;
 	nodeFile.open(nodes, std::ifstream::in);
 	neighbourFile.open(neighbours, std::ifstream::in);
 
+	cout << "Ist das Muster periodisch? (0,1; default: 0) >> ";
+
+	bool periodic = input(0);
+
 	// Listenkopf
-	NodeHead * list = new NodeHead();
+	NodeHead * list = new NodeHead(periodic);
+
+	if (periodic) {
+		cout << "Nehme eine Box von (-5,5)^3 an..." << endl;
+		list->setMins(-5, -5, -5);
+		list->setMaxs(5, 5, 5);
+	}
 
 	// Position des Punktes
 	double x, y, z;
@@ -87,31 +97,15 @@ int gui() {
 	cout << "4 - Grad der Hyperuniformity." << char(9) << char(9) << "8 - "
 			<< endl;
 	cout << "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
-	cout << "Was möchtest du über die Punkte wissen? (1-9, default: 0) >> ";
+	cout << "Was möchtest du über die Punkte wissen? (1-9; default: 0) >> ";
 
-	int option;
+	int option = 0;
 
-	// Wenn das nächste Zeichen ein newline ist...
-	if (cin.peek() == '\n') {
-		// ...defaultwert setzen
-		option = 0;
-		// wenn kein int eingegeben wurde...
-	} else if (!(cin >> option)) {
-		// Fehler löschen
-		cin.clear();
-		cin.ignore();
-		// ...Fehler schmeißen
-		cout << "Das war keine Zahl!" << endl;
-		option = -1;
-	}
-
-	cin.ignore();
-
-	return option;
+	return input(option);
 }
 
 /**
- * Schreibt die Anzahl der Nachbarn jedes Knotens untereinander in eine Datei und TODO führt ein gnuplot-script aus das die Daten als pdf plotet.
+ * Schreibt die Anzahl der Nachbarn jedes Knotens untereinander in eine Datei.
  */
 void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Zähle die Nachbarn jedes Knotens..." << endl;
@@ -133,6 +127,7 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 		counter = 0;
 		neighIter = nodeIter->getNeighbours();
 		// Nachbarn zählen
+		// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
 		while (neighIter) {
 			counter++;
 			neighIter = neighIter->getNext();
@@ -155,7 +150,7 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 }
 
 /**
- * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei. TODO: periodische Randbedingungen beachten
+ * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei.
  */
 void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
@@ -176,8 +171,14 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 		neighIter = nodeIter->getNeighbours();
 		// über Nachbarn iterieren
 		while (neighIter) {
-			// Wert schreiben
-			data.push_back(nodeIter->euklidian(neighIter->getNode()));
+			// je nach Periodizität Wert schreiben
+			if (list->isPeriodic()) {
+				data.push_back(
+						nodeIter->euklidianPeriodic(neighIter->getNode()));
+			} else {
+				data.push_back(nodeIter->euklidian(neighIter->getNode()));
+			}
+
 			// weiter gehts
 			neighIter = neighIter->getNext();
 		}
@@ -186,13 +187,42 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 
 	// Daten sortieren...
 	data = mergeSort(data);
+	vector<double> halfData;
+
+	// TODO: Statistiken in nem Template berechnen
+
+	// Summe
+	double sum = 0;
+
 	// ...und jeden zweiten schreiben.
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		outfile << data[i] << endl;
+		halfData.push_back(data[i]);
+		sum += data[i];
 	}
 
+	// Mittelwert & Median
+	double average = sum / halfData.size();
+	double median = halfData[halfData.size() / 2];
+
+	// Varianzen
+	double varAverage = 0;
+	double varMedian = 0;
+	for (unsigned int i = 0; i < halfData.size(); i++) {
+		varAverage += pow((halfData[i] - average), 2);
+		varMedian += pow((halfData[i] - median), 2);
+	}
+	varAverage = varAverage / halfData.size();
+	varMedian = varMedian / halfData.size();
+
+	// "Metadaten": TODO: Standardabweichung, Median
+	cout << "Anzahl Stege: " << halfData.size()
+			<< ", Mittelwert +- Standardabweichung: " << average << "+-"
+			<< sqrt(varAverage) << ", FWHM: "  << 2*sqrt(2*log(2)*varAverage) <<  ", Median +- Standardabweichung: " << median
+			<< "+-" << sqrt(varMedian) << ", FWHM: "  << 2*sqrt(2*log(2)*varMedian) << endl;
+
 	// Daten ploten
-	plotHist(data, 0, 2, 20, "Länge");
+	plotHist(halfData, 0.6, 1.05, 25, "Länge");
 
 	cout << "Längendaten in " << outfileName << " geschrieben." << endl;
 }
@@ -223,13 +253,29 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 			// über Nachbarn des Nachbarn iterieren
 			while (neighIter2) {
 				// wenn nicht der Winkel zwischen sich berechnet werden soll...
-				if (!nodeIter->equals(
-						neighIter2->getNode()) /*Test ob neighIter2 nicht er selsbst ist*/) {
+				if (!nodeIter->equals(neighIter2->getNode())) {
+
 					// ...Wert schreiben, umgerechnet in Grad
-					data.push_back(
-							((180.0) / M_PI)
-									* neighIter1->getNode()->angle(nodeIter,
-											neighIter2->getNode()));
+					if (!list->isPeriodic()) {
+						data.push_back(
+								((180.0) / M_PI)
+										* neighIter1->getNode()->angle(nodeIter,
+												neighIter2->getNode()));
+					}
+
+					// TODO: unschöner Hack: nur schreiben falls die Randbedingungen nicht übertritten wurden
+					if (list->isPeriodic()
+							&& neighIter1->getNode()->euklidian(nodeIter)
+									< list->lengthX() / 2.0
+							&& neighIter1->getNode()->euklidian(
+									neighIter2->getNode())
+									< list->lengthX() / 2.0) {
+						data.push_back(
+								((180.0) / M_PI)
+										* neighIter1->getNode()->angle(nodeIter,
+												neighIter2->getNode()));
+					}
+
 				}
 				// weiter gehts
 				neighIter2 = neighIter2->getNext();
@@ -244,16 +290,17 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 
 	// Daten sortieren...
 	data = mergeSort(data);
+	vector<double> halfData;
 	// ...und jeden zweiten schreiben.
-	for (unsigned int i = 0; i < data.size(); i+=2) {
+	for (unsigned int i = 0; i < data.size(); i += 2) {
+		halfData.push_back(data[i]);
 		outfile << data[i] << endl;
 	}
 
-	plotHist(data, 0, 180, 180, "Winkel");
+	plotHist(halfData, 0, 180, 180, "Winkel");
 
 	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
 }
-
 
 /**
  * Hier wird ausgeführt was gewählt wurde.
