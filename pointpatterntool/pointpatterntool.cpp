@@ -7,8 +7,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
+
+#include <cmath>
+#include <boost/tuple/tuple.hpp>
+
 
 #include "nodelist.hpp"
+#include "templates.cpp"
 
 using namespace std;
 
@@ -79,11 +85,11 @@ int gui() {
 			<< endl;
 	cout << "3 - Vert. der Winkel der Nachbarn." << char(9) << "7 - " << endl;
 	cout << "4 - Grad der Hyperuniformity." << char(9) << char(9) << "8 - "
-			<< endl << endl;
+			<< endl;
 	cout << "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
 	cout << "Was möchtest du über die Punkte wissen? (1-9, default: 0) >> ";
 
-	int option = 0;
+	int option;
 
 	// Wenn das nächste Zeichen ein newline ist...
 	if (cin.peek() == '\n') {
@@ -91,9 +97,15 @@ int gui() {
 		option = 0;
 		// wenn kein int eingegeben wurde...
 	} else if (!(cin >> option)) {
+		// Fehler löschen
+		cin.clear();
+		cin.ignore();
 		// ...Fehler schmeißen
 		cout << "Das war keine Zahl!" << endl;
+		option = -1;
 	}
+
+	cin.ignore();
 
 	return option;
 }
@@ -108,6 +120,9 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 	ofstream outfile;
 	outfile.open(outfileName);
 
+	// Datenstruktur um die Werte aufzunehmen
+	vector<double> data;
+
 	// Iterationsvariablen
 	Node * nodeIter = list->getFirst();
 	Neighbour * neighIter;
@@ -120,20 +135,27 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 		// Nachbarn zählen
 		while (neighIter) {
 			counter++;
-			neighIter = neighIter->getNextNeighbour();
+			neighIter = neighIter->getNext();
 		}
 		// Wert schreiben
-		outfile << counter << endl;
+		data.push_back(counter);
+		// weiter gehts
 		nodeIter = nodeIter->getNext();
 	}
 
-	// TODO: gnuplotscript hier ausführen
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i] << endl;
+	}
+
+	// Daten ploten
+	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
 
 	cout << "Nachbarsdaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
- * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei. TODO: gnuplotscript
+ * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei. TODO: periodische Randbedingungen beachten
  */
 void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
@@ -141,6 +163,9 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	// Outfile
 	ofstream outfile;
 	outfile.open(outfileName);
+
+	// Datenstruktur um die Werte aufzunehmen
+	vector<double> data;
 
 	// Iterationsvariablen
 	Node * nodeIter = list->getFirst();
@@ -152,22 +177,28 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 		// über Nachbarn iterieren
 		while (neighIter) {
 			// Wert schreiben
-			outfile << nodeIter->euklidian(neighIter->getNode()) << endl;
+			data.push_back(nodeIter->euklidian(neighIter->getNode()));
 			// weiter gehts
-			neighIter = neighIter->getNextNeighbour();
+			neighIter = neighIter->getNext();
 		}
 		nodeIter = nodeIter->getNext();
 	}
 
-	// TODO: periodische Randbedingungen beachten
-	// TODO: doppelte Längen ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
-	// TODO: gnuplotscript hier ausführen
+	// Daten sortieren...
+	data = mergeSort(data);
+	// ...und jeden zweiten schreiben.
+	for (unsigned int i = 0; i < data.size(); i += 2) {
+		outfile << data[i] << endl;
+	}
+
+	// Daten ploten
+	plotHist(data, 0, 2, 20, "Länge");
 
 	cout << "Längendaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
- * Schreibt die Winkel zwischen den Nachbarn in eine Datei.
+ * Schreibt die Winkel zwischen den Nachbarn in eine Datei. TODO: periodische Randbedingungen beachten
  */
 void angleDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
@@ -176,46 +207,64 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 	ofstream outfile;
 	outfile.open(outfileName);
 
+	// Datenstruktur um die Werte aufzunehmen
+	vector<double> data;
+
 	// Iterationsvariablen
-	Node * nodeIter = list->getFirst();
-	Neighbour * neighIter;
+	Node *nodeIter = list->getFirst();
+	Neighbour *neighIter1, *neighIter2;
 
 	// Iteration über jeden Knoten
 	while (nodeIter) {
-		neighIter = nodeIter->getNeighbours();
+		neighIter1 = nodeIter->getNeighbours();
 		// über Nachbarn iterieren
-		while (neighIter) {
-			while (neighIter->getNextNeighbour()) {
-				// Wert schreiben
-				outfile
-						<< (180 / 3.141)
-								* nodeIter->angle(neighIter->getNode(),
-										neighIter->getNextNeighbour()->getNode())
-						<< endl;
-				neighIter = neighIter->getNextNeighbour();
+		while (neighIter1) {
+			neighIter2 = neighIter1->getNode()->getNeighbours();
+			// über Nachbarn des Nachbarn iterieren
+			while (neighIter2) {
+				// wenn nicht der Winkel zwischen sich berechnet werden soll...
+				if (!nodeIter->equals(
+						neighIter2->getNode()) /*Test ob neighIter2 nicht er selsbst ist*/) {
+					// ...Wert schreiben, umgerechnet in Grad
+					data.push_back(
+							((180.0) / M_PI)
+									* neighIter1->getNode()->angle(nodeIter,
+											neighIter2->getNode()));
+				}
+				// weiter gehts
+				neighIter2 = neighIter2->getNext();
+
 			}
 
 			// weiter gehts
-			neighIter = neighIter->getNextNeighbour();
+			neighIter1 = neighIter1->getNext();
 		}
 		nodeIter = nodeIter->getNext();
 	}
 
-	// TODO: periodische Randbedingungen beachten
-	// TODO: doppelte Winkel ausschließen (nach berechnung sortieren und jedes zweite Element schreiben?)
-	// TODO: gnuplotscript hier ausführen
+	// Daten sortieren...
+	data = mergeSort(data);
+	// ...und jeden zweiten schreiben.
+	for (unsigned int i = 0; i < data.size(); i+=2) {
+		outfile << data[i] << endl;
+	}
+
+	plotHist(data, 0, 180, 180, "Winkel");
 
 	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
 }
+
 
 /**
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char *argv[]) {
-	cout << "Es giilt also ein Punktmuster zu charakterisieren. Also los!"
+
+	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
 			<< endl;
+	// Muster einlesen
 	NodeHead * list = readfile(argv[1], argv[2]);
-	//list->display();
+
 	int option = -1;
 	while (option != 0) {
 		// Optionen anzeigen und wählen lassen

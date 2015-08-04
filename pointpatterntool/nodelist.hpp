@@ -16,6 +16,10 @@
 #include <iostream>
 #include <cmath>
 
+#include <vector>
+
+using namespace std;
+
 /**
  * Kopf der Liste. Hier stecken Daten wie Listenlänge, erstes Element, letztes Element drin, die sonst jedesmal in jedem Knoten der Liste geändert werden müssten.
  */
@@ -119,13 +123,10 @@ public:
 
 	// setter & getter
 	Node * getNode();
-	Neighbour * getNextNeighbour();
+	Neighbour * getNext();
 
 	void add(Node * node);
 };
 
-/**
- * Position?
- */
 
 #endif /* NODELIST_HPP_ */

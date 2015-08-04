@@ -5,11 +5,16 @@
  *      Author: lukas
  */
 
+#include <iostream>
+
 #include <math.h>
 #include "nodelist.hpp"
 
+using namespace std;
+
 NodeHead::NodeHead() :
-		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(0), maxZ(0) {
+		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(
+				0), maxZ(0) {
 }
 
 int NodeHead::length() {
@@ -44,10 +49,9 @@ Node * NodeHead::getAt(double x, double y, double z) {
 	// Toleranz
 	double t = 0.000001;
 
+	// Knoteniteration
 	Node* node = first;
-
 	while (node) {
-		// TODO: reicht der direkte Vergleich immer? Vielleicht einen kleinen Radius definieren, wie Dirk
 		if ((fabs(x - node->getX()) < t && fabs(y - node->getY()) < t
 				&& fabs(z - node->getZ()) < t)) {
 			return node;
@@ -72,7 +76,7 @@ void NodeHead::display() {
 			std::cout << "(" << neighboursIter->getNode()->getX() << ", "
 					<< neighboursIter->getNode()->getY() << ", "
 					<< neighboursIter->getNode()->getZ() << ") ";
-			neighboursIter = neighboursIter->getNextNeighbour();
+			neighboursIter = neighboursIter->getNext();
 		}
 		std::cout << std::endl;
 
@@ -141,21 +145,21 @@ double Node::euklidian(Node * node) {
 }
 
 double Node::angle(Node * nodeA, Node * nodeB) {
-	// cos alpha = |a*b| / |a|*|b|
+	// cos alpha = skp(a,b) / |a|*|b|
 
-	double vec1X = x-nodeA->getX();
-	double vec1Y = y-nodeA->getY();
-	double vec1Z = z-nodeA->getZ();
-	double len1 = pow(vec1X,2) + pow(vec1Y,2) + pow(vec1Z,2);
+	double vec1X = nodeA->getX() - x;
+	double vec1Y = nodeA->getY() - y;
+	double vec1Z = nodeA->getZ() - z;
+	double len1 = pow(vec1X, 2) + pow(vec1Y, 2) + pow(vec1Z, 2);
 
-	double vec2X = x-nodeB->getX();
-	double vec2Y = y-nodeB->getY();
-	double vec2Z = z-nodeB->getZ();
-	double len2 = pow(vec2X,2) + pow(vec2Y,2) + pow(vec2Z,2);
+	double vec2X = nodeB->getX() - x;
+	double vec2Y = nodeB->getY() - y;
+	double vec2Z = nodeB->getZ() - z;
+	double len2 = pow(vec2X, 2) + pow(vec2Y, 2) + pow(vec2Z, 2);
 
-	double skp = vec1X*vec2X + vec1Y*vec2Y + vec1Z*vec2Z;
+	double skp = vec1X * vec2X + vec1Y * vec2Y + vec1Z * vec2Z;
 
-	return acos(sqrt(skp/(len1*len2)));
+	return acos(skp / sqrt(len1 * len2));
 }
 
 int Node::countNeighbours() {
@@ -165,7 +169,7 @@ int Node::countNeighbours() {
 
 	while (neighIter) {
 		num++;
-		neighIter = neighIter->getNextNeighbour();
+		neighIter = neighIter->getNext();
 	}
 
 	return num;
@@ -196,7 +200,7 @@ bool Node::isNeighbour(Node * node) {
 			// ein gleicher ist gefunden
 			return true;
 		}
-		neighIter = neighIter->getNextNeighbour();
+		neighIter = neighIter->getNext();
 	}
 
 	// wenn kein gleicher gefunden ist, ists kein Nachbar
@@ -219,7 +223,7 @@ Neighbour::Neighbour(Node * node) :
 		next(NULL), node(node) {
 }
 
-Neighbour * Neighbour::getNextNeighbour() {
+Neighbour * Neighbour::getNext() {
 	return next;
 }
 
