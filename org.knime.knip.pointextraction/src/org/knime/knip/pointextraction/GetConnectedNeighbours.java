@@ -56,6 +56,9 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 int[] nodePixelPosition = new int[labeling.numDimensions()];
                 int[] nextOnLine = new int[labeling.numDimensions()];
 
+                // Centerdaten
+                double[][] centers = new double[labeling.getLabels().size() + 1][labeling.numDimensions()];
+
                 // Datenstruktur um Ergebnis aufzunehmen
                 @SuppressWarnings("unchecked")
                 ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[labeling.getLabels().size() + 1]);
@@ -69,6 +72,12 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                         // Cursor über Knotenpixel
                         Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
 
+                        //new Centroid().compute(iterableInterval, center);
+
+                        // Für die Berechnung des Schwerpunkts
+                        double[] positionSum = new double[labeling.numDimensions()];
+                        int pixelCount = 0;
+
                         // Iteration über Knotenpixel
                         while (nodeCur.hasNext()) {
                                 nodeCur.fwd();
@@ -76,6 +85,12 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                 // Inputposition auf labelpixel setzen
                                 nodeCur.localize(nodePixelPosition);
                                 inRndAccess.setPosition(nodePixelPosition);
+
+                                // Schwerpunktsberechnung: Addition aller Pixelcoordinaten/Anzahl der Pixel
+                                for (int i = 0; i < labeling.numDimensions(); i++) {
+                                        positionSum[i] += nodePixelPosition[i];
+                                        pixelCount++;
+                                }
 
                                 // ROI um nodepixel legen
                                 roi.setOrigin(nodeCur);
@@ -103,11 +118,58 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                 }
                         }
 
+                        // Schwerpunktsberechnung: Addition aller Pixelcoordinaten/Anzahl der Pixel
+                        for (int i = 0; i < labeling.numDimensions(); i++) {
+                                // Center berechnen + speichern
+                                centers[node][i] = positionSum[i] / pixelCount;
+                        }
+
                 }
 
-                System.out.println("Node\tNumber of Connections\tConnected Nodes");
-                for (int i = 1; i < nodeArray.length; i++) {
-                        System.out.println(i + "\t" + nodeArray[i].size() + "\t" + nodeArray[i]);
+                System.out.println("File1: Nodepositions");
+                // Knoteniteration. Das erste Label ist 1, nicht 0...
+                for (int i = 1; i < centers.length; i++) {
+
+                        // über alle Nachbarn Iterieren
+                        for (int neigh = 1; neigh < nodeArray[i].size(); neigh++) {
+                                String outStr = "";
+
+                                // dimensionsiteration 
+                                for (int dim = 0; dim < labeling.numDimensions(); dim++) {
+                                        // TODO: Ausgabe mit drei Nachkommastellen
+                                        if (dim != labeling.numDimensions() - 1) {
+                                                outStr += centers[i][dim] + "\t";
+                                        } else {
+                                                outStr += centers[i][dim];
+                                        }
+                                }
+                                System.out.println(outStr);
+                        }
+                }
+
+                System.out.println("File2: Neighbourpositions");
+                // Knoteniteration. Das erste Label ist 1, nicht 0...
+                for (int i = 1; i < centers.length; i++) {
+
+                        // über alle Nachbarn Iterieren
+                        for (int neigh = 1; neigh < nodeArray[i].size(); neigh++) {
+                                String outStr = "";
+
+                                // dimensionsiteration 
+                                for (int dim = 0; dim < labeling.numDimensions(); dim++) {
+                                        // TODO: Ausgabe mit drei Nachkommastellen
+                                        if (dim != labeling.numDimensions() - 1) {
+                                                outStr += centers[neigh][dim] + "\t";
+                                        } else {
+                                                outStr += centers[neigh][dim];
+                                        }
+                                }
+
+                                System.out.println(outStr);
+                        }
+
+                        //System.out.println(i + "\t" + nodeArray[i].size() + "\t" + nodeArray[i]);
+
                 }
 
                 // TODO: Ausgabe in Tabelle: ExecutionContext - woher? Wie die outTable rausgeben?
