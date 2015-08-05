@@ -95,6 +95,18 @@ Node * NodeHead::getAt(double x, double y, double z) {
 	return NULL;
 }
 
+double NodeHead::getMinX() {
+	return minX;
+}
+
+double NodeHead::getMinY() {
+	return minY;
+}
+
+double NodeHead::getMinZ() {
+	return minZ;
+}
+
 double NodeHead::lengthX() {
 	return maxX - minX;
 }
@@ -129,6 +141,24 @@ void NodeHead::display() {
 		i++;
 	}
 
+}
+
+int NodeHead::pointsInside(double r, double mx, double my, double mz) {
+	Node * nodeIter = first;
+
+	int ctr = 0;
+
+	while(nodeIter) {
+
+		// TODO: um Lx Ly Lz -Lx -Ly -Lz verschobene Punkte auch
+
+		if (nodeIter->inside(r, mx, my, mz)) {
+			ctr++;
+		}
+		nodeIter = nodeIter->getNext();
+	}
+
+	return ctr;
 }
 
 Node::Node() :
@@ -184,19 +214,26 @@ Neighbour * Node::getNeighbours() {
 }
 
 double Node::euklidian(Node * node) {
+	return euklidian(node->getX(), node->getY(), node->getZ());
+}
 
-	double xDist = fabs(x - node->getX());
-	double yDist = fabs(y - node->getY());
-	double zDist = fabs(z - node->getZ());
+double Node::euklidian(double px, double py, double pz) {
+
+	double xDist = x - px;
+	double yDist = y - py;
+	double zDist = z - pz;
 
 	return sqrt(pow(xDist, 2) + pow(yDist, 2) + pow(zDist, 2));
 }
 
 double Node::euklidianPeriodic(Node * node) {
 	// Minimalen Abstand finden, wenn das Muster periodisch fortsetzbar ist
-	double xDist = min(fabs(x - node->getX()), fabs(fabs(x - node->getX()) - head->lengthX()));
-	double yDist = min(fabs(y - node->getY()), fabs(fabs(y - node->getY()) - head->lengthY()));
-	double zDist = min(fabs(z - node->getZ()), fabs(fabs(z - node->getZ()) - head->lengthZ()));
+	double xDist = min(fabs(x - node->getX()),
+			fabs(fabs(x - node->getX()) - head->lengthX()));
+	double yDist = min(fabs(y - node->getY()),
+			fabs(fabs(y - node->getY()) - head->lengthY()));
+	double zDist = min(fabs(z - node->getZ()),
+			fabs(fabs(z - node->getZ()) - head->lengthZ()));
 
 	return sqrt(pow(xDist, 2) + pow(yDist, 2) + pow(zDist, 2));
 }
@@ -248,6 +285,10 @@ void Node::addNeighbour(Node * node) {
 		// ...ansonsten initialisieren.
 		neighbours = new Neighbour(node);
 	}
+}
+
+bool Node::inside(double r, double mx, double my, double mz) {
+	return r > euklidian(mx, my, mz);
 }
 
 bool Node::isNeighbour(Node * node) {

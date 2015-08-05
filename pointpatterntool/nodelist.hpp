@@ -61,10 +61,16 @@ public:
 	bool isPeriodic();
 	// überprüft ob ein Knoten an einem Punkt exisitiert
 	Node * getAt(double x, double y, double z);
+	// gibt die Minimalwerte der Box zurück
+	double getMinX();
+	double getMinY();
+	double getMinZ();
 	// gibt die Größe der Box zurück
 	double lengthX();
 	double lengthY();
 	double lengthZ();
+	// Zählt die Punkte in einer gegebenen Kugel
+	int pointsInside(double r, double mx, double my, double mz);
 
 };
 
@@ -112,6 +118,8 @@ public:
 	/* Datenspezifisches */
 	// Gibt die Euklidsche Distanz zu node zurück.
 	double euklidian(Node * node);
+	// Gibt die Euklidsche Distanz zu einem gegebenen Punkt zurück.
+	double euklidian(double px, double py, double pz);
 	// Gibt die Euklidsche Distanz zu node zurück, mit periodische Randbedingungen angenommen
 	double euklidianPeriodic(Node * node);
 	// berechnet den Winkel zwischen diesem und den zwei gegebenen Knoten
@@ -122,7 +130,8 @@ public:
 	bool equals(Node * node);
 	// zählt die Nachbarn
 	int countNeighbours();
-
+	// Überprüft, ob dieser Knoten in der gegebenen Kugel liegt.
+	bool inside(double r, double mx, double my, double mz);
 };
 
 /**

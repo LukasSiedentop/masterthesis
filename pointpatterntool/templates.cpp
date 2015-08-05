@@ -43,6 +43,63 @@ T input(T in) {
 }
 
 /**
+ * Berechnet und schreibt die Statistiken eines Vektors auf die Konsole. Dieser muss aus Daten bestehen, die Darstell-, Addier-, und Teilbar sind.
+ * Zurzeit: Anzahl, Erwartungswert mit Standardabweichung und FWHM, Median mit Standardabweichung und FWHM
+ */
+template<typename T>
+void stats(vector<T> data) {
+	// Summe
+	double sum = 0;
+	for (unsigned int i = 0; i < data.size(); i++) {
+		sum += data[i];
+	}
+
+	// Erwartungswert (1. Moment) & Median
+	double expectedValue = sum / data.size();
+	double median = data[data.size() / 2];
+
+	// Varianzen (2. Moment)
+	double variance = 0;
+	double varMedian = 0;
+
+	for (unsigned int i = 0; i < data.size(); i++) {
+		variance += pow((data[i] - expectedValue), 2);
+		varMedian += pow((data[i] - median), 2);
+	}
+	variance = variance / data.size();
+	varMedian = varMedian / data.size();
+
+	double skewness = 0;
+	for (unsigned int i = 0; i < data.size(); i++) {
+		skewness += pow(((data[i] - expectedValue) / sqrt(variance)), 3);
+	}
+	skewness = skewness / data.size();
+
+	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
+	// Moment	Bedeutung
+	// 0		=0
+	// 1		Erwartungswert
+	// 2		Varianz
+	// 3		Schiefe (<0: linksschief, >0: rechtsschief)
+	// 4		Wölbung
+
+	// TODO: Modus
+
+	// Daten schreiben
+	cout << char(9) << "Anzahl: " << data.size() << endl;
+	cout << char(9) << "Minimum: " << data[0] << ", Maximum: "
+			<< data[data.size() - 1] << endl;
+	cout << char(9) << "Erwartungswert +- Standardabweichung: " << expectedValue
+			<< "+-" << sqrt(variance) << ", FWHM: "
+			<< 2 * sqrt(2 * log(2) * variance) << endl;
+	cout << char(9) << "Varianz: " << variance << endl;
+	cout << char(9) << "Schiefe: " << skewness << endl;
+	cout << char(9) << "Median +- Standardabweichung: " << median << "+-"
+			<< sqrt(varMedian) << ", FWHM: " << 2 * sqrt(2 * log(2) * varMedian)
+			<< endl;
+}
+
+/**
  * Templates um einen Vektor zu (merge-) sortieren. Geändert von http://www.bogotobogo.com/Algorithms/mergesort.php, code A
  * TODO: umbaubar auf die NodeList? Diese als Vector?
  */
@@ -94,6 +151,9 @@ vector<T> mergeSort(vector<T> m) {
 	return result;
 }
 
+/**
+ * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
+ */
 template<typename T>
 void plotHist(vector<T> data, double min, double max, int n,
 		const char xlabel[]) {
@@ -121,7 +181,42 @@ void plotHist(vector<T> data, double min, double max, int n,
 	gp << "set ylabel 'Häufigkeit'\n";
 
 	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-	gp << "plot '-' u (hist($1, width)):(1.0) w boxes smooth freq lc rgb'blue' notitle\n";
+	gp
+			<< "plot '-' u (hist($1, width)):(1.0) w boxes smooth freq lc rgb'blue' notitle\n";
+	gp.send1d(data);
+
+	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
+	// the gnuplot window doesn't get closed.
+	cout << "Weiter mit Enter." << endl;
+	cin.get();
+}
+
+/**
+ * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
+ */
+template<typename T>
+void plot2D(vector<vector<T> > data) {
+
+	Gnuplot gp;
+	gp << "reset\n";
+
+	gp << "A = 1\n";
+	gp << "f(x) = A*x**2\n";
+	gp << "fit [0:10] f(x) '-' u 1:2 via A\n";
+	gp.send1d(data);
+
+	gp << "set xrange [0:10]\n";
+	gp << "set yrange [0:]\n";
+	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
+	// 10 x-tics
+	gp << "set xtics 0,1,10\n";
+	gp << "set tics out nomirror\n";
+	gp << "set xlabel 'Radius R'\n";
+	gp << "set ylabel 'Varianz  {/Symbol s}^2(R)'\n";
+
+	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
+	gp
+			<< "plot '-' u 1:2 ls 7 lc rgb'blue' t 'Numerische Daten', f(x) lc rgb'blue' t sprintf('Fit: f(R) = %dR^2',A)\n";
 	gp.send1d(data);
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that

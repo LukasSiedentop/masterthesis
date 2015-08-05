@@ -12,6 +12,8 @@
 #include <cmath>
 #include <boost/tuple/tuple.hpp>
 
+#include <boost/progress.hpp>
+
 #include "nodelist.hpp"
 #include "templates.cpp"
 
@@ -90,14 +92,17 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 int gui() {
 	cout << char(9) << "Statistiken" << char(9) << char(9) << char(9) << char(9)
 			<< "Sortier- und Arrangieroptionen" << endl;
-	cout << "1 - Vert. der Anzahl der Nachbarn." << char(9) << "5 - " << endl;
-	cout << "2 - Vert. der Abstände zu den Nachbarn." << char(9) << "6 - "
+	cout << "1 - Vert. der Anzahl der Nachbarn." << char(9) << "10 - " << endl;
+	cout << "2 - Vert. der Abstände zu den Nachbarn." << char(9) << "11 - "
 			<< endl;
-	cout << "3 - Vert. der Winkel der Nachbarn." << char(9) << "7 - " << endl;
-	cout << "4 - Grad der Hyperuniformity." << char(9) << char(9) << "8 - "
+	cout << "3 - Vert. der Winkel der Nachbarn." << char(9) << "12 - " << endl;
+	cout << "4 - Vert. der Voronoizellengröße." << char(9) << char(9) << "13 - "
+			<< endl;
+	cout << "5 - Grad der Hyperuniformity." << char(9) << char(9) << "14 - "
 			<< endl;
 	cout << "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
-	cout << "Was möchtest du über die Punkte wissen? (1-9; default: 0) >> ";
+	cout
+			<< "Was möchtest du über die Punkte wissen? (0-5,9-14; default: 0) >> ";
 
 	int option = 0;
 
@@ -109,10 +114,6 @@ int gui() {
  */
 void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Zähle die Nachbarn jedes Knotens..." << endl;
-
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
 
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
@@ -138,10 +139,18 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 		nodeIter = nodeIter->getNext();
 	}
 
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
 	// Daten schreiben
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i] << endl;
 	}
+
+	// Statistiken
+	cout << "Nachbarstatistik:" << endl;
+	stats(data);
 
 	// Daten ploten
 	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
@@ -154,10 +163,6 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
  */
 void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
-
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
 
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
@@ -189,37 +194,19 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	data = mergeSort(data);
 	vector<double> halfData;
 
-	// TODO: Statistiken in nem Template berechnen
-
-	// Summe
-	double sum = 0;
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
 
 	// ...und jeden zweiten schreiben.
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		outfile << data[i] << endl;
 		halfData.push_back(data[i]);
-		sum += data[i];
 	}
 
-	// Mittelwert & Median
-	double average = sum / halfData.size();
-	double median = halfData[halfData.size() / 2];
-
-	// Varianzen
-	double varAverage = 0;
-	double varMedian = 0;
-	for (unsigned int i = 0; i < halfData.size(); i++) {
-		varAverage += pow((halfData[i] - average), 2);
-		varMedian += pow((halfData[i] - median), 2);
-	}
-	varAverage = varAverage / halfData.size();
-	varMedian = varMedian / halfData.size();
-
-	// "Metadaten": TODO: Standardabweichung, Median
-	cout << "Anzahl Stege: " << halfData.size()
-			<< ", Mittelwert +- Standardabweichung: " << average << "+-"
-			<< sqrt(varAverage) << ", FWHM: "  << 2*sqrt(2*log(2)*varAverage) <<  ", Median +- Standardabweichung: " << median
-			<< "+-" << sqrt(varMedian) << ", FWHM: "  << 2*sqrt(2*log(2)*varMedian) << endl;
+	// Statistiken
+	cout << "Längenstatistik:" << endl;
+	stats(halfData);
 
 	// Daten ploten
 	plotHist(halfData, 0.6, 1.05, 25, "Länge");
@@ -232,10 +219,6 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
  */
 void angleDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
-
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
 
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
@@ -291,15 +274,104 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 	// Daten sortieren...
 	data = mergeSort(data);
 	vector<double> halfData;
+
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
 	// ...und jeden zweiten schreiben.
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
 		outfile << data[i] << endl;
 	}
 
+	// Statistiken
+	cout << "Winkelstatistik:" << endl;
+	stats(halfData);
+
+	// Daten ploten
 	plotHist(halfData, 0, 180, 180, "Winkel");
 
 	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
+}
+
+/**
+ * Errechnet die Hyperuniformität des Musters.
+ */
+void hyperuniformity(NodeHead * list, const char outfileName[]) {
+
+	// Radiusincrement
+	double dr = 0.2, rMax = list->lengthX();
+
+	// Anzahl Kugeln bzw. iterationen
+	const int n = 1000;
+
+	// Fortschrittsbalken
+	boost::progress_display show_progress(n);
+
+	// Datenstruktur um Anzahl der Punkte in Kugel zu speichern
+	vector<vector<double> > data;
+	data.resize(((int) floor(rMax / dr) + 1));
+	for (int i = 0; i < ((int) floor(rMax / dr) + 1); ++i) {
+		data[i].resize(n);
+	}
+
+	for (int i = 0; i < n; i++) {
+		// Zufälligen Mittelpunkt auswählen
+		double mx = ((double) rand() / RAND_MAX) * (list->lengthX())
+				+ list->getMinX();
+		double my = ((double) rand() / RAND_MAX) * (list->lengthY())
+				+ list->getMinY();
+		double mz = ((double) rand() / RAND_MAX) * (list->lengthZ())
+				+ list->getMinZ();
+
+		// Über Radius iterieren
+		for (int j = 0; j < floor(rMax / dr); j++) {
+			// TODO: Periodizität beachten bzw Rand
+			data[j][i] = list->pointsInside(j * dr, mx, my, mz);
+		}
+		++show_progress;
+	}
+
+
+	// Erwartungswert aller Radii berechnen
+	vector<double> expectedValue;
+	expectedValue.resize(floor(rMax / dr) + 1);
+	for (int j = 0; j < floor(rMax / dr); j++) {
+		for (int i = 0; i < n; i++) {
+			expectedValue[j] += data[j][i];
+		}
+		expectedValue[j] = expectedValue[j] / n;
+	}
+
+	// Varianz für jeden Radius berechnen Gnuplot brauchts so: variance[j][i], (j,i) => (rows,colums)
+	vector<vector<double> > variance;
+	variance.resize(floor(rMax / dr) + 1);
+
+	for (int j = 0; j < floor(rMax / dr); j++) {
+		variance[j].resize(2);
+
+		variance[j][0] = j * dr;
+
+		for (int i = 0; i < n; i++) {
+			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
+		}
+		variance[j][1] = variance[j][1] / n;
+	}
+
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Daten schreiben
+	outfile << "Radius" << char(9) << "Varianz" << endl;
+	for (int i = 0; i < floor(rMax / dr); i++) {
+		outfile << variance[i][0] << char(9) << variance[i][1] << endl;
+	}
+
+	// Varianz über Radius plotten
+	plot2D(variance);
+
 }
 
 /**
@@ -331,6 +403,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 3:
 			angleDistribution(list, "./data/statistics/angleDistribution.dat");
+			break;
+		case 5:
+			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
 			break;
 		case 9:
 			list->display();
