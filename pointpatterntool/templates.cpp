@@ -12,6 +12,7 @@
 
 #include "gnuplot-iostream.h"
 
+
 using namespace std;
 
 /*
@@ -205,7 +206,8 @@ void plot2D(vector<vector<T> > data) {
 	gp << "fit [0:10] f(x) '-' u 1:2 via A\n";
 	gp.send1d(data);
 
-	gp << "set xrange [0:10]\n";
+	gp << "set key top left\n";
+	gp << "set xrange [0:9.8]\n";
 	gp << "set yrange [0:]\n";
 	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
 	// 10 x-tics
@@ -224,3 +226,4 @@ void plot2D(vector<vector<T> > data) {
 	std::cout << "Weiter mit Enter." << std::endl;
 	std::cin.get();
 }
+

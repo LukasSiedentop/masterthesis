@@ -69,6 +69,8 @@ public:
 	double lengthX();
 	double lengthY();
 	double lengthZ();
+	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen
+	vector<vector<double> > getShifters();
 	// Zählt die Punkte in einer gegebenen Kugel
 	int pointsInside(double r, double mx, double my, double mz);
 
@@ -124,14 +126,14 @@ public:
 	double euklidianPeriodic(Node * node);
 	// berechnet den Winkel zwischen diesem und den zwei gegebenen Knoten
 	double angle(Node * nodeA, Node * nodeB);
+	// berechnet den Winkel unter beachtung periodischer Randbedingungen
+	double anglePeriodic(Node * nodeA, Node * nodeB);
 	// fügt der Nachbarnliste einen weiteren Nachbarn hinzu
 	void addNeighbour(Node * node);
 	// vergleicht diesen Knoten mit dem gegebenen, wenn beide an der gleichen Position sind, sind sie gleich (TODO: Nachbarn und so auch vergleichen?)
 	bool equals(Node * node);
 	// zählt die Nachbarn
 	int countNeighbours();
-	// Überprüft, ob dieser Knoten in der gegebenen Kugel liegt.
-	bool inside(double r, double mx, double my, double mz);
 };
 
 /**

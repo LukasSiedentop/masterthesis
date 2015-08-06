@@ -143,18 +143,50 @@ void NodeHead::display() {
 
 }
 
+vector<vector<double> > NodeHead::getShifters() {
+	vector<vector<double> > shifters;
+
+	// Boxlängen
+	double lx = lengthX(), ly = lengthY(), lz = lengthZ();
+
+	// alle Kombinationen durchgehen
+	for (int ix = -1; ix < 2; ix++) {
+		for (int iy = -1; iy < 2; iy++) {
+			for (int iz = -1; iz < 2; iz++) {
+				vector<double> coord;
+				coord.push_back(ix * lx);
+				coord.push_back(iy * ly);
+				coord.push_back(iz * lz);
+
+				shifters.push_back(coord);
+			}
+		}
+	}
+
+	return shifters;
+}
+
 int NodeHead::pointsInside(double r, double mx, double my, double mz) {
 	Node * nodeIter = first;
 
 	int ctr = 0;
+	vector<vector<double> > shifters = getShifters();
+	// TODO: paralelisieren
+	while (nodeIter) {
 
-	while(nodeIter) {
-
-		// TODO: um Lx Ly Lz -Lx -Ly -Lz verschobene Punkte auch
-
-		if (nodeIter->inside(r, mx, my, mz)) {
+		if (periodic) {
+			// Abstandsvergleich mit in jeder Raumrichtung verschobenen Kugel
+			for (unsigned int i = 0; i < shifters.size(); i++) {
+				if (r
+						> nodeIter->euklidian(mx + shifters[i][0],
+								my + shifters[i][1], mz + shifters[i][2])) {
+					ctr++;
+				}
+			}
+		} else if (r > nodeIter->euklidian(mx, my, mz)) {
 			ctr++;
 		}
+
 		nodeIter = nodeIter->getNext();
 	}
 
@@ -240,7 +272,6 @@ double Node::euklidianPeriodic(Node * node) {
 
 double Node::angle(Node * nodeA, Node * nodeB) {
 	// cos alpha = skp(a,b) / |a|*|b|
-	// TODO: durchdenken, ob da Winkel zuviel oder zu wenig gezählt werden.
 
 	double vec1X = nodeA->getX() - x;
 	double vec1Y = nodeA->getY() - y;
@@ -255,6 +286,83 @@ double Node::angle(Node * nodeA, Node * nodeB) {
 
 	double skp = vec1X * vec2X + vec1Y * vec2Y + vec1Z * vec2Z;
 
+	return acos(skp / sqrt(len1 * len2));
+}
+
+double Node::anglePeriodic(Node * nodeA, Node * nodeB) {
+	double vec1X = x - nodeA->getX();
+	double vec1Y = y - nodeA->getY();
+	double vec1Z = z - nodeA->getZ();
+
+	double vec2X = x - nodeB->getX();
+	double vec2Y = y - nodeB->getY();
+	double vec2Z = z - nodeB->getZ();
+
+	double len1 = pow(vec1X, 2) + pow(vec1Y, 2) + pow(vec1Z, 2);
+	double len2 = pow(vec2X, 2) + pow(vec2Y, 2) + pow(vec2Z, 2);
+
+	// Wenn Vektor 1 länger als die halbe Boxlänge ist...
+	if (sqrt(len1) > head->lengthX() / 2) {
+		// temporär die Distanz zwischenspeichern
+		double dist = 0;
+		vector<vector<double> > shifters = head->getShifters();
+		for (unsigned int i = 0; i < shifters.size(); i++) {
+			// Distanz berechnen
+			// wenn deren betrag kleiner ist als die vektorkomponente, austauschen
+
+			// Vektor A
+			dist = x - (nodeA->getX() + shifters[i][0]);
+			if (fabs(dist) < fabs(vec1X)) {
+				vec1X = dist;
+			}
+
+			dist = y - (nodeA->getY() + shifters[i][1]);
+			if (fabs(dist) < fabs(vec1Y)) {
+				vec1Y = dist;
+			}
+
+			dist = z - (nodeA->getZ() + shifters[i][2]);
+			if (fabs(dist) < fabs(vec1Z)) {
+				vec1Z = dist;
+			}
+		}
+		// Länge neu berechnen
+		len1 = pow(vec1X, 2) + pow(vec1Y, 2) + pow(vec1Z, 2);
+	}
+
+	// Wenn Vektor 2 länger als die halbe Boxlänge ist...
+	if (sqrt(len2) > head->lengthX() / 2) {
+		// temporär die Distanz zwischenspeichern
+		double dist = 0;
+		vector<vector<double> > shifters = head->getShifters();
+		for (unsigned int i = 0; i < shifters.size(); i++) {
+			// Distanz berechnen
+			// wenn deren betrag kleiner ist als die vektorkomponente, austauschen
+
+			// Vektor B
+			dist = x - (nodeB->getX() + shifters[i][0]);
+			if (fabs(dist) < fabs(vec2X)) {
+				vec2X = dist;
+			}
+
+			dist = y - (nodeB->getY() + shifters[i][1]);
+			if (fabs(dist) < fabs(vec2Y)) {
+				vec2Y = dist;
+			}
+
+			dist = z - (nodeB->getZ() + shifters[i][2]);
+			if (fabs(dist) < fabs(vec2Z)) {
+				vec2Z = dist;
+			}
+		}
+		// Länge neu berechnen
+		len2 = pow(vec2X, 2) + pow(vec2Y, 2) + pow(vec2Z, 2);
+	}
+
+	// Skalarprodukt
+	double skp = vec1X * vec2X + vec1Y * vec2Y + vec1Z * vec2Z;
+
+	// Winkel ausgeben
 	return acos(skp / sqrt(len1 * len2));
 }
 
@@ -285,10 +393,6 @@ void Node::addNeighbour(Node * node) {
 		// ...ansonsten initialisieren.
 		neighbours = new Neighbour(node);
 	}
-}
-
-bool Node::inside(double r, double mx, double my, double mz) {
-	return r > euklidian(mx, my, mz);
 }
 
 bool Node::isNeighbour(Node * node) {

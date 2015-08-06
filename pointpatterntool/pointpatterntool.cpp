@@ -15,9 +15,55 @@
 #include <boost/progress.hpp>
 
 #include "nodelist.hpp"
+
 #include "templates.cpp"
 
 using namespace std;
+
+
+/**
+ * Plottet das Punktmuster. TODO
+ */
+void plotPattern(NodeHead * list) {
+	vector<vector<double> > data;
+
+	Node * nodeIter = list->getFirst();
+	while (nodeIter) {
+		Neighbour * neighIter = nodeIter->getNeighbours();
+		while (neighIter) {
+			vector<double> line;
+			line.resize(3);
+
+			line[0] = nodeIter->getX();
+			line[1] = nodeIter->getY();
+			line[2] = nodeIter->getZ();
+
+			data.push_back(line);
+
+			line[0] = neighIter->getNode()->getX();
+			line[1] = neighIter->getNode()->getY();
+			line[2] = neighIter->getNode()->getZ();
+
+			data.push_back(line);
+
+			line[0] = nan("");
+			line[1] = nan("");
+			line[2] = nan("");
+
+			data.push_back(line);
+
+			neighIter = neighIter->getNext();
+		}
+		nodeIter = nodeIter->getNext();
+	}
+
+
+	Gnuplot gp;
+	gp << "set datafile missing 'NaN'\n";
+	gp << "splot '-' w l \n";
+	gp.send1d(data);
+
+}
 
 /**
  * Liest zwei Dateien ein. Die erste enthält Punkte im R^3, die zweite Nachbarn dieser Punkte. Beispiel:
@@ -100,9 +146,9 @@ int gui() {
 			<< endl;
 	cout << "5 - Grad der Hyperuniformity." << char(9) << char(9) << "14 - "
 			<< endl;
-	cout << "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
+	cout << "8 - Muster plotten" << char(9)<< "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
 	cout
-			<< "Was möchtest du über die Punkte wissen? (0-5,9-14; default: 0) >> ";
+			<< "Was möchtest du über die Punkte wissen? (0-5,8-14; default: 0) >> ";
 
 	int option = 0;
 
@@ -223,6 +269,9 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
 
+	// Fortschrittsbalken
+	boost::progress_display show_progress(list->length());
+
 	// Iterationsvariablen
 	Node *nodeIter = list->getFirst();
 	Neighbour *neighIter1, *neighIter2;
@@ -237,38 +286,32 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 			while (neighIter2) {
 				// wenn nicht der Winkel zwischen sich berechnet werden soll...
 				if (!nodeIter->equals(neighIter2->getNode())) {
+					// ...Wert berechnen & schreiben, umgerechnet in Grad
+					if (list->isPeriodic()) {
+						data.push_back(
+								((180.0) / M_PI)
+										* neighIter1->getNode()->anglePeriodic(
+												nodeIter,
+												neighIter2->getNode()));
+					} else {
 
-					// ...Wert schreiben, umgerechnet in Grad
-					if (!list->isPeriodic()) {
 						data.push_back(
 								((180.0) / M_PI)
 										* neighIter1->getNode()->angle(nodeIter,
 												neighIter2->getNode()));
 					}
-
-					// TODO: unschöner Hack: nur schreiben falls die Randbedingungen nicht übertritten wurden
-					if (list->isPeriodic()
-							&& neighIter1->getNode()->euklidian(nodeIter)
-									< list->lengthX() / 2.0
-							&& neighIter1->getNode()->euklidian(
-									neighIter2->getNode())
-									< list->lengthX() / 2.0) {
-						data.push_back(
-								((180.0) / M_PI)
-										* neighIter1->getNode()->angle(nodeIter,
-												neighIter2->getNode()));
-					}
-
 				}
 				// weiter gehts
 				neighIter2 = neighIter2->getNext();
-
 			}
-
 			// weiter gehts
 			neighIter1 = neighIter1->getNext();
 		}
+		// weiter gehts
 		nodeIter = nodeIter->getNext();
+
+		// Fortschritt
+		++show_progress;
 	}
 
 	// Daten sortieren...
@@ -301,7 +344,7 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 void hyperuniformity(NodeHead * list, const char outfileName[]) {
 
 	// Radiusincrement
-	double dr = 0.2, rMax = list->lengthX();
+	double dr = 0.2, rMax = 11;
 
 	// Anzahl Kugeln bzw. iterationen
 	const int n = 1000;
@@ -333,8 +376,9 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 		++show_progress;
 	}
 
-
+	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
 	// Erwartungswert aller Radii berechnen
+	// Der sollte genau die Dichte des Musters mal das Kugelvolumen sein!
 	vector<double> expectedValue;
 	expectedValue.resize(floor(rMax / dr) + 1);
 	for (int j = 0; j < floor(rMax / dr); j++) {
@@ -342,21 +386,24 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 			expectedValue[j] += data[j][i];
 		}
 		expectedValue[j] = expectedValue[j] / n;
+
+		//cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
+
 	}
 
-	// Varianz für jeden Radius berechnen Gnuplot brauchts so: variance[j][i], (j,i) => (rows,colums)
+	// Varianz für jeden Radius berechnen Gnuplot brauchts so: variance[i][j], (i,j) => (rows,colums)
 	vector<vector<double> > variance;
 	variance.resize(floor(rMax / dr) + 1);
 
-	for (int j = 0; j < floor(rMax / dr); j++) {
-		variance[j].resize(2);
+	for (int i = 0; i < floor(rMax / dr); i++) {
+		variance[i].resize(2);
 
-		variance[j][0] = j * dr;
+		variance[i][0] = i * dr;
 
-		for (int i = 0; i < n; i++) {
-			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
+		for (int j = 0; j < n; j++) {
+			variance[i][1] += pow((data[i][j] - expectedValue[i]), 2);
 		}
-		variance[j][1] = variance[j][1] / n;
+		variance[i][1] = variance[i][1] / n;
 	}
 
 	// Outfile
@@ -381,7 +428,7 @@ int main(int argc, char *argv[]) {
 
 	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
 			<< endl;
-	// Muster einlesen
+// Muster einlesen
 	NodeHead * list = readfile(argv[1], argv[2]);
 
 	int option = -1;
@@ -406,6 +453,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 5:
 			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
+			break;
+		case 8:
+			plotPattern(list);
 			break;
 		case 9:
 			list->display();
