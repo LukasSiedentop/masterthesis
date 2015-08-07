@@ -12,7 +12,6 @@
 
 #include "gnuplot-iostream.h"
 
-
 using namespace std;
 
 /*
@@ -49,6 +48,11 @@ T input(T in) {
  */
 template<typename T>
 void stats(vector<T> data) {
+	// Erwartungswert: E = 1/N \sum_i=0^N x_i
+	// Varianz: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
+	// Schiefe: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
+	// Exzess = Wölbung - 3: w =  (1/N \sum_i=0^N ((x_i - E)/\sigma)^4) - 3
+
 	// Summe
 	double sum = 0;
 	for (unsigned int i = 0; i < data.size(); i++) {
@@ -71,20 +75,23 @@ void stats(vector<T> data) {
 	varMedian = varMedian / data.size();
 
 	double skewness = 0;
+	double kurtosis = 0;
 	for (unsigned int i = 0; i < data.size(); i++) {
 		skewness += pow(((data[i] - expectedValue) / sqrt(variance)), 3);
+		kurtosis += pow(((data[i] - expectedValue) / sqrt(variance)), 4);
 	}
 	skewness = skewness / data.size();
+	kurtosis = kurtosis / data.size();
 
 	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
 	// Moment	Bedeutung
 	// 0		=0
 	// 1		Erwartungswert
 	// 2		Varianz
-	// 3		Schiefe (<0: linksschief, >0: rechtsschief)
+	// 3		Schiefe
 	// 4		Wölbung
 
-	// TODO: Modus
+	// TODO: Modus https://de.wikipedia.org/wiki/Modus_(Statistik)
 
 	// Daten schreiben
 	cout << char(9) << "Anzahl: " << data.size() << endl;
@@ -94,7 +101,12 @@ void stats(vector<T> data) {
 			<< "+-" << sqrt(variance) << ", FWHM: "
 			<< 2 * sqrt(2 * log(2) * variance) << endl;
 	cout << char(9) << "Varianz: " << variance << endl;
-	cout << char(9) << "Schiefe: " << skewness << endl;
+	cout << char(9) << "Schiefe: " << skewness << " ("
+			<< (((skewness > 0) - (skewness < 0)) < 0 ?
+					"linksschief" : "rechtschief") << ")" << endl;
+	cout << char(9) << "Exzess: " << kurtosis - 3 << " ("
+			<< (((kurtosis - 3 > 0) - (kurtosis - 3 < 0)) < 0 ?
+					"flachgipflig" : "steilgipflig") << ")" << endl;
 	cout << char(9) << "Median +- Standardabweichung: " << median << "+-"
 			<< sqrt(varMedian) << ", FWHM: " << 2 * sqrt(2 * log(2) * varMedian)
 			<< endl;

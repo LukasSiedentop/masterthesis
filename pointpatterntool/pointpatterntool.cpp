@@ -8,21 +8,21 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
 #include <cmath>
-#include <boost/tuple/tuple.hpp>
 
+#include <boost/tuple/tuple.hpp>
 #include <boost/progress.hpp>
 
+#include "templates.cpp"
 #include "nodelist.hpp"
 
-#include "templates.cpp"
+// TODO: voro einbinden
+//#include "voro++.hh"
 
 using namespace std;
 
-
 /**
- * Plottet das Punktmuster. TODO
+ * Plottet das Punktmuster.
  */
 void plotPattern(NodeHead * list) {
 	vector<vector<double> > data;
@@ -34,35 +34,94 @@ void plotPattern(NodeHead * list) {
 			vector<double> line;
 			line.resize(3);
 
-			line[0] = nodeIter->getX();
-			line[1] = nodeIter->getY();
-			line[2] = nodeIter->getZ();
+			//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
+			if (list->isPeriodic()
+					&& nodeIter->euklidian(neighIter->getNode())
+							< list->lengthX() / 2) {
+				line[0] = nodeIter->getX();
+				line[1] = nodeIter->getY();
+				line[2] = nodeIter->getZ();
 
-			data.push_back(line);
+				data.push_back(line);
 
-			line[0] = neighIter->getNode()->getX();
-			line[1] = neighIter->getNode()->getY();
-			line[2] = neighIter->getNode()->getZ();
+				line[0] = neighIter->getNode()->getX();
+				line[1] = neighIter->getNode()->getY();
+				line[2] = neighIter->getNode()->getZ();
 
-			data.push_back(line);
+				data.push_back(line);
 
-			line[0] = nan("");
-			line[1] = nan("");
-			line[2] = nan("");
+				line[0] = nan("");
+				line[1] = nan("");
+				line[2] = nan("");
 
-			data.push_back(line);
+				data.push_back(line);
+
+				line[0] = nan("");
+				line[1] = nan("");
+				line[2] = nan("");
+
+				data.push_back(line);
+			} else if (!list->isPeriodic()) {
+				line[0] = nodeIter->getX();
+				line[1] = nodeIter->getY();
+				line[2] = nodeIter->getZ();
+
+				data.push_back(line);
+
+				line[0] = neighIter->getNode()->getX();
+				line[1] = neighIter->getNode()->getY();
+				line[2] = neighIter->getNode()->getZ();
+
+				data.push_back(line);
+
+				line[0] = nan("");
+				line[1] = nan("");
+				line[2] = nan("");
+
+				data.push_back(line);
+
+				line[0] = nan("");
+				line[1] = nan("");
+				line[2] = nan("");
+
+				data.push_back(line);
+			}
 
 			neighIter = neighIter->getNext();
 		}
 		nodeIter = nodeIter->getNext();
 	}
 
-
 	Gnuplot gp;
-	gp << "set datafile missing 'NaN'\n";
-	gp << "splot '-' w l \n";
+	gp << "reset\n";
+
+	gp << "min = " << list->getMinX() << "\n";
+	gp << "max = " << list->lengthX() + list->getMinX() << "\n";
+
+	gp << "set xlabel 'x'\n";
+	gp << "set ylabel 'y'\n";
+	gp << "set zlabel 'z'\n";
+
+	gp << "set xrange [min:max]\n";
+	gp << "set yrange [min:max]\n";
+	gp << "set zrange [min:max]\n";
+
+	// z-Achsen Offset ausschalten
+	gp << "set ticslevel 0\n";
+	gp << "set tics out nomirror\n";
+
+	gp << "set xtics min,1,max\n";
+	gp << "set ytics min,1,max\n";
+	gp << "set ztics min,1,max\n";
+
+	gp << "set view equal xyz\n";
+
+	//gp << "set datafile missing 'nan'\n"; u ($1):($2):($3)
+	gp << "splot '-' w l lc rgb'blue' notitle \n";
 	gp.send1d(data);
 
+	cout << "Weiter mit Enter." << endl;
+	cin.get();
 }
 
 /**
@@ -146,7 +205,9 @@ int gui() {
 			<< endl;
 	cout << "5 - Grad der Hyperuniformity." << char(9) << char(9) << "14 - "
 			<< endl;
-	cout << "8 - Muster plotten" << char(9)<< "9 - Liste darstellen" << char(9) << "0 - Nichts." << endl;
+	cout << "7 - Muster schreiben (voro++)" << char(9) << "8 - Muster plotten"
+			<< char(9) << "9 - Liste darstellen" << char(9) << "0 - Nichts."
+			<< endl;
 	cout
 			<< "Was möchtest du über die Punkte wissen? (0-5,8-14; default: 0) >> ";
 
@@ -154,6 +215,8 @@ int gui() {
 
 	return input(option);
 }
+
+// TODO: Methoden die NodeHead * list brauchen in nodehead?!
 
 /**
  * Schreibt die Anzahl der Nachbarn jedes Knotens untereinander in eine Datei.
@@ -261,7 +324,7 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 }
 
 /**
- * Schreibt die Winkel zwischen den Nachbarn in eine Datei. TODO: periodische Randbedingungen beachten
+ * Schreibt die Winkel zwischen den Nachbarn in eine Datei.
  */
 void angleDistribution(NodeHead * list, const char outfileName[]) {
 	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
@@ -370,7 +433,7 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 
 		// Über Radius iterieren
 		for (int j = 0; j < floor(rMax / dr); j++) {
-			// TODO: Periodizität beachten bzw Rand
+			// TODO: Rand beachten bei nicht periodisch -> zufälligen Mittelpunkt wählen, sodass kugel immer im muster liegt
 			data[j][i] = list->pointsInside(j * dr, mx, my, mz);
 		}
 		++show_progress;
@@ -422,13 +485,46 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 }
 
 /**
+ * Schreibt die Koordinaten der Knoten mit einer Nummerierung davor, für voro++.
+ */
+void writePoints(NodeHead * list, const char outfileName[]) {
+
+	vector<string> data;
+	int ctr = 0;
+	Node * nodeIter = list->getFirst();
+	while (nodeIter) {
+		std::ostringstream strs;
+		strs << ctr << "\t" << nodeIter->getX() << "\t" << nodeIter->getY()
+				<< "\t" << nodeIter->getZ();
+
+		data.push_back(strs.str());
+
+		// weiter gehts
+		ctr++;
+		nodeIter = nodeIter->getNext();
+	}
+
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i] << endl;
+	}
+
+	cout << "Muster in " << outfileName << " geschrieben." << endl;
+}
+
+/**
  * Hier wird ausgeführt was gewählt wurde.
  */
+
 int main(int argc, char *argv[]) {
 
 	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
 			<< endl;
-// Muster einlesen
+	// Muster einlesen
 	NodeHead * list = readfile(argv[1], argv[2]);
 
 	int option = -1;
@@ -454,6 +550,9 @@ int main(int argc, char *argv[]) {
 		case 5:
 			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
 			break;
+		case 7:
+			writePoints(list, "./data/voro++.dat");
+			break;
 		case 8:
 			plotPattern(list);
 			break;
@@ -471,3 +570,32 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+/*
+ // Set up constants for the container geometry
+ const double x_min = -5, x_max = 5;
+ const double y_min = -5, y_max = 5;
+ const double z_min = 0, z_max = 10;
+
+ // Set up the number of blocks that the container is divided into
+ const int n_x = 6, n_y = 6, n_z = 6;
+
+ int main() {
+
+ // Create a container with the geometry given above, and make it
+ // non-periodic in each of the three coordinates. Allocate space for
+ // eight particles within each computational block
+ voro::container con(x_min, x_max, y_min, y_max, z_min, z_max, n_x, n_y, n_z,
+ false, false, false, 8);
+
+ //Randomly add particles into the container
+ voro::con.import("./data/voro++.dat");
+
+ // Save the Voronoi network of all the particles to text files
+ // in gnuplot and POV-Ray formats
+ voro::con.draw_cells_gnuplot("./data/pack_ten_cube.gnu");
+ voro::con.draw_cells_pov("./data/pack_ten_cube_v.pov");
+
+ // Output the particles in POV-Ray format
+ voro::con.draw_particles_pov("./data/pack_ten_cube_p.pov");
+ }
+ */
