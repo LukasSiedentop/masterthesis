@@ -238,4 +238,3 @@ void plot2D(vector<vector<T> > data) {
 	std::cout << "Weiter mit Enter." << std::endl;
 	std::cin.get();
 }
-

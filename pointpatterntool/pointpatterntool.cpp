@@ -10,14 +10,13 @@
 #include <vector>
 #include <cmath>
 
+#include <voro++/voro++.hh>
+
 #include <boost/tuple/tuple.hpp>
 #include <boost/progress.hpp>
 
 #include "templates.cpp"
 #include "nodelist.hpp"
-
-// TODO: voro einbinden
-//#include "voro++.hh"
 
 using namespace std;
 
@@ -95,8 +94,8 @@ void plotPattern(NodeHead * list) {
 	Gnuplot gp;
 	gp << "reset\n";
 
-	gp << "min = " << list->getMinX() << "\n";
-	gp << "max = " << list->lengthX() + list->getMinX() << "\n";
+	gp << "min = " << list->getMinX() - 0.5 << "\n";
+	gp << "max = " << list->lengthX() + list->getMinX()+0.5 << "\n";
 
 	gp << "set xlabel 'x'\n";
 	gp << "set ylabel 'y'\n";
@@ -205,11 +204,11 @@ int gui() {
 			<< endl;
 	cout << "5 - Grad der Hyperuniformity." << char(9) << char(9) << "14 - "
 			<< endl;
-	cout << "7 - Muster schreiben (voro++)" << char(9) << "8 - Muster plotten"
+	cout << "6 - Voro++ ausprobieren" << char(9) << "7 - Muster schreiben (voro++)" << char(9) << "8 - Muster plotten"
 			<< char(9) << "9 - Liste darstellen" << char(9) << "0 - Nichts."
 			<< endl;
 	cout
-			<< "Was möchtest du über die Punkte wissen? (0-5,8-14; default: 0) >> ";
+			<< "Was möchtest du über die Punkte wissen? (0-14; default: 0) >> ";
 
 	int option = 0;
 
@@ -517,9 +516,40 @@ void writePoints(NodeHead * list, const char outfileName[]) {
 }
 
 /**
+ * Test für voro++
+ */
+void testVoro() {
+	// Set up constants for the container geometry
+	const double x_min = -5, x_max = 5;
+	const double y_min = -5, y_max = 5;
+	const double z_min = -5, z_max = 5;
+
+	// Set up the number of blocks that the container is divided into
+	const int n_x = 6, n_y = 6, n_z = 6;
+
+	// Create a container with the geometry given above, and make it
+	// non-periodic in each of the three coordinates. Allocate space for
+	// eight particles within each computational block
+	voro::container con(x_min, x_max, y_min, y_max, z_min, z_max, n_x, n_y, n_z,
+			true, true, true, 8);
+
+	//Randomly add particles into the container
+	con.import("./data/voro++.dat");
+
+	con.print_custom("%i %s", "./data/voro++_neighbours.dat");
+
+	// Save the Voronoi network of all the particles to text files
+	// in gnuplot and POV-Ray formats
+	con.draw_cells_gnuplot("./data/voro++.gnu");
+	con.draw_cells_pov("./data/voro++_c.pov");
+
+	// Output the particles in POV-Ray format
+	con.draw_particles_pov("./data/voro++_p.pov");
+}
+
+/**
  * Hier wird ausgeführt was gewählt wurde.
  */
-
 int main(int argc, char *argv[]) {
 
 	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
@@ -550,6 +580,9 @@ int main(int argc, char *argv[]) {
 		case 5:
 			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
 			break;
+		case 6:
+			testVoro();
+			break;
 		case 7:
 			writePoints(list, "./data/voro++.dat");
 			break;
@@ -570,32 +603,3 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
-/*
- // Set up constants for the container geometry
- const double x_min = -5, x_max = 5;
- const double y_min = -5, y_max = 5;
- const double z_min = 0, z_max = 10;
-
- // Set up the number of blocks that the container is divided into
- const int n_x = 6, n_y = 6, n_z = 6;
-
- int main() {
-
- // Create a container with the geometry given above, and make it
- // non-periodic in each of the three coordinates. Allocate space for
- // eight particles within each computational block
- voro::container con(x_min, x_max, y_min, y_max, z_min, z_max, n_x, n_y, n_z,
- false, false, false, 8);
-
- //Randomly add particles into the container
- voro::con.import("./data/voro++.dat");
-
- // Save the Voronoi network of all the particles to text files
- // in gnuplot and POV-Ray formats
- voro::con.draw_cells_gnuplot("./data/pack_ten_cube.gnu");
- voro::con.draw_cells_pov("./data/pack_ten_cube_v.pov");
-
- // Output the particles in POV-Ray format
- voro::con.draw_particles_pov("./data/pack_ten_cube_p.pov");
- }
- */
