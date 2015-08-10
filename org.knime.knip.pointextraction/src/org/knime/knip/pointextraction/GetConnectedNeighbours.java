@@ -3,6 +3,7 @@ package org.knime.knip.pointextraction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.knime.core.data.def.IntCell;
 import org.scijava.ItemIO;
@@ -76,7 +77,8 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
 
                         // Für die Berechnung des Schwerpunkts
                         double[] positionSum = new double[labeling.numDimensions()];
-                        int pixelCount = 0;
+                        int[] pixelCount = new int[labeling.numDimensions()];
+                        Arrays.fill(pixelCount, 0);
 
                         // Iteration über Knotenpixel
                         while (nodeCur.hasNext()) {
@@ -89,7 +91,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                 // Schwerpunktsberechnung: Addition aller Pixelcoordinaten/Anzahl der Pixel
                                 for (int i = 0; i < labeling.numDimensions(); i++) {
                                         positionSum[i] += nodePixelPosition[i];
-                                        pixelCount++;
+                                        pixelCount[i]++;
                                 }
 
                                 // ROI um nodepixel legen
@@ -121,7 +123,8 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                         // Schwerpunktsberechnung: Addition aller Pixelcoordinaten/Anzahl der Pixel
                         for (int i = 0; i < labeling.numDimensions(); i++) {
                                 // Center berechnen + speichern
-                                centers[node][i] = positionSum[i] / pixelCount;
+                                centers[node][i] = positionSum[i] / pixelCount[i];
+                                //System.out.println("Node " + node + "[" + i + "]: " + centers[node][i]);
                         }
 
                 }
@@ -131,19 +134,18 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 for (int i = 1; i < centers.length; i++) {
 
                         // über alle Nachbarn Iterieren
-                        for (int neigh = 1; neigh < nodeArray[i].size(); neigh++) {
+                        for (int neigh = 0; neigh < nodeArray[i].size(); neigh++) {
                                 String outStr = "";
 
                                 // dimensionsiteration 
                                 for (int dim = 0; dim < labeling.numDimensions(); dim++) {
-                                        // TODO: Ausgabe mit drei Nachkommastellen
                                         if (dim != labeling.numDimensions() - 1) {
-                                                outStr += centers[i][dim] + "\t";
+                                                outStr += String.format((Locale) null, "%.3f", centers[i][dim]) + "\t";
                                         } else {
-                                                outStr += centers[i][dim];
+                                                outStr += String.format((Locale) null, "%.3f", centers[i][dim]);
                                         }
                                 }
-                                System.out.println(outStr);
+                                System.out.println(outStr); //"Node " + i + ": " + 
                         }
                 }
 
@@ -152,16 +154,16 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 for (int i = 1; i < centers.length; i++) {
 
                         // über alle Nachbarn Iterieren
-                        for (int neigh = 1; neigh < nodeArray[i].size(); neigh++) {
+                        for (int neigh = 0; neigh < nodeArray[i].size(); neigh++) {
                                 String outStr = "";
 
                                 // dimensionsiteration 
                                 for (int dim = 0; dim < labeling.numDimensions(); dim++) {
-                                        // TODO: Ausgabe mit drei Nachkommastellen
                                         if (dim != labeling.numDimensions() - 1) {
-                                                outStr += centers[neigh][dim] + "\t";
+                                                outStr += String.format((Locale) null, "%.3f", centers[nodeArray[i].get(neigh).getIntValue()][dim])
+                                                                + "\t";
                                         } else {
-                                                outStr += centers[neigh][dim];
+                                                outStr += String.format((Locale) null, "%.3f", centers[nodeArray[i].get(neigh).getIntValue()][dim]);
                                         }
                                 }
 
