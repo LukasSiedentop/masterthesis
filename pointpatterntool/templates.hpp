@@ -1,9 +1,14 @@
 /*
- * templates.cpp
+ * templates.hpp
  *
  *  Created on: 03.08.2015
- *      Author: lukas
+ *      Author: Lukas Siedentop
+ *
+ * A Collection of useful methods like I/O, sorting etc that can be used frequently by methods from main.
  */
+
+#ifndef TEMPLATES_HPP_
+#define TEMPLATES_HPP_
 
 #include <vector>
 
@@ -11,8 +16,11 @@
 #include <sstream>
 
 #include "gnuplot-iostream.h"
+#include "nodelist.hpp"
 
 using namespace std;
+
+/* I/O */
 
 /*
  * Holt den Input Typgerecht. Von http://www.cplusplus.com/forum/articles/6046/
@@ -43,11 +51,44 @@ T input(T in) {
 }
 
 /**
+ * Schreibt das Histogramm in eine Datei mit gegebenem Namen, optional mit Statistiken und/oder Header
+ */
+template<typename T>
+void writeHist(vector<T> data, bool includeStats, const char header[], const char outfileName[]
+		) {
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Statistiken
+	if (includeStats) {
+		outfile << stats(data, "#") << endl;
+	}
+
+	// Kopfzeile
+	if (header != "") {
+		outfile << header << endl;
+	}
+
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i] << endl;
+	}
+
+	cout << "Histogramm in " << outfileName << " geschrieben." << endl;
+}
+
+
+// TODO: write 2D, 3D,
+
+/* Statistiken */
+
+/**
  * Berechnet und schreibt die Statistiken eines Vektors auf die Konsole. Dieser muss aus Daten bestehen, die Darstell-, Addier-, und Teilbar sind.
  * Zurzeit: Anzahl, Erwartungswert mit Standardabweichung und FWHM, Median mit Standardabweichung und FWHM
  */
 template<typename T>
-void stats(vector<T> data) {
+string stats(vector<T> data, const char commentDelimeter[] = "\t") {
 	// Erwartungswert: E = 1/N \sum_i=0^N x_i
 	// Varianz: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
 	// Schiefe: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
@@ -93,24 +134,30 @@ void stats(vector<T> data) {
 
 	// TODO: Modus https://de.wikipedia.org/wiki/Modus_(Statistik)
 
+	stringstream stream;
+
 	// Daten schreiben
-	cout << char(9) << "Anzahl: " << data.size() << endl;
-	cout << char(9) << "Minimum: " << data[0] << ", Maximum: "
+	stream << commentDelimeter << "Anzahl: " << data.size() << endl;
+	stream << commentDelimeter << "Minimum: " << data[0] << ", Maximum: "
 			<< data[data.size() - 1] << endl;
-	cout << char(9) << "Erwartungswert +- Standardabweichung: " << expectedValue
-			<< "+-" << sqrt(variance) << ", FWHM: "
+	stream << commentDelimeter << "Erwartungswert +- Standardabweichung: "
+			<< expectedValue << "+-" << sqrt(variance) << ", FWHM: "
 			<< 2 * sqrt(2 * log(2) * variance) << endl;
-	cout << char(9) << "Varianz: " << variance << endl;
-	cout << char(9) << "Schiefe: " << skewness << " ("
+	stream << commentDelimeter << "Varianz: " << variance << endl;
+	stream << commentDelimeter << "Schiefe: " << skewness << " ("
 			<< (((skewness > 0) - (skewness < 0)) < 0 ?
 					"linksschief" : "rechtschief") << ")" << endl;
-	cout << char(9) << "Exzess: " << kurtosis - 3 << " ("
+	stream << commentDelimeter << "Exzess: " << kurtosis - 3 << " ("
 			<< (((kurtosis - 3 > 0) - (kurtosis - 3 < 0)) < 0 ?
 					"flachgipflig" : "steilgipflig") << ")" << endl;
-	cout << char(9) << "Median +- Standardabweichung: " << median << "+-"
-			<< sqrt(varMedian) << ", FWHM: " << 2 * sqrt(2 * log(2) * varMedian)
-			<< endl;
+	stream << commentDelimeter << "Median +- Standardabweichung: " << median
+			<< "+-" << sqrt(varMedian) << ", FWHM: "
+			<< 2 * sqrt(2 * log(2) * varMedian) << endl;
+
+	return stream.str();
 }
+
+/* Sortiermethoden */
 
 /**
  * Templates um einen Vektor zu (merge-) sortieren. Geändert von http://www.bogotobogo.com/Algorithms/mergesort.php, code A
@@ -164,12 +211,14 @@ vector<T> mergeSort(vector<T> m) {
 	return result;
 }
 
+/* Plotmethoden Gnuplot */
+// TODO: anzeigen UND svg speichern
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
 template<typename T>
 void plotHist(vector<T> data, double min, double max, int n,
-		const char xlabel[]) {
+		const char xlabel[] = "x") {
 	Gnuplot gp;
 	// Don't forget to put "\n" at the end of each line!
 
@@ -208,7 +257,8 @@ void plotHist(vector<T> data, double min, double max, int n,
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
 template<typename T>
-void plot2D(vector<vector<T> > data) {
+void plot2D(vector<vector<T> > data, const char xlabel[] = "x",
+		const char ylabel[] = "y") {
 
 	Gnuplot gp;
 	gp << "reset\n";
@@ -225,8 +275,8 @@ void plot2D(vector<vector<T> > data) {
 	// 10 x-tics
 	gp << "set xtics 0,1,10\n";
 	gp << "set tics out nomirror\n";
-	gp << "set xlabel 'Radius R'\n";
-	gp << "set ylabel 'Varianz  {/Symbol s}^2(R)'\n";
+	gp << "set xlabel '" << xlabel << "'\n";
+	gp << "set ylabel '" << ylabel << "'\n";
 
 	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
 	gp
@@ -238,3 +288,44 @@ void plot2D(vector<vector<T> > data) {
 	std::cout << "Weiter mit Enter." << std::endl;
 	std::cin.get();
 }
+
+/**
+ * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
+ */
+template<typename T>
+void plot3D(vector<vector<T> > data, double min, double max,
+		const char xlabel[] = "x", const char ylabel[] = "y",
+		const char zlabel[] = "z") {
+	Gnuplot gp;
+	gp << "reset\n";
+
+	gp << "min = " << min - 0.5 << "\n";
+	gp << "max = " << max + 0.5 << "\n";
+
+	gp << "set xlabel '" << xlabel << "'\n";
+	gp << "set ylabel '" << ylabel << "'\n";
+	gp << "set zlabel '" << zlabel << "'\n";
+
+	gp << "set xrange [min:max]\n";
+	gp << "set yrange [min:max]\n";
+	gp << "set zrange [min:max]\n";
+
+	// z-Achsen Offset ausschalten
+	gp << "set ticslevel 0\n";
+	gp << "set tics out nomirror\n";
+
+	gp << "set xtics min,1,max\n";
+	gp << "set ytics min,1,max\n";
+	gp << "set ztics min,1,max\n";
+
+	gp << "set view equal xyz\n";
+
+	//gp << "set datafile missing 'nan'\n"; u ($1):($2):($3)
+	gp << "splot '-' w l lc rgb'blue' notitle \n";
+	gp.send1d(data);
+
+	cout << "Weiter mit Enter." << endl;
+	cin.get();
+}
+
+#endif /* NODELIST_HPP_ */
