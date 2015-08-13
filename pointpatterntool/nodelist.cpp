@@ -2,7 +2,7 @@
  * nodelist.cpp
  *
  *  Created on: 24.07.2015
- *      Author: lukas
+ *      Author: Lukas Siedentop
  */
 
 #include <iostream>
@@ -105,6 +105,18 @@ double NodeHead::getMinY() {
 
 double NodeHead::getMinZ() {
 	return minZ;
+}
+
+double NodeHead::getMaxX() {
+	return maxX;
+}
+
+double NodeHead::getMaxY() {
+	return maxY;
+}
+
+double NodeHead::getMaxZ() {
+	return maxZ;
 }
 
 double NodeHead::lengthX() {

@@ -7,7 +7,7 @@
  * de.wikibooks.org/wiki/C%2B%2B-Programmierung
  *
  *  Created on: 24.07.2015
- *      Author: lukas
+ *      Author: Lukas Siedentop
  */
 
 #ifndef NODELIST_HPP_
@@ -65,6 +65,10 @@ public:
 	double getMinX();
 	double getMinY();
 	double getMinZ();
+	// gibt die Maximalwerte der Box zurück
+	double getMaxX();
+	double getMaxY();
+	double getMaxZ();
 	// gibt die Größe der Box zurück
 	double lengthX();
 	double lengthY();
