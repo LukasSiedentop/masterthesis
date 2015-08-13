@@ -15,113 +15,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/progress.hpp>
 
-#include "templates.cpp"
 #include "nodelist.hpp"
+#include "templates.hpp"
 
 using namespace std;
-
-/**
- * Plottet das Punktmuster.
- */
-void plotPattern(NodeHead * list) {
-	vector<vector<double> > data;
-
-	Node * nodeIter = list->getFirst();
-	while (nodeIter) {
-		Neighbour * neighIter = nodeIter->getNeighbours();
-		while (neighIter) {
-			vector<double> line;
-			line.resize(3);
-
-			//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
-			if (list->isPeriodic()
-					&& nodeIter->euklidian(neighIter->getNode())
-							< list->lengthX() / 2) {
-				line[0] = nodeIter->getX();
-				line[1] = nodeIter->getY();
-				line[2] = nodeIter->getZ();
-
-				data.push_back(line);
-
-				line[0] = neighIter->getNode()->getX();
-				line[1] = neighIter->getNode()->getY();
-				line[2] = neighIter->getNode()->getZ();
-
-				data.push_back(line);
-
-				line[0] = nan("");
-				line[1] = nan("");
-				line[2] = nan("");
-
-				data.push_back(line);
-
-				line[0] = nan("");
-				line[1] = nan("");
-				line[2] = nan("");
-
-				data.push_back(line);
-			} else if (!list->isPeriodic()) {
-				line[0] = nodeIter->getX();
-				line[1] = nodeIter->getY();
-				line[2] = nodeIter->getZ();
-
-				data.push_back(line);
-
-				line[0] = neighIter->getNode()->getX();
-				line[1] = neighIter->getNode()->getY();
-				line[2] = neighIter->getNode()->getZ();
-
-				data.push_back(line);
-
-				line[0] = nan("");
-				line[1] = nan("");
-				line[2] = nan("");
-
-				data.push_back(line);
-
-				line[0] = nan("");
-				line[1] = nan("");
-				line[2] = nan("");
-
-				data.push_back(line);
-			}
-
-			neighIter = neighIter->getNext();
-		}
-		nodeIter = nodeIter->getNext();
-	}
-
-	Gnuplot gp;
-	gp << "reset\n";
-
-	gp << "min = " << list->getMinX() - 0.5 << "\n";
-	gp << "max = " << list->lengthX() + list->getMinX()+0.5 << "\n";
-
-	gp << "set xlabel 'x'\n";
-	gp << "set ylabel 'y'\n";
-	gp << "set zlabel 'z'\n";
-
-	gp << "set xrange [min:max]\n";
-	gp << "set yrange [min:max]\n";
-	gp << "set zrange [min:max]\n";
-
-	// z-Achsen Offset ausschalten
-	gp << "set ticslevel 0\n";
-	gp << "set tics out nomirror\n";
-
-	gp << "set xtics min,1,max\n";
-	gp << "set ytics min,1,max\n";
-	gp << "set ztics min,1,max\n";
-
-	gp << "set view equal xyz\n";
-
-	//gp << "set datafile missing 'nan'\n"; u ($1):($2):($3)
-	gp << "splot '-' w l lc rgb'blue' notitle \n";
-	gp.send1d(data);
-
-	cout << "Weiter mit Enter." << endl;
-	cin.get();
-}
 
 /**
  * Liest zwei Dateien ein. Die erste enthält Punkte im R^3, die zweite Nachbarn dieser Punkte. Beispiel:
@@ -196,7 +93,8 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 int gui() {
 	cout << char(9) << "Statistiken" << char(9) << char(9) << char(9) << char(9)
 			<< "Sortier- und Arrangieroptionen" << endl;
-	cout << "1 - Vert. der Anzahl der Nachbarn." << char(9) << "10 - " << endl;
+	cout << "1 - Vert. der Anzahl der Nachbarn." << char(9)
+			<< "10 - POV-Ray Datei schreiben" << endl;
 	cout << "2 - Vert. der Abstände zu den Nachbarn." << char(9) << "11 - "
 			<< endl;
 	cout << "3 - Vert. der Winkel der Nachbarn." << char(9) << "12 - " << endl;
@@ -204,11 +102,11 @@ int gui() {
 			<< endl;
 	cout << "5 - Grad der Hyperuniformity." << char(9) << char(9) << "14 - "
 			<< endl;
-	cout << "6 - Voro++ ausprobieren" << char(9) << "7 - Muster schreiben (voro++)" << char(9) << "8 - Muster plotten"
-			<< char(9) << "9 - Liste darstellen" << char(9) << "0 - Nichts."
-			<< endl;
-	cout
-			<< "Was möchtest du über die Punkte wissen? (0-14; default: 0) >> ";
+	cout << "6 - Voro++ ausprobieren" << char(9)
+			<< "7 - Muster schreiben (voro++)" << char(9)
+			<< "8 - Muster plotten" << char(9) << "9 - Liste darstellen"
+			<< char(9) << "0 - Nichts." << endl;
+	cout << "Was möchtest du über die Punkte wissen? (0-14; default: 0) >> ";
 
 	int option = 0;
 
@@ -247,23 +145,15 @@ void neighbourDistribution(NodeHead * list, const char outfileName[]) {
 		nodeIter = nodeIter->getNext();
 	}
 
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
-
 	// Daten schreiben
-	for (unsigned int i = 0; i < data.size(); i++) {
-		outfile << data[i] << endl;
-	}
+	writeHist(data, true, "# Anzahl Nächster Nachbarn", outfileName);
 
 	// Statistiken
 	cout << "Nachbarstatistik:" << endl;
-	stats(data);
+	cout << stats(data);
 
 	// Daten ploten
 	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
-
-	cout << "Nachbarsdaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
@@ -302,24 +192,20 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 	data = mergeSort(data);
 	vector<double> halfData;
 
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
-
-	// ...und jeden zweiten schreiben.
+	// ...und jeden zweiten behalten.
 	for (unsigned int i = 0; i < data.size(); i += 2) {
-		outfile << data[i] << endl;
 		halfData.push_back(data[i]);
 	}
 
+	// Daten schreiben
+	writeHist(halfData, true, outfileName, "# Längen");
+
 	// Statistiken
 	cout << "Längenstatistik:" << endl;
-	stats(halfData);
+	cout << stats(halfData);
 
 	// Daten ploten
 	plotHist(halfData, 0.6, 1.05, 25, "Länge");
-
-	cout << "Längendaten in " << outfileName << " geschrieben." << endl;
 }
 
 /**
@@ -380,19 +266,17 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 	data = mergeSort(data);
 	vector<double> halfData;
 
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
-
-	// ...und jeden zweiten schreiben.
+	// ...und jeden zweiten behalten.
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
-		outfile << data[i] << endl;
 	}
+
+	// Daten schreiben
+	writeHist(halfData, true, outfileName, "# Winkel");
 
 	// Statistiken
 	cout << "Winkelstatistik:" << endl;
-	stats(halfData);
+	cout << stats(halfData);
 
 	// Daten ploten
 	plotHist(halfData, 0, 180, 180, "Winkel");
@@ -473,13 +357,13 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 	outfile.open(outfileName);
 
 	// Daten schreiben
-	outfile << "Radius" << char(9) << "Varianz" << endl;
+	outfile << "# Radius" << char(9) << "Varianz" << endl;
 	for (int i = 0; i < floor(rMax / dr); i++) {
 		outfile << variance[i][0] << char(9) << variance[i][1] << endl;
 	}
 
 	// Varianz über Radius plotten
-	plot2D(variance);
+	plot2D(variance, "Radius R", "Varianz  {/Symbol s}^2(R)");
 
 }
 
@@ -513,6 +397,140 @@ void writePoints(NodeHead * list, const char outfileName[]) {
 	}
 
 	cout << "Muster in " << outfileName << " geschrieben." << endl;
+}
+
+/**
+ * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
+ */
+void gnuplotPattern(NodeHead * list) {
+	vector<vector<double> > data;
+
+		Node * nodeIter = list->getFirst();
+		while (nodeIter) {
+			Neighbour * neighIter = nodeIter->getNeighbours();
+			while (neighIter) {
+				vector<double> line;
+				line.resize(3);
+
+				//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
+				if (list->isPeriodic()
+						&& nodeIter->euklidian(neighIter->getNode())
+								< list->lengthX() / 2) {
+					line[0] = nodeIter->getX();
+					line[1] = nodeIter->getY();
+					line[2] = nodeIter->getZ();
+
+					data.push_back(line);
+
+					line[0] = neighIter->getNode()->getX();
+					line[1] = neighIter->getNode()->getY();
+					line[2] = neighIter->getNode()->getZ();
+
+					data.push_back(line);
+
+					line[0] = nan("");
+					line[1] = nan("");
+					line[2] = nan("");
+
+					data.push_back(line);
+
+					line[0] = nan("");
+					line[1] = nan("");
+					line[2] = nan("");
+
+					data.push_back(line);
+				} else if (!list->isPeriodic()) {
+					line[0] = nodeIter->getX();
+					line[1] = nodeIter->getY();
+					line[2] = nodeIter->getZ();
+
+					data.push_back(line);
+
+					line[0] = neighIter->getNode()->getX();
+					line[1] = neighIter->getNode()->getY();
+					line[2] = neighIter->getNode()->getZ();
+
+					data.push_back(line);
+
+					line[0] = nan("");
+					line[1] = nan("");
+					line[2] = nan("");
+
+					data.push_back(line);
+
+					line[0] = nan("");
+					line[1] = nan("");
+					line[2] = nan("");
+
+					data.push_back(line);
+				}
+
+				neighIter = neighIter->getNext();
+			}
+			nodeIter = nodeIter->getNext();
+		}
+
+		// Plotten
+		plot3D(data, list->getMinX(), list->getMaxX());
+}
+
+/**
+ * Schreibt eine pov-datei der Stäbe
+ */
+void writePOV(NodeHead * list, const char outfileName[]) {
+	vector<string> data;
+
+	Node * nodeIter = list->getFirst();
+	while (nodeIter) {
+
+		stringstream stream;
+
+		// Kugel am Gelenk
+		stream << "sphere{<" << nodeIter->getX() << "," << nodeIter->getY()
+				<< "," << nodeIter->getZ() << ">,r}" << endl;
+
+		Neighbour * neighIter = nodeIter->getNeighbours();
+		while (neighIter) {
+
+			//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
+			if (list->isPeriodic()
+					&& nodeIter->euklidian(neighIter->getNode())
+							< list->lengthX() / 2) {
+				// Zylinder von A nach B TODO: den zurück nicht...
+				stream << "cylinder{<" << nodeIter->getX() << ","
+						<< nodeIter->getY() << "," << nodeIter->getZ() << ">,<"
+						<< neighIter->getNode()->getX() << ","
+						<< neighIter->getNode()->getY() << ","
+						<< neighIter->getNode()->getZ() << ">,r}" << endl;
+
+			} else if (!list->isPeriodic()) {
+				// Zylinder von A nach B TODO: den zurück nicht...
+				stream << "cylinder{<" << nodeIter->getX() << ","
+						<< nodeIter->getY() << "," << nodeIter->getZ() << ">,<"
+						<< neighIter->getNode()->getX() << ","
+						<< neighIter->getNode()->getY() << ","
+						<< neighIter->getNode()->getZ() << ">,r}" << endl;
+			}
+
+			neighIter = neighIter->getNext();
+		}
+
+		data.push_back(stream.str());
+
+		nodeIter = nodeIter->getNext();
+	}
+
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i];
+	}
+
+	cout << "Stäbe in " << outfileName << " geschrieben." << endl;
+
 }
 
 /**
@@ -551,7 +569,6 @@ void testVoro() {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char *argv[]) {
-
 	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
 			<< endl;
 	// Muster einlesen
@@ -587,10 +604,13 @@ int main(int argc, char *argv[]) {
 			writePoints(list, "./data/voro++.dat");
 			break;
 		case 8:
-			plotPattern(list);
+			gnuplotPattern(list);
 			break;
 		case 9:
 			list->display();
+			break;
+		case 10:
+			writePOV(list, "./data/staebe.pov");
 			break;
 		default:
 			cout << "Das gibts leider (noch) nicht." << endl;
