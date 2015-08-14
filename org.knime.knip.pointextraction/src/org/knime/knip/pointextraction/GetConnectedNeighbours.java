@@ -18,17 +18,16 @@ import net.imglib2.RandomAccess;
 import net.imglib2.labeling.Labeling;
 import net.imglib2.roi.RectangleRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 
 @SuppressWarnings("deprecation")
 @Plugin(menu = {@Menu(label = "PointExtraction"),
                 @Menu(label = "Connected Neighbours")}, description = "Gets the Neighbours of Nodes which are connected by a pixel line. Takes a skeleton BitType Image and a Labeling with the Nodes.", headless = true, type = Command.class)
 public class GetConnectedNeighbours<BitType extends RealType<BitType>> implements Command {
 
-        @Parameter(type = ItemIO.INPUT)
+        @Parameter(type = ItemIO.INPUT, label = "(skeletonized) Image", description = "Skeltonized Image whose Intersections are to be found.")
         private ImgPlus<BitType> input;
 
-        @Parameter(type = ItemIO.INPUT)
+        @Parameter(type = ItemIO.INPUT, label = "Labeling", description = "Labeling containing Labels at each intersection (aka node).")
         private Labeling<Integer> labeling;
 
         // geht nicht
@@ -39,10 +38,13 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
         //private BufferedDataTable output;
 
         @Parameter(type = ItemIO.OUTPUT)
-        private ImgPlus<UnsignedByteType> output;
+        private ImgPlus<BitType> output;
 
         @Override
         public void run() {
+                // to eliminate error message
+                output = input.copy();
+
                 RandomAccess<BitType> inRndAccess = input.randomAccess();
 
                 Iterator<Integer> nodes = labeling.getLabels().iterator();
@@ -108,7 +110,6 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                                 roiCursor.localize(nextOnLine);
 
                                                 if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
-
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition);
                                                         if (nextNode != null) {
                                                                 nodeArray[node].add(new IntCell(nextNode));
@@ -140,9 +141,9 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                 // dimensionsiteration 
                                 for (int dim = 0; dim < labeling.numDimensions(); dim++) {
                                         if (dim != labeling.numDimensions() - 1) {
-                                                outStr += String.format((Locale) null, "%.3f", centers[i][dim]) + "\t";
+                                                outStr += String.format((Locale) null, "%.6f", centers[i][dim]) + "\t";
                                         } else {
-                                                outStr += String.format((Locale) null, "%.3f", centers[i][dim]);
+                                                outStr += String.format((Locale) null, "%.6f", centers[i][dim]);
                                         }
                                 }
                                 System.out.println(outStr); //"Node " + i + ": " + 
@@ -160,10 +161,10 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                 // dimensionsiteration 
                                 for (int dim = 0; dim < labeling.numDimensions(); dim++) {
                                         if (dim != labeling.numDimensions() - 1) {
-                                                outStr += String.format((Locale) null, "%.3f", centers[nodeArray[i].get(neigh).getIntValue()][dim])
+                                                outStr += String.format((Locale) null, "%.6f", centers[nodeArray[i].get(neigh).getIntValue()][dim])
                                                                 + "\t";
                                         } else {
-                                                outStr += String.format((Locale) null, "%.3f", centers[nodeArray[i].get(neigh).getIntValue()][dim]);
+                                                outStr += String.format((Locale) null, "%.6f", centers[nodeArray[i].get(neigh).getIntValue()][dim]);
                                         }
                                 }
 
@@ -174,7 +175,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
 
                 }
 
-                // TODO: Ausgabe in Tabelle: ExecutionContext - woher? Wie die outTable rausgeben?
+                // TODO: Ausgabe in Tabelle - end 2015 (maybe)
                 // the DataTableSpec of the final table
                 // From new node Wizard (https://tech.knime.org/execute-0):
                 /*
