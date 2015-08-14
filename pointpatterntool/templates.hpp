@@ -20,67 +20,6 @@
 
 using namespace std;
 
-/* I/O */
-
-/*
- * Holt den Input Typgerecht. Von http://www.cplusplus.com/forum/articles/6046/
- * In muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
- */
-template<typename T>
-T input(T in) {
-	string input = "";
-
-	while (true) {
-		// füllt den input-string mit der Eingabe
-		getline(cin, input);
-
-		// setzt den Defaultwert bei einem leeren String (getline löscht das letzte \n!)
-		if (input == "") {
-			return in;
-		}
-
-		// Konvertieren von string nach T
-		stringstream inputStream(input);
-		if (inputStream >> in) {
-			break;
-		}
-		cout << "Falscher Input! Nochmal." << endl;
-	}
-
-	return in;
-}
-
-/**
- * Schreibt das Histogramm in eine Datei mit gegebenem Namen, optional mit Statistiken und/oder Header
- */
-template<typename T>
-void writeHist(vector<T> data, bool includeStats, const char header[], const char outfileName[]
-		) {
-	// Outfile
-	ofstream outfile;
-	outfile.open(outfileName);
-
-	// Statistiken
-	if (includeStats) {
-		outfile << stats(data, "#") << endl;
-	}
-
-	// Kopfzeile
-	if (header != "") {
-		outfile << header << endl;
-	}
-
-	// Daten schreiben
-	for (unsigned int i = 0; i < data.size(); i++) {
-		outfile << data[i] << endl;
-	}
-
-	cout << "Histogramm in " << outfileName << " geschrieben." << endl;
-}
-
-
-// TODO: write 2D, 3D,
-
 /* Statistiken */
 
 /**
@@ -156,6 +95,66 @@ string stats(vector<T> data, const char commentDelimeter[] = "\t") {
 
 	return stream.str();
 }
+
+
+/* I/O */
+
+/*
+ * Holt den Input Typgerecht. Von http://www.cplusplus.com/forum/articles/6046/
+ * In muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
+ */
+template<typename T>
+T input(T in) {
+	string input = "";
+
+	while (true) {
+		// füllt den input-string mit der Eingabe
+		getline(cin, input);
+
+		// setzt den Defaultwert bei einem leeren String (getline löscht das letzte \n!)
+		if (input == "") {
+			return in;
+		}
+
+		// Konvertieren von string nach T
+		stringstream inputStream(input);
+		if (inputStream >> in) {
+			break;
+		}
+		cout << "Falscher Input! Nochmal." << endl;
+	}
+
+	return in;
+}
+
+/**
+ * Schreibt das Histogramm in eine Datei mit gegebenem Namen, optional mit Statistiken und/oder Header
+ */
+template<typename T>
+void writeHist(vector<T> data, bool includeStats, const char header[], const char outfileName[]
+		) {
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Statistiken
+	if (includeStats) {
+		outfile << stats(data, "# ") << endl;
+	}
+
+	// Kopfzeile
+	outfile << header << endl;
+
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i] << endl;
+	}
+
+	cout << "Histogramm in " << outfileName << " geschrieben." << endl;
+}
+
+
+// TODO: write 2D, 3D,
 
 /* Sortiermethoden */
 
