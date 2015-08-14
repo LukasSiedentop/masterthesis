@@ -633,19 +633,31 @@ void compareLists(NodeHead * listA, NodeHead * listB) {
  */
 int main(int argc, char *argv[]) {
 
-	double pos1[] = { M_PI, 3.0};//, 5.0 };
-	double pos2[] = { 5.0, 17.0};//, 1.0 };
+	double pos1[] = { M_PI, 3.0 };	//, 5.0 };
+	double pos2[] = { 5.0, 17.0 };	//, 1.0 };
 	coordinate coord1(pos1, 2);
 	coordinate coord2(pos1, 2);
 	coordinate coord3(pos2, 2);
 
-	cout << "1 " << coord1 << ", size: " << coord1.numDimensions() << endl;
+	cout << "1 " << coord1 << "Länge: " << coord1.length() << ", size: " << coord1.numDimensions() << endl;
 	cout << "2 " << coord2 << endl;
 	cout << "3 " << coord3 << endl;
+	cout << "1+2 " << (coord1 == coord2) << endl;
+	cout << "1+3 " << (coord1 == coord3) << endl;
+	cout << "!1+2 " << (coord1 != coord2) << endl;
+	cout << "!1+3 " << (coord1 != coord3) << endl;
 	coord1 += coord3; // coordinate coord4 =
+	coord2 *= 2; // coordinate coord4 =
+	coord2 /= 2; // coordinate coord4 =
 	cout << "1 " << coord1 << ", size: " << coord1.numDimensions() << endl;
 	cout << "2 " << coord2 << endl;
 	cout << "3 " << coord3 << endl;
+	cout << "1+2 " << (coord1 == coord2) << endl;
+	cout << "1+3 " << (coord1 == coord3) << endl;
+	cout << "!1+2 " << (coord1 != coord2) << endl;
+	cout << "!1+3 " << (coord1 != coord3) << endl;
+
+	cout << "1<3 " << (coord1 < coord3) << endl;
 	//cout << "4 " << coord4 << endl;
 	//cout << "vgl 12: " << (coord1 == coord2) << endl;
 	//cout << "vgl 13: " << (coord1 == coord3) << endl;

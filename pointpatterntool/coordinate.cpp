@@ -27,20 +27,31 @@ bool coordinate::operator ==(const coordinate &rhs) {
 
 	bool equals = 0;
 
-	cout << "hier" << endl;
-	cout << "jo: " << &this[0] << endl;
-
 	for (unsigned i = 0; i < size(); i++) {
-		//equals &= abs(rhs[i]-lhs[i]) < tolerance;
+		equals += abs(rhs[i]-at(i)) < tolerance;
 	}
 
 	return equals;
+}
+
+bool coordinate::operator !=(const coordinate &rhs) {
+	return !(*this == rhs);
 }
 
 void coordinate::operator +=(const coordinate &rhs) {
 	for (unsigned i = 0; i < size(); i++) {
 		at(i) += rhs[i];
 	}
+}
+
+void coordinate::operator *=(const double &factor) {
+	for (unsigned i = 0; i < size(); i++) {
+		at(i) *= factor;
+	}
+}
+
+void coordinate::operator /=(const double &factor) {
+	*this *= 1/factor;
 }
 
 ostream& operator <<(ostream &os, const coordinate &obj) {
@@ -51,4 +62,16 @@ ostream& operator <<(ostream &os, const coordinate &obj) {
 	os << obj.back() << ")";
 
 	return os;
+}
+
+double coordinate::lengthSqr() {
+	double sumSqr = 0;
+	for (unsigned i = 0; i < size(); i++) {
+		sumSqr += pow(at(i),2);
+	}
+	return sumSqr;
+}
+
+double coordinate::length() {
+	return sqrt(lengthSqr());
 }

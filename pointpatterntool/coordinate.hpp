@@ -23,10 +23,16 @@ public:
 	coordinate(double point[], unsigned n);
 	~coordinate();
 
+	/* nützliche Operatoren */
 	bool operator ==(const coordinate &rhs);
+	bool operator !=(const coordinate &rhs);
 	void operator +=(const coordinate &rhs);
-
+	void operator *=(const double &factor);
+	void operator /=(const double &factor);
 	friend std::ostream& operator <<(std::ostream &os, const coordinate &obj);
+
+	double lengthSqr();
+	double length();
 
 	int numDimensions();
 };
