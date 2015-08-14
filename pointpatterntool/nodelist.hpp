@@ -3,6 +3,8 @@
  *
  * Datenstruktur des Punktmusters: eine doppelt verkettete Liste mit Kopf.
  *
+ * TODO: Liste erbt von std::vector -> NodeHead = vector<Node>
+ *
  * www.codeproject.com/Articles/668818/Implementing-a-Doubly-Linked-List-to-be-used-on-an
  * de.wikibooks.org/wiki/C%2B%2B-Programmierung
  *
@@ -57,8 +59,16 @@ public:
 	void setMins(double xMin, double yMin, double zMin);
 	// Maximalwerte setzen
 	void setMaxs(double xMax, double yMax, double zMax);
+	// Bewegt die Liste um den gegebenen Vektor
+	void shiftList(double sx, double sy, double sz);
+	// Skaliert die Liste um die gegebenen Faktoren a,b, c
+	void scaleList(double a, double b, double c);
 	// Periodizität
 	bool isPeriodic();
+	// skaliert die Liste, sodass die Dichte der gewünschten entspricht
+	void setDensity(double density);
+	// berechnet die Punktdichte der Liste
+	double getDensity();
 	// überprüft ob ein Knoten an einem Punkt exisitiert
 	Node * getAt(double x, double y, double z);
 	// gibt die Minimalwerte der Box zurück
@@ -77,7 +87,8 @@ public:
 	vector<vector<double> > getShifters();
 	// Zählt die Punkte in einer gegebenen Kugel
 	int pointsInside(double r, double mx, double my, double mz);
-
+	// gibt Statistiken der Liste als String zurück TODO: was noch?
+	string listStats(const char commentDelimeter[] = "\t");
 };
 
 /**
@@ -138,6 +149,10 @@ public:
 	bool equals(Node * node);
 	// zählt die Nachbarn
 	int countNeighbours();
+	// verschiebt den Knoten um den angegebenen Vektor
+	void shift(double sx, double sy, double sz);
+	// multipliziert die Knotenposition um die gegebenen Faktoren
+	void scale(double a, double b, double c);
 };
 
 /**

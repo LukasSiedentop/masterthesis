@@ -5,12 +5,16 @@
  *      Author: Lukas Siedentop
  */
 
-#include <iostream>
-
-#include <math.h>
 #include "nodelist.hpp"
 
+//#include <iostream>
+#include <math.h>
+#include <sstream>
+
+
 using namespace std;
+
+/* NodeHead */
 
 NodeHead::NodeHead() :
 		first(NULL), last(NULL), size(0), minX(0), minY(0), minZ(0), maxX(0), maxY(
@@ -61,8 +65,41 @@ void NodeHead::setMaxs(double xMax, double yMax, double zMax) {
 	maxZ = zMax;
 }
 
+void NodeHead::shiftList(double sx, double sy, double sz) {
+	minX += sx;
+	minY += sy;
+	minZ += sz;
+
+	maxX += sx;
+	maxY += sy;
+	maxZ += sz;
+
+	Node * nodeIter = first;
+	while (nodeIter) {
+		nodeIter->shift(sx, sy, sz);
+		nodeIter = nodeIter->getNext();
+	}
+}
+
+void NodeHead::scaleList(double a, double b, double c) {
+	Node * nodeIter = first;
+	while (nodeIter) {
+		nodeIter->scale(a, b, c);
+		nodeIter = nodeIter->getNext();
+	}
+}
+
 bool NodeHead::isPeriodic() {
 	return periodic;
+}
+
+void NodeHead::setDensity(double density) {
+	double factor = density / getDensity();
+	scaleList(factor, factor, factor);
+}
+
+double NodeHead::getDensity() {
+	return size / (lengthX() * lengthY() * lengthZ());
 }
 
 Node * NodeHead::getAt(double x, double y, double z) {
@@ -204,6 +241,21 @@ int NodeHead::pointsInside(double r, double mx, double my, double mz) {
 
 	return ctr;
 }
+
+string NodeHead::listStats(const char commentDelimeter[]) {
+	double volume = lengthX()*lengthY()*lengthZ();
+	double density = getDensity();
+
+	stringstream stream;
+	stream << commentDelimeter << "Anzahl Knoten: " << size << endl;
+	stream << commentDelimeter << "Extremalwerte: (" << minX << ", " << minY << ", " << minZ << "), (" << maxX << ", " << maxY << ", " << maxZ << ")" << endl;
+	stream << commentDelimeter << "Volumen: " << volume << endl;
+	stream << commentDelimeter << "Punktdichte: " << density << endl;
+
+	return stream.str();
+}
+
+/* Node */
 
 Node::Node() :
 		head(NULL), prev(NULL), next(NULL), x(0), y(0), z(0), neighbours(NULL) {
@@ -391,6 +443,18 @@ int Node::countNeighbours() {
 	return num;
 }
 
+void Node::shift(double sx, double sy, double sz) {
+	x += sx;
+	y += sy;
+	z += sz;
+}
+
+void Node::scale(double a, double b, double c) {
+	x *= a;
+	y *= b;
+	z *= c;
+}
+
 void Node::addNeighbour(Node * node) {
 // aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
 	if (this->isNeighbour(node) || (this->equals(node))) {
@@ -430,6 +494,8 @@ bool Node::equals(Node * node) {
 	return (fabs(x - node->getX()) < t && fabs(y - node->getY()) < t
 			&& fabs(z - node->getZ()) < t);
 }
+
+/* Neighbour */
 
 Neighbour::Neighbour() :
 		next(NULL), node(NULL) {
