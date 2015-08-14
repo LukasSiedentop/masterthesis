@@ -7,8 +7,8 @@
  * A Collection of useful methods like I/O, sorting etc that can be used frequently by methods from main.
  */
 
-#ifndef TEMPLATES_HPP_
-#define TEMPLATES_HPP_
+#ifndef FUNCTIONS_HPP_
+#define FUNCTIONS_HPP_
 
 #include <vector>
 
@@ -95,7 +95,6 @@ string stats(vector<T> data, const char commentDelimeter[] = "\t") {
 
 	return stream.str();
 }
-
 
 /* I/O */
 

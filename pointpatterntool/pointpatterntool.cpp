@@ -15,8 +15,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/progress.hpp>
 
+#include "functions.hpp"
 #include "nodelist.hpp"
-#include "templates.hpp"
+
+#include "coordinate.hpp"
 
 using namespace std;
 
@@ -630,70 +632,88 @@ void compareLists(NodeHead * listA, NodeHead * listB) {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char *argv[]) {
-	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
-			<< endl;
 
-	//vector<NodeHead * > lists; // TODO
-	// Muster einlesen
-	NodeHead * list = readfile(argv[1], argv[2]);
-	NodeHead * list2 = readfile(argv[3], argv[4]);
+	double pos1[] = { 0.0, 0.0, 0.0 };
+	double pos2[] = { 0.0, 0.0, 1.0 };
+	coordinate * coord1 = new coordinate(pos1, 3);
+	coordinate * coord2 = new coordinate(pos1, 3);
+	coordinate * coord3 = new coordinate(pos2, 3);
+	coordinate coord4;
 
-	int option = -1;
-	while (option != 0) {
-		// Optionen anzeigen und wählen lassen
-		option = gui();
+	cout << "1 " << coord1 << ", size: " << coord1->numDimensions() << endl;
+	cout << "2 " << coord2 << endl;
+	cout << "3 " << coord3 << endl;
+	coord4 = (coord1 += coord3);
+	cout << "4 " << coord4 << endl;
+	cout << "vgl 12: " << (coord1 == coord2) << endl;
+	cout << "vgl 13: " << (coord1 == coord3) << endl;
 
-		switch (option) {
-		case 0:
-			cout << "Beende." << endl;
-			break;
-		case 1:
-			neighbourDistribution(list,
-					"./data/statistics/neighbourDistribution.dat");
-			break;
-		case 2:
-			lengthDistribution(list,
-					"./data/statistics/lenghtDistribution.dat");
-			break;
-		case 3:
-			angleDistribution(list, "./data/statistics/angleDistribution.dat");
-			break;
-		case 4:
-			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
-			break;
-		case 5:
-			list->display();
-			break;
-		case 6:
-			cout << "Liste 1: " << list->listStats();
-			cout << "Liste 2: " << list2->listStats();
-			break;
-		case 7:
-			gnuplotPattern(list);
-			break;
-		case 8:
-			writePOV(list, "./data/staebe.pov");
-			break;
-		case 9:
-			writePointsVoro(list, "./data/voro++.dat");
-			break;
-		case 10:
-			testVoro();
-			break;
-		case 11:
-			list2 = readfileGui();
-			break;
-		case 12:
-			compareLists(list, list2);
-			break;
-		default:
-			cout << "Das gibts leider (noch) nicht." << endl;
-		}
+	/*
 
-		if (option != 0) {
-			cout << "Und nun?" << endl;
-		}
-	}
+	 cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
+	 << endl;
 
+	 //vector<NodeHead * > lists; // TODO
+	 // Muster einlesen
+	 NodeHead * list = readfile(argv[1], argv[2]);
+	 NodeHead * list2 = readfile(argv[3], argv[4]);
+
+	 int option = -1;
+	 while (option != 0) {
+	 // Optionen anzeigen und wählen lassen
+	 option = gui();
+
+	 switch (option) {
+	 case 0:
+	 cout << "Beende." << endl;
+	 break;
+	 case 1:
+	 neighbourDistribution(list,
+	 "./data/statistics/neighbourDistribution.dat");
+	 break;
+	 case 2:
+	 lengthDistribution(list,
+	 "./data/statistics/lenghtDistribution.dat");
+	 break;
+	 case 3:
+	 angleDistribution(list, "./data/statistics/angleDistribution.dat");
+	 break;
+	 case 4:
+	 hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
+	 break;
+	 case 5:
+	 list->display();
+	 break;
+	 case 6:
+	 cout << "Liste 1: " << list->listStats();
+	 cout << "Liste 2: " << list2->listStats();
+	 break;
+	 case 7:
+	 gnuplotPattern(list);
+	 break;
+	 case 8:
+	 writePOV(list, "./data/staebe.pov");
+	 break;
+	 case 9:
+	 writePointsVoro(list, "./data/voro++.dat");
+	 break;
+	 case 10:
+	 testVoro();
+	 break;
+	 case 11:
+	 list2 = readfileGui();
+	 break;
+	 case 12:
+	 compareLists(list, list2);
+	 break;
+	 default:
+	 cout << "Das gibts leider (noch) nicht." << endl;
+	 }
+
+	 if (option != 0) {
+	 cout << "Und nun?" << endl;
+	 }
+	 }
+	 */
 	return 0;
 }

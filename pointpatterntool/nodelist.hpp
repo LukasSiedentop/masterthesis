@@ -17,7 +17,8 @@
 
 #include <iostream>
 #include <cmath>
-
+#include <math.h>
+#include <sstream>
 #include <vector>
 
 using namespace std;
