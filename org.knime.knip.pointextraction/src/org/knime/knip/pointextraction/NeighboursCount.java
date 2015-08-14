@@ -2,6 +2,12 @@ package org.knime.knip.pointextraction;
 
 import java.util.Arrays;
 
+import org.scijava.ItemIO;
+import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
 import net.imagej.ImgPlus;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
@@ -10,20 +16,15 @@ import net.imglib2.roi.RectangleRegionOfInterest;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
 @SuppressWarnings("deprecation")
-@Plugin(menu = {@Menu(label = "PointExtraction"), @Menu(label = "Neighbours Count")}, description = "Counts the Neighbours of a white Pixel in a BitType Image and returns them in a ByteTypeImage.", headless = true, type = Command.class)
+@Plugin(menu = {@Menu(label = "PointExtraction"),
+                @Menu(label = "Neighbours Count")}, description = "Counts the Neighbours of a white Pixel in a BitType Image and returns them in a ByteTypeImage.", headless = true, type = Command.class)
 public class NeighboursCount<BitType extends RealType<BitType>> implements Command {
 
         @Parameter(type = ItemIO.INPUT)
         private ImgPlus<BitType> input;
 
-        @Parameter(type = ItemIO.INPUT, label = "Window Size")
+        @Parameter(type = ItemIO.INPUT, label = "Window Size", description = "Windowsize in which neighbours are searched for.")
         private double windowSize = 3;
 
         @Parameter(type = ItemIO.OUTPUT)
