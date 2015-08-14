@@ -22,8 +22,12 @@ public:
 	coordinate();
 	coordinate(double point[], unsigned n);
 	~coordinate();
-	inline bool operator ==(const coordinate &lhs, const coordinate &rhs);
-	inline coordinate operator +=(const coordinate &lhs, const coordinate &rhs);
+
+	bool operator ==(const coordinate &rhs);
+	void operator +=(const coordinate &rhs);
+
+	friend std::ostream& operator <<(std::ostream &os, const coordinate &obj);
+
 	int numDimensions();
 };
 

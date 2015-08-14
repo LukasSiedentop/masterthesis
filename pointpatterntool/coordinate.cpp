@@ -23,7 +23,7 @@ int coordinate::numDimensions() {
 	return size();
 }
 
-inline bool coordinate::operator ==(const coordinate &lhs, const coordinate &rhs) {
+bool coordinate::operator ==(const coordinate &rhs) {
 
 	bool equals = 0;
 
@@ -31,20 +31,24 @@ inline bool coordinate::operator ==(const coordinate &lhs, const coordinate &rhs
 	cout << "jo: " << &this[0] << endl;
 
 	for (unsigned i = 0; i < size(); i++) {
-		equals &= abs(rhs[i]-lhs[i]) < tolerance;
+		//equals &= abs(rhs[i]-lhs[i]) < tolerance;
 	}
 
 	return equals;
 }
 
-inline coordinate coordinate::operator +=(const coordinate &lhs, const coordinate &rhs) {
-
-	cout << "hier" << endl;
-
+void coordinate::operator +=(const coordinate &rhs) {
 	for (unsigned i = 0; i < size(); i++) {
-		this[i] += rhs[i];
+		at(i) += rhs[i];
 	}
-
-	return *this;
 }
 
+ostream& operator <<(ostream &os, const coordinate &obj) {
+	os << "(";
+	for (unsigned i = 0; i < obj.size()-1; i++) {
+		os << obj[i] << ", ";
+	}
+	os << obj.back() << ")";
+
+	return os;
+}
