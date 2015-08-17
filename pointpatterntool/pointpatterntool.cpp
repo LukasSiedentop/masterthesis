@@ -10,6 +10,8 @@
 #include <vector>
 #include <cmath>
 
+#include <ctime>
+
 #include <voro++/voro++.hh>
 
 #include <boost/tuple/tuple.hpp>
@@ -62,7 +64,7 @@ int gui() {
  * 3 4 5		1 2 3
  * 3 4 5		2 3 4
  */
-NodeHead * readfile(const char * nodes, const char * neighbours) {
+nodelist * readfile(const char * nodes, const char * neighbours) {
 	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
 			<< " ein." << endl;
 
@@ -76,12 +78,12 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 	bool periodic = input(0);
 
 	// Listenkopf
-	NodeHead * list = new NodeHead(periodic);
+	nodelist * list = new nodelist(periodic);
 
 	if (periodic) {
 		cout << "Nehme eine Box von (-5,5)^3 an..." << endl;
-		list->setMins(-5, -5, -5);
-		list->setMaxs(5, 5, 5);
+		list->setMins(coordinate(-5, -5, -5));
+		list->setMaxs(coordinate(5, 5, 5));
 	}
 
 	// Position des Punktes
@@ -95,25 +97,25 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 	// einlesen der Dateien
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
 
-		Node * node = list->getAt(x, y, z);
+		node * n = list->getAt(coordinate(x, y, z));
 		// Wenn an der Knoten Position noch kein Knoten existiert...
-		if (!node) {
+		if (!n) {
 			// ... füge ihn der Liste hinzu
-			node = new Node(x, y, z);
-			list->add(node);
+			n = new node(list, x, y, z);
+			list->push_back(n);
 		}
 
-		Node * neighbour = list->getAt(nx, ny, nz);
+		node * neighbour = list->getAt(coordinate(nx, ny, nz));
 		// Wenn an der Nachbarknoten Position noch kein Knoten existiert...
 		if (!neighbour) {
 			// ... füge ihn der Liste hinzu
-			neighbour = new Node(nx, ny, nz);
-			list->add(neighbour);
+			neighbour = new node(list, nx, ny, nz);
+			list->push_back(neighbour);
 		}
 
 		// die Nachbarschaft setzen
-		node->addNeighbour(neighbour);
-		neighbour->addNeighbour(node);
+		n->getNeighbours()->push_back(neighbour);
+		neighbour->getNeighbours()->push_back(n);
 
 		// wenn nicht periodisch...
 		if (!periodic) {
@@ -130,16 +132,16 @@ NodeHead * readfile(const char * nodes, const char * neighbours) {
 
 	// Extremalwerte setzen
 	if (!periodic) {
-		list->setMins(minX, minY, minZ);
-		list->setMaxs(maxX, maxY, maxZ);
+		list->setMins(coordinate(minX, minY, minZ));
+		list->setMaxs(coordinate(maxX, maxY, maxZ));
 	}
 
-	cout << "Dateien eingelesen und Liste mit " << list->length()
+	cout << "Dateien eingelesen und Liste mit " << list->size()
 			<< " Knoten erstellt." << endl;
 	return list;
-}
+}/*
 
-NodeHead * readfileGui() {
+nodelist * readfileGui() {
 	string nodes = "data/Left.dat", neighbours = "data/Right.dat";
 
 	cout << "Lese zweite Liste ein..." << endl;
@@ -149,55 +151,14 @@ NodeHead * readfileGui() {
 	neighbours = input(neighbours);
 
 	return readfile(nodes.c_str(), neighbours.c_str());
-}
+}*/
 
-// TODO: Methoden die NodeHead * list brauchen in nodehead?!
-
-/**
- * Schreibt die Anzahl der Nachbarn jedes Knotens untereinander in eine Datei.
- */
-void neighbourDistribution(NodeHead * list, const char outfileName[]) {
-	cout << "Zähle die Nachbarn jedes Knotens..." << endl;
-
-	// Datenstruktur um die Werte aufzunehmen
-	vector<double> data;
-
-	// Iterationsvariablen
-	Node * nodeIter = list->getFirst();
-	Neighbour * neighIter;
-	int counter;
-
-	// Iteration über jeden Knoten
-	while (nodeIter) {
-		counter = 0;
-		neighIter = nodeIter->getNeighbours();
-		// Nachbarn zählen
-		// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
-		while (neighIter) {
-			counter++;
-			neighIter = neighIter->getNext();
-		}
-		// Wert schreiben
-		data.push_back(counter);
-		// weiter gehts
-		nodeIter = nodeIter->getNext();
-	}
-
-	// Daten schreiben
-	writeHist(data, true, "# Anzahl Nächster Nachbarn", outfileName);
-
-	// Statistiken
-	cout << "Nachbarstatistik:" << endl;
-	cout << stats(data);
-
-	// Daten ploten
-	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
-}
+// TODO: Methoden die nodelist * list brauchen in nodelist?!
 
 /**
  * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei.
- */
-void lengthDistribution(NodeHead * list, const char outfileName[]) {
+ *//*
+void lengthDistribution(nodelist * list, const char outfileName[]) {
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
 
 	// Datenstruktur um die Werte aufzunehmen
@@ -244,12 +205,12 @@ void lengthDistribution(NodeHead * list, const char outfileName[]) {
 
 	// Daten ploten
 	plotHist(halfData, 0.6, 1.05, 25, "Länge");
-}
+}*/
 
 /**
  * Schreibt die Winkel zwischen den Nachbarn in eine Datei.
- */
-void angleDistribution(NodeHead * list, const char outfileName[]) {
+ *//*
+void angleDistribution(nodelist * list, const char outfileName[]) {
 	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
 
 	// Datenstruktur um die Werte aufzunehmen
@@ -314,12 +275,12 @@ void angleDistribution(NodeHead * list, const char outfileName[]) {
 	plotHist(halfData, 0, 180, 180, "Winkel");
 
 	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
-}
+}*/
 
 /**
  * Errechnet die Hyperuniformität des Musters.
- */
-void hyperuniformity(NodeHead * list, const char outfileName[]) {
+ *//*
+void hyperuniformity(nodelist * list, const char outfileName[]) {
 
 	// Radiusincrement
 	double dr = 0.2, rMax = 11;
@@ -397,12 +358,12 @@ void hyperuniformity(NodeHead * list, const char outfileName[]) {
 	// Varianz über Radius plotten
 	plot2D(variance, "Radius R", "Varianz  {/Symbol s}^2(R)");
 
-}
+}*/
 
 /**
  * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
- */
-void gnuplotPattern(NodeHead * list) {
+ *//*
+void gnuplotPattern(nodelist * list) {
 	vector<vector<double> > data;
 
 	Node * nodeIter = list->getFirst();
@@ -473,14 +434,14 @@ void gnuplotPattern(NodeHead * list) {
 	// Plotten
 	plot3D(data, list->getMinX(), list->getMaxX());
 }
-
+*/
 /**
  * Schreibt eine pov-datei der Stäbe
- */
-void writePOV(NodeHead * list, const char outfileName[]) {
+ *//*
+void writePOV(nodelist * list, const char outfileName[]) {
 	vector<string> data;
 
-	Node * nodeIter = list->getFirst();
+	node * nodeIter = list->getFirst();
 	while (nodeIter) {
 
 		stringstream stream;
@@ -532,27 +493,24 @@ void writePOV(NodeHead * list, const char outfileName[]) {
 	cout << "Stäbe in " << outfileName << " geschrieben." << endl;
 
 }
-
+*/
 /**
  * Schreibt die Koordinaten der Knoten mit einer Nummerierung davor, für voro++.
- */
-void writePointsVoro(NodeHead * list, const char outfileName[]) {
+ *//*
+void writePointsVoro(nodelist * list, const char outfileName[]) {
 
 	vector<string> data;
 	int ctr = 0;
-	Node * nodeIter = list->getFirst();
-	while (nodeIter) {
+	for (vector<node * >::iterator it = list->begin(); it != list->end(); ++it) {
+	node * n = it;
 		std::ostringstream strs;
-		strs << ctr << "\t" << nodeIter->getX() << "\t" << nodeIter->getY()
-				<< "\t" << nodeIter->getZ();
+		strs << ctr << "\t" << n->getPosition().toString("", "\t", "");
 
 		data.push_back(strs.str());
 
 		// weiter gehts
 		ctr++;
-		nodeIter = nodeIter->getNext();
 	}
-
 	// Outfile
 	ofstream outfile;
 	outfile.open(outfileName);
@@ -563,11 +521,11 @@ void writePointsVoro(NodeHead * list, const char outfileName[]) {
 	}
 
 	cout << "Muster in " << outfileName << " geschrieben." << endl;
-}
+}*/
 
 /**
  * Test für voro++
- */
+ *//*
 void testVoro() {
 	// Set up constants for the container geometry
 	const double x_min = -5, x_max = 5;
@@ -597,29 +555,15 @@ void testVoro() {
 	con.draw_particles_pov("./data/voro++_p.pov");
 }
 
-void compareLists(NodeHead * listA, NodeHead * listB) {
+void compareLists(nodelist * listA, nodelist * listB) {
 	cout << "Statistik Liste 1:" << endl << listA->listStats();
 	cout << "Statistik Liste 2:" << endl << listB->listStats();
 
 	// Mittelpunkte auf den von listA gleichsetzen
-	vector<double> shifter, midA, midB;
-	shifter.resize(3);
-	midA.resize(3);
-	midB.resize(3);
-	// TODO: koordinatenklasse
-	midA[0] = (listA->getMinX() + listA->getMaxX()) / 2;
-	midA[1] = (listA->getMinY() + listA->getMaxY()) / 2;
-	midA[2] = (listA->getMinZ() + listA->getMaxZ()) / 2;
-
-	midB[0] = (listB->getMinX() + listB->getMaxX()) / 2;
-	midB[1] = (listB->getMinY() + listB->getMaxY()) / 2;
-	midB[2] = (listB->getMinZ() + listB->getMaxZ()) / 2;
-
-	shifter[0] = midB[0] - midA[0];
-	shifter[1] = midB[1] - midA[1];
-	shifter[2] = midB[2] - midA[2];
-
-	listB->shiftList(shifter[0], shifter[1], shifter[2]);
+	coordinate shifter;
+	listB->shiftList(
+			(listB->getMins() + listB->getMaxs()
+					- (listA->getMins() + listA->getMaxs())) / 2);
 
 	// Dichte anpassen
 	listB->setDensity(listA->getDensity());
@@ -628,106 +572,94 @@ void compareLists(NodeHead * listA, NodeHead * listB) {
 	cout << "Statistik Liste 2:" << endl << listB->listStats();
 }
 
-/**
- * Hier wird ausgeführt was gewählt wurde.
- */
-int main(int argc, char *argv[]) {
+void benchmark() {
+	double pos1[] = { M_PI, 3.0, 5.0 };
+	double pos2[] = { 5.0, 17.0, 1.0 };
 
-	double pos1[] = { M_PI, 3.0 };	//, 5.0 };
-	double pos2[] = { 5.0, 17.0 };	//, 1.0 };
 	coordinate coord1(pos1, 2);
 	coordinate coord2(pos1, 2);
 	coordinate coord3(pos2, 2);
 
-	cout << "1 " << coord1 << "Länge: " << coord1.length() << ", size: " << coord1.numDimensions() << endl;
+	cout << "1 " << coord1 << endl;
 	cout << "2 " << coord2 << endl;
 	cout << "3 " << coord3 << endl;
-	cout << "1+2 " << (coord1 == coord2) << endl;
-	cout << "1+3 " << (coord1 == coord3) << endl;
-	cout << "!1+2 " << (coord1 != coord2) << endl;
-	cout << "!1+3 " << (coord1 != coord3) << endl;
-	coord1 += coord3; // coordinate coord4 =
-	coord2 *= 2; // coordinate coord4 =
-	coord2 /= 2; // coordinate coord4 =
-	cout << "1 " << coord1 << ", size: " << coord1.numDimensions() << endl;
-	cout << "2 " << coord2 << endl;
-	cout << "3 " << coord3 << endl;
-	cout << "1+2 " << (coord1 == coord2) << endl;
-	cout << "1+3 " << (coord1 == coord3) << endl;
-	cout << "!1+2 " << (coord1 != coord2) << endl;
-	cout << "!1+3 " << (coord1 != coord3) << endl;
 
-	cout << "1<3 " << (coord1 < coord3) << endl;
-	//cout << "4 " << coord4 << endl;
-	//cout << "vgl 12: " << (coord1 == coord2) << endl;
-	//cout << "vgl 13: " << (coord1 == coord3) << endl;
+	clock_t t;
+	t = clock();
+	for (unsigned i = 0; i < 1000; i++) {
+		(coord1 == coord2);
+		(coord1 == coord3);
+		(coord1 != coord2);
+		(coord1 != coord3);
+	}
+}*/
 
-	/*
+/**
+ * Hier wird ausgeführt was gewählt wurde.
+ */
+int main(int argc, char *argv[]) {
+	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
+			<< endl;
 
-	 cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
-	 << endl;
+	//vector<nodelist * > lists; // TODO
+	// Muster einlesen
+	nodelist * list = readfile(argv[1], argv[2]);
+	nodelist * list2 = readfile(argv[3], argv[4]);
 
-	 //vector<NodeHead * > lists; // TODO
-	 // Muster einlesen
-	 NodeHead * list = readfile(argv[1], argv[2]);
-	 NodeHead * list2 = readfile(argv[3], argv[4]);
+	int option = -1;
+	while (option != 0) {
+		// Optionen anzeigen und wählen lassen
+		option = gui();
 
-	 int option = -1;
-	 while (option != 0) {
-	 // Optionen anzeigen und wählen lassen
-	 option = gui();
+		switch (option) {
+		case 0:
+			cout << "Beende." << endl;
+			break;
+		case 1:
+			list->neighbourDistribution();
+			break;/*
+		case 2:
+			lengthDistribution(list,
+					"./data/statistics/lenghtDistribution.dat");
+			break;
+		case 3:
+			angleDistribution(list, "./data/statistics/angleDistribution.dat");
+			break;
+		case 4:
+			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
+			break;
+		case 5:
+			list->display();
+			break;
+		case 6:
+			cout << "Liste 1: " << list->listStats();
+			cout << "Liste 2: " << list2->listStats();
+			break;
+		case 7:
+			gnuplotPattern(list);
+			break;
+		case 8:
+			writePOV(list, "./data/staebe.pov");
+			break;
+		case 9:
+			writePointsVoro(list, "./data/voro++.dat");
+			break;
+		case 10:
+			testVoro();
+			break;
+		case 11:
+			list2 = readfileGui();
+			break;
+		case 12:
+			compareLists(list, list2);
+			break;*/
+		default:
+			cout << "Das gibts leider (noch) nicht." << endl;
+		}
 
-	 switch (option) {
-	 case 0:
-	 cout << "Beende." << endl;
-	 break;
-	 case 1:
-	 neighbourDistribution(list,
-	 "./data/statistics/neighbourDistribution.dat");
-	 break;
-	 case 2:
-	 lengthDistribution(list,
-	 "./data/statistics/lenghtDistribution.dat");
-	 break;
-	 case 3:
-	 angleDistribution(list, "./data/statistics/angleDistribution.dat");
-	 break;
-	 case 4:
-	 hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
-	 break;
-	 case 5:
-	 list->display();
-	 break;
-	 case 6:
-	 cout << "Liste 1: " << list->listStats();
-	 cout << "Liste 2: " << list2->listStats();
-	 break;
-	 case 7:
-	 gnuplotPattern(list);
-	 break;
-	 case 8:
-	 writePOV(list, "./data/staebe.pov");
-	 break;
-	 case 9:
-	 writePointsVoro(list, "./data/voro++.dat");
-	 break;
-	 case 10:
-	 testVoro();
-	 break;
-	 case 11:
-	 list2 = readfileGui();
-	 break;
-	 case 12:
-	 compareLists(list, list2);
-	 break;
-	 default:
-	 cout << "Das gibts leider (noch) nicht." << endl;
-	 }
-
-	 if (option != 0) {
-	 cout << "Und nun?" << endl;
-	 }
-	 }
-	 */
+		if (option != 0) {
+			cout << "Und nun?" << endl;
+		}
+	}
 	return 0;
 }

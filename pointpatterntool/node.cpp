@@ -7,4 +7,122 @@
 
 #include "node.hpp"
 
+using namespace std;
 
+node::node() :
+		list(NULL), position(coordinate()), neighbours(NULL){//, inBox(NULL) {
+}
+
+node::node(nodelist * list, double x, double y, double z) :
+		list(list), position(coordinate(x, y, z)), neighbours(NULL){//, inBox(NULL) {
+}
+
+coordinate node::getPosition() {
+	return position;
+}
+
+std::vector<class node * > * node::getNeighbours() {
+	return neighbours;
+}
+
+/*std::vector<int> * node::isInBox() {
+	return inBox;
+}*/
+
+double node::euklidian(node * node) {
+	return euklidian(node->getPosition());
+}
+
+double node::euklidian(coordinate point) {
+	return position.euklidian(point);
+}
+
+double node::euklidianPeriodic(node * node) {
+
+	coordinate differenceVec = coordinate::getVec(position, node->getPosition(), list->getShifters());
+
+	return differenceVec.length;
+}
+
+double node::angle(node * nodeA, node * nodeB) {
+	// cos alpha = skp(a,b) / |a|*|b|
+
+	coordinate vec1 = nodeA->getPosition() - position;
+
+	coordinate vec2 = nodeB->getPosition() - position;
+
+	double len1sqr = vec1.lengthSqr();
+	double len2sqr = vec2.lengthSqr();
+
+	double skp = coordinate::scp(vec1, vec2);
+
+	return acos(skp / sqrt(len1sqr * len2sqr));
+}
+
+double node::anglePeriodic(node * nodeA, node * nodeB) {
+	coordinate vec1 = coordinate::getVec(position, nodeA->getPosition(), list->getShifters());
+	coordinate vec2 = coordinate::getVec(position, nodeB->getPosition(), list->getShifters());
+
+	double len1sqr = vec1.lengthSqr();
+	double len2sqr = vec2.lengthSqr();
+
+	// Skalarprodukt
+	double skp = coordinate::scp(vec1, vec2);
+
+	// Winkel ausgeben
+	return acos(skp / sqrt(len1sqr * len2sqr));
+}
+
+int node::countNeighbours() {
+	return neighbours.size();
+}
+
+void node::shift(coordinate shifter) {
+	position += shifter;
+}
+
+void node::scale(double a, double b, double c) {
+	position *= new coordinate(a, b, c);
+}
+
+void node::addNeighbour(node * node) {
+// aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
+	if (this->isNeighbour(node) || (this->equals(node))) {
+		return;
+	}
+
+	neighbours.push_back(node);
+}
+
+bool node::isNeighbour(node * node) {
+
+	bool exists = 0;
+	for (vector<class node *>::iterator it = neighbours.begin();
+			it != neighbours.end(); ++it) {
+		// TODO: geht das wirklich?
+		exists += (it == node);
+	}
+	return exists;
+}
+
+bool node::equals(node * node) {
+	/*
+	 // Nachbarn vergleichen
+	 bool equals = 0;
+	 for (vector<node *>::iterator neighbour = neighbours.begin();
+	 neighbour != neighbours.end(); ++neighbour) {
+	 for (vector<node *>::iterator nodeNeighbour = neighbours.begin();
+	 nodeNeighbour != neighbours.end(); ++nodeNeighbour) {
+
+	 // TODO: prüfen
+	 equals += (neighbour == nodeNeighbour);
+
+	 }
+	 }
+
+	 //return ((position == node->getPosition()) && equals);
+	 */
+
+	// Positionen vergleichen
+	return (position == node->getPosition());
+}
