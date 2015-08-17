@@ -12,11 +12,11 @@ using namespace std;
 /* Nodelist */
 
 nodelist::nodelist() :
-		min(NULL), max(NULL), periodic(0) {
+		min(coordinate()), max(coordinate()), periodic(0) {
 }
 
 nodelist::nodelist(bool periodicity) :
-		min(NULL), max(NULL), periodic(periodicity) {
+		min(coordinate()), max(coordinate()), periodic(periodicity) {
 }
 
 void nodelist::setMins(coordinate mins) {
@@ -34,20 +34,18 @@ void nodelist::shiftList(coordinate shifter) {
 
 	// Einträge shiften
 	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
-		node* node = it;
-		node->shift(shifter);
+		(*it)->shift(shifter);
 	}
 }
 
-void nodelist::scaleList(double a, double b, double c) {
+void nodelist::scaleList(double a) {
 	// Extremalwerte anpassen
-	min *= coordinate(a, b, c);
-	max *= coordinate(a, b, c);
+	min *= a;
+	max *= a;
 
 	// Einträge shiften
 	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
-		node* node = it;
-		node->scale(a, b, c);
+		(*it)->scale(a);
 	}
 }
 
@@ -57,7 +55,7 @@ bool nodelist::isPeriodic() {
 
 void nodelist::setDensity(double density) {
 	double factor = density / getDensity();
-	scaleList(factor, factor, factor);
+	scaleList(factor);
 }
 
 double nodelist::getDensity() {
@@ -67,9 +65,10 @@ double nodelist::getDensity() {
 double nodelist::getVolume() {
 	// Volumen berechnen
 	double volume = 1;
-	for (vector<double>::iterator it = getLengths().begin();
-			it != getLengths().end(); ++it) {
-		volume *= it;
+
+	for (coordinate::iterator it = getLengths().begin(); it != getLengths().end(); ++it) {
+
+		volume *= (*it);
 	}
 	return volume;
 }
@@ -77,7 +76,6 @@ double nodelist::getVolume() {
 node * nodelist::getAt(coordinate point) {
 	// Iteration über alle Knoten
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		node* node = it;
 
 		// Punkt in Box holen
 		/*
@@ -87,8 +85,8 @@ node * nodelist::getAt(coordinate point) {
 		 */
 
 		// Vergleich der Koordinaten
-		if (node->getPosition() == point) {
-			return node;
+		if ((*it)->getPosition() == point) {
+			return (*it);
 		}
 	}
 	return NULL;
@@ -112,16 +110,14 @@ void nodelist::display() {
 	int i = 1;
 
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		node* n = it;
 
-		cout << char(9) << i << "-tes Element: " << n->getPosition() << " mit "
-				<< n->countNeighbours() << " Nachbarn bei: ";
+		cout << char(9) << i << "-tes Element: " << (*it)->getPosition() << " mit "
+				<< (*it)->countNeighbours() << " Nachbarn bei: ";
 
-		for (vector<class node *>::iterator itNeigh =
-				n->getNeighbours()->begin();
-				itNeigh != n->getNeighbours()->end(); ++itNeigh) {
-			node* neigh = itNeigh;
-			cout << neigh->getPosition();
+		for (vector<class node *>::iterator neighIt =
+				(*it)->getNeighbours()->begin();
+				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
+			cout << (*neighIt)->getPosition();
 		}
 
 		cout << endl;
@@ -161,16 +157,14 @@ int nodelist::pointsInside(double r, coordinate mid) {
 	vector<coordinate> shifters = getShifters();
 	// TODO: paralelisieren
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		node* n = it;
-
 		if (periodic) {
 			// Abstandsvergleich mit in jeder Raumrichtung verschobenen Kugel
 			for (unsigned int i = 0; i < shifters.size(); i++) {
-				if (n->euklidian(mid + shifters[i]) < r) {
+				if ((*it)->euklidian(mid + shifters[i]) < r) {
 					ctr++;
 				}
 			}
-		} else if (n->euklidian(mid) < r) {
+		} else if ((*it)->euklidian(mid) < r) {
 			ctr++;
 		}
 	}
@@ -183,7 +177,7 @@ string nodelist::listStats(const char commentDelimeter[]) {
 	double density = getDensity();
 
 	stringstream stream;
-	stream << commentDelimeter << "Anzahl Knoten: " << size << endl;
+	stream << commentDelimeter << "Anzahl Knoten: " << size() << endl;
 	stream << commentDelimeter << "Extremalwerte: " << min << ", " << max
 			<< endl;
 	stream << commentDelimeter << "Volumen: " << volume << endl;
@@ -207,10 +201,8 @@ void nodelist::neighbourDistribution() {
 
 	// Iteration über jeden Knoten
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		node* n = it;
 		counter = 0;
-		for (vector<class node *>::iterator neighIt = n->getNeighbours()->begin(); neighIt != n->getNeighbours()->end(); ++neighIt) {
-				node* neigh = neighIt;
+		for (vector<class node *>::iterator neighIt = (*it)->getNeighbours()->begin(); neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
 				// Nachbarn zählen
 				// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
 					counter++;

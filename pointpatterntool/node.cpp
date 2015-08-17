@@ -10,11 +10,23 @@
 using namespace std;
 
 node::node() :
-		list(NULL), position(coordinate()), neighbours(NULL){//, inBox(NULL) {
+		position(coordinate()){ //, inBox(NULL) {
+	// TODO: geht das besser?
+	nodelist * l = new nodelist();
+	list = l;
+
+	std::vector<class node *> neighs;
+	neighbours = neighs;
 }
 
 node::node(nodelist * list, double x, double y, double z) :
-		list(list), position(coordinate(x, y, z)), neighbours(NULL){//, inBox(NULL) {
+		list(list), position(coordinate(x, y, z)){//, inBox(NULL) {
+	std::vector<class node *> neighs;
+	neighbours = neighs;
+}
+
+node::~node() {
+	// TODO: was ist hier zu tun?
 }
 
 coordinate node::getPosition() {
@@ -22,7 +34,7 @@ coordinate node::getPosition() {
 }
 
 std::vector<class node * > * node::getNeighbours() {
-	return neighbours;
+	return &neighbours;
 }
 
 /*std::vector<int> * node::isInBox() {
@@ -41,7 +53,7 @@ double node::euklidianPeriodic(node * node) {
 
 	coordinate differenceVec = coordinate::getVec(position, node->getPosition(), list->getShifters());
 
-	return differenceVec.length;
+	return differenceVec.length();
 }
 
 double node::angle(node * nodeA, node * nodeB) {
@@ -81,8 +93,8 @@ void node::shift(coordinate shifter) {
 	position += shifter;
 }
 
-void node::scale(double a, double b, double c) {
-	position *= new coordinate(a, b, c);
+void node::scale(double a) {
+	position *= a;
 }
 
 void node::addNeighbour(node * node) {
@@ -99,8 +111,10 @@ bool node::isNeighbour(node * node) {
 	bool exists = 0;
 	for (vector<class node *>::iterator it = neighbours.begin();
 			it != neighbours.end(); ++it) {
+
+
 		// TODO: geht das wirklich?
-		exists += (it == node);
+		exists += ((*it) == node);
 	}
 	return exists;
 }

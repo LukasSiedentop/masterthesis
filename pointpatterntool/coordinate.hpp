@@ -11,15 +11,17 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 /**
  * Point in n-Dimensional space with various operators
  */
-class coordinate: std::vector<double> {
+class coordinate: public std::vector<double> {
 private:
 	static const double tolerance = 2e-6;
 public:
 	coordinate();
+	coordinate(const coordinate & coord);
 	coordinate(double x, double y);
 	coordinate(double x, double y, double z);
 	coordinate(double point[], unsigned n);
@@ -27,12 +29,6 @@ public:
 
 	/* Anzahl der Dimensionen */
 	int numDimensions();
-
-	/* Addition/Subtraktion/Multiplikation?/Division? */
-	coordinate operator+(const coordinate & lhs, const coordinate & rhs);
-	coordinate operator-(const coordinate & lhs, const coordinate & rhs);
-	coordinate operator*(const coordinate & lhs, const coordinate & rhs);
-	coordinate operator/(const coordinate & lhs, const coordinate & rhs);
 
 	/* boolsche Operatoren */
 	bool operator ==(const coordinate &rhs);
@@ -44,15 +40,21 @@ public:
 	//bool operator >=(const coordinate &rhs);
 
 	/* bewegen + skalieren */
-	void operator +=(const coordinate &rhs);
-	void operator -=(const coordinate &rhs);
-	void operator *=(const double &factor);
-	void operator /=(const double &factor);
+	coordinate & operator +=(const coordinate &rhs);
+	coordinate & operator -=(const coordinate &rhs);
+	coordinate & operator *=(const double &factor);
+	coordinate & operator /=(const double &factor);
 
 	/* ausgeben */
+	std::string toString(const char begin[] = "(", const char delimiter[] = ",",
+			const char end[] = ")");
 	friend std::ostream& operator <<(std::ostream &os, const coordinate &obj);
-	std::string toString(const char begin[]="(", const char delimiter[]=",", const char end[]=")");
 
+	/* Addition/Subtraktion/Multiplikation/Division */
+	friend coordinate operator+(const coordinate & lhs, const coordinate & rhs);
+	friend coordinate operator-(const coordinate & lhs, const coordinate & rhs);
+	friend coordinate operator*(const coordinate & lhs, const double &rhs);
+	friend coordinate operator/(const coordinate & lhs, const double &rhs);
 
 	/* abstände */
 	double euklidian(coordinate & point);
@@ -63,7 +65,8 @@ public:
 	static double scp(const coordinate &a, const coordinate &b);
 
 	/* gibt den minimal Langen Vektor von A nach B zurück, unter Berücksichtigung periodischer Randbedingungen */
-	static coordinate getVec(const coordinate &a, const coordinate &b, vector<coordinate> shifters);
+	static coordinate getVec(const coordinate & a, const coordinate & b,
+			vector<coordinate>  shifters);
 };
 
 #endif /* COORDINATE_HPP_ */

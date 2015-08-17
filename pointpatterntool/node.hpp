@@ -19,7 +19,7 @@
 class node {
 private:
 	// Liste, zu der der Knoten gehört (gebraucht für periodizität)
-	nodelist * list;
+	class nodelist * list;
 	// Position
 	coordinate position;
 
@@ -33,7 +33,7 @@ private:
 	bool isNeighbour(node * node);
 public:
 	node();
-	node(nodelist * list, double x, double y, double z);
+	node(class nodelist * list, double x, double y, double z);
 	~node();
 
 	coordinate getPosition();
@@ -60,8 +60,8 @@ public:
 	int countNeighbours();
 	// verschiebt den Knoten um den angegebenen Vektor
 	void shift(coordinate shifter);
-	// multipliziert die Knotenposition um die gegebenen Faktoren
-	void scale(double a, double b, double c);
+	// multipliziert die Knotenposition um den gegebenen Faktor
+	void scale(double a);
 };
 
 #endif /* NODE_HPP_ */

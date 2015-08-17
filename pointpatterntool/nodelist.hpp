@@ -23,13 +23,14 @@
 
 #include "coordinate.hpp"
 #include "node.hpp"
+#include "functions.hpp"
 
 using namespace std;
 
 /**
  * Kopf der Liste. Hier stecken Daten wie Listenlänge, erstes Element, letztes Element drin, die sonst jedesmal in jedem Knoten der Liste geändert werden müssten.
  */
-class nodelist: std::vector<class node*> {
+class nodelist: public std::vector<class node*> {
 private:
 	// Extremalwerte aka Boundaries
 	coordinate min, max;
@@ -53,7 +54,7 @@ public:
 	// Bewegt die Liste um den gegebenen Vektor
 	void shiftList(coordinate shifter);
 	// Skaliert die Liste um die gegebenen Faktoren a,b, c
-	void scaleList(double a, double b, double c);
+	void scaleList(double a);
 	// Periodizität
 	bool isPeriodic();
 	// skaliert die Liste, sodass die Dichte der gewünschten entspricht

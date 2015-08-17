@@ -114,8 +114,8 @@ nodelist * readfile(const char * nodes, const char * neighbours) {
 		}
 
 		// die Nachbarschaft setzen
-		n->getNeighbours()->push_back(neighbour);
-		neighbour->getNeighbours()->push_back(n);
+		n->addNeighbour(neighbour);
+		neighbour->addNeighbour(n);
 
 		// wenn nicht periodisch...
 		if (!periodic) {
@@ -627,14 +627,15 @@ int main(int argc, char *argv[]) {
 			break;
 		case 4:
 			hyperuniformity(list, "./data/statistics/hyperuniformity.dat");
-			break;
+			break;*/
 		case 5:
 			list->display();
+			list2->display();
 			break;
 		case 6:
 			cout << "Liste 1: " << list->listStats();
 			cout << "Liste 2: " << list2->listStats();
-			break;
+			break;/*
 		case 7:
 			gnuplotPattern(list);
 			break;
