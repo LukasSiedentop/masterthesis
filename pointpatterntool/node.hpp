@@ -36,7 +36,7 @@ public:
 	node(class nodelist * list, double x, double y, double z);
 	~node();
 
-	coordinate getPosition();
+	coordinate * getPosition();
 
 	std::vector<class node *> * getNeighbours();
 	//std::vector<int> * isInBox();

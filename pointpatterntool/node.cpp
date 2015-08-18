@@ -29,8 +29,8 @@ node::~node() {
 	// TODO: was ist hier zu tun?
 }
 
-coordinate node::getPosition() {
-	return position;
+coordinate * node::getPosition() {
+	return &position;
 }
 
 std::vector<class node * > * node::getNeighbours() {
@@ -42,7 +42,7 @@ std::vector<class node * > * node::getNeighbours() {
 }*/
 
 double node::euklidian(node * node) {
-	return euklidian(node->getPosition());
+	return euklidian(* node->getPosition());
 }
 
 double node::euklidian(coordinate point) {
@@ -50,18 +50,25 @@ double node::euklidian(coordinate point) {
 }
 
 double node::euklidianPeriodic(node * node) {
+	coordinate differenceVec = position - *node->getPosition();
 
-	coordinate differenceVec = coordinate::getVec(position, node->getPosition(), list->getShifters());
+	// Wenn die Länge größer als die Featuresize ist...
+	double length = differenceVec.length();
+	if (list->getLengths().length()/2 > length) {
+		// Fehler nicht schlimm, ist von Eclipse
+		differenceVec = coordinate::getVec(position, *node->getPosition(), list->getShifters());
+		length = differenceVec.length();
+	}
 
-	return differenceVec.length();
+	return length;
 }
 
 double node::angle(node * nodeA, node * nodeB) {
 	// cos alpha = skp(a,b) / |a|*|b|
 
-	coordinate vec1 = nodeA->getPosition() - position;
+	coordinate vec1 = *nodeA->getPosition() - position;
 
-	coordinate vec2 = nodeB->getPosition() - position;
+	coordinate vec2 = *nodeB->getPosition() - position;
 
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
@@ -72,11 +79,21 @@ double node::angle(node * nodeA, node * nodeB) {
 }
 
 double node::anglePeriodic(node * nodeA, node * nodeB) {
-	coordinate vec1 = coordinate::getVec(position, nodeA->getPosition(), list->getShifters());
-	coordinate vec2 = coordinate::getVec(position, nodeB->getPosition(), list->getShifters());
+	coordinate vec1 = position - *nodeA->getPosition();
+	coordinate vec2 = position - *nodeB->getPosition();
 
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
+
+	double maxFeatureSize = list->getLengths().lengthSqr()/4;
+
+	if ((len1sqr > maxFeatureSize) || (len2sqr > maxFeatureSize)) {
+		// Fehler nicht schlimm, ist von Eclipse
+		vec1 = coordinate::getVec(position, *nodeA->getPosition(), list->getShifters());
+		vec2 = coordinate::getVec(position, *nodeB->getPosition(), list->getShifters());
+		len1sqr = vec1.lengthSqr();
+		len2sqr = vec2.lengthSqr();
+	}
 
 	// Skalarprodukt
 	double skp = coordinate::scp(vec1, vec2);
@@ -138,5 +155,5 @@ bool node::equals(node * node) {
 	 */
 
 	// Positionen vergleichen
-	return (position == node->getPosition());
+	return (position == *node->getPosition());
 }

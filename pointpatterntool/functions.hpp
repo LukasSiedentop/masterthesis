@@ -17,6 +17,7 @@
 
 #include "gnuplot-iostream.h"
 #include "nodelist.hpp"
+#include "coordinate.hpp"
 
 using namespace std;
 
@@ -130,8 +131,8 @@ T input(T in) {
  * Schreibt das Histogramm in eine Datei mit gegebenem Namen, optional mit Statistiken und/oder Header
  */
 template<typename T>
-void writeHist(vector<T> data, bool includeStats, const char header[], const char outfileName[]
-		) {
+void writeHist(vector<T> data, bool includeStats, const char header[],
+		const char outfileName[]) {
 	// Outfile
 	ofstream outfile;
 	outfile.open(outfileName);
@@ -151,7 +152,6 @@ void writeHist(vector<T> data, bool includeStats, const char header[], const cha
 
 	cout << "Histogramm in " << outfileName << " geschrieben." << endl;
 }
-
 
 // TODO: write 2D, 3D,
 
@@ -278,52 +278,20 @@ void plot2D(vector<vector<T> > data, const char xlabel[] = "x",
 
 	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
 	gp
-			<< "plot '-' u 1:2 ls 7 lc rgb'blue' t 'Numerische Daten', f(x) lc rgb'blue' t sprintf('Fit: f(R) = %dR^2',A)\n";
+			<< "plot '-' u 1:2 ls 7 lc rgb'blue' t 'Numerische Daten', f(x) lc rgb'blue' t sprintf('Fit: f(R) = %.3fR^2',A)\n";
 	gp.send1d(data);
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
 	// the gnuplot window doesn't get closed.
 	std::cout << "Weiter mit Enter." << std::endl;
 	std::cin.get();
-}
+};
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-template<typename T>
-void plot3D(vector<vector<T> > data, double min, double max,
+void plot3D(vector<coordinate > data, coordinate mins, coordinate maxs,
 		const char xlabel[] = "x", const char ylabel[] = "y",
-		const char zlabel[] = "z") {
-	Gnuplot gp;
-	gp << "reset\n";
-
-	gp << "min = " << min - 0.5 << "\n";
-	gp << "max = " << max + 0.5 << "\n";
-
-	gp << "set xlabel '" << xlabel << "'\n";
-	gp << "set ylabel '" << ylabel << "'\n";
-	gp << "set zlabel '" << zlabel << "'\n";
-
-	gp << "set xrange [min:max]\n";
-	gp << "set yrange [min:max]\n";
-	gp << "set zrange [min:max]\n";
-
-	// z-Achsen Offset ausschalten
-	gp << "set ticslevel 0\n";
-	gp << "set tics out nomirror\n";
-
-	gp << "set xtics min,1,max\n";
-	gp << "set ytics min,1,max\n";
-	gp << "set ztics min,1,max\n";
-
-	gp << "set view equal xyz\n";
-
-	//gp << "set datafile missing 'nan'\n"; u ($1):($2):($3)
-	gp << "splot '-' w l lc rgb'blue' notitle \n";
-	gp.send1d(data);
-
-	cout << "Weiter mit Enter." << endl;
-	cin.get();
-}
+		const char zlabel[] = "z");
 
 #endif /* NODELIST_HPP_ */

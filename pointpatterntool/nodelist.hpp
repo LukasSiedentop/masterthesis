@@ -21,6 +21,10 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/progress.hpp>
+
+#include <ctime>
+
 #include "coordinate.hpp"
 #include "node.hpp"
 #include "functions.hpp"
@@ -71,15 +75,24 @@ public:
 	coordinate getMaxs();
 	// gibt die Größe der Box zurück
 	coordinate getLengths();
-	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen TODO: n-Dimensional
+	// gibt die größte Featuresize zurück, die Sinn macht (für periodische Randbedingungen)
+	double getMaxFeatureSize();
+	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. TODO: n-Dimensional
 	vector<coordinate> getShifters();
+	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. Es werden nur diejenigen Verschiebungen zurückgegeben, in denen die Box um den Mittelpunkt mid mit der Seitenlänge 2*halfExtend liegt. Geht davon aus, das das Muster den Schwerpunkt im Ursprung hat. TODO: n-Dimensional
+	vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// Zählt die Punkte in einer gegebenen Kugel
-	int pointsInside(double r, coordinate mid);
+	int pointsInside(coordinate mid, double r);
+	// Zählt die Punkte in einer gegebenen Kugel
+	int pointsInsidePeriodic(coordinate mid, double r);
 	// gibt Statistiken der Liste als String zurück TODO: was noch?
 	string listStats(const char commentDelimeter[] = "\t");
 
 	/* Berechnungen */
 	void neighbourDistribution();
+	void lengthDistribution();
+	void angleDistribution();
+	void hyperuniformity();
 };
 
 #endif /* NODELIST_HPP_ */
