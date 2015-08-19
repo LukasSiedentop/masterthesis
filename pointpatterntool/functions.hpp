@@ -15,6 +15,8 @@
 #include <string>
 #include <sstream>
 
+#include <typeinfo>
+
 #include "gnuplot-iostream.h"
 #include "nodelist.hpp"
 #include "coordinate.hpp"
@@ -101,7 +103,7 @@ string stats(vector<T> data, const char commentDelimeter[] = "\t") {
 
 /*
  * Holt den Input Typgerecht. Von http://www.cplusplus.com/forum/articles/6046/
- * In muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
+ * in muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
  */
 template<typename T>
 T input(T in) {
@@ -125,6 +127,23 @@ T input(T in) {
 	}
 
 	return in;
+}
+
+/*
+ * Konvertiert den gegebenen String in den Typ des gegebenen Arguments. Bei Fehler gibt kommt das Argument zurück.
+ */
+template<typename T>
+T convert(string input, T type) {
+	// Konvertieren von string nach T
+	stringstream inputStream(input);
+	if (inputStream >> type) {
+		return type;
+	}
+
+	// Error
+	cout << "Konnte string '" << input << "' nicht in " << typeid(type).name()
+			<< " umwandeln, nehme " << type << "." << endl;
+	return type;
 }
 
 /**
@@ -255,23 +274,24 @@ void plotHist(vector<T> data, double min, double max, int n,
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
 template<typename T>
-void plot2D(vector<vector<T> > data, const char xlabel[] = "x",
-		const char ylabel[] = "y") {
+void plot2D(vector<vector<T> > data, double xMin, double dx, double xMax,
+		double fitMax, const char xlabel[] = "x", const char ylabel[] = "y") {
 
 	Gnuplot gp;
 	gp << "reset\n";
 
 	gp << "A = 1\n";
 	gp << "f(x) = A*x**2\n";
-	gp << "fit [0:10] f(x) '-' u 1:2 via A\n";
+	//gp << "f(x) = A*log(B*x)\n";
+	gp << "fit [0:" << fitMax << "] f(x) '-' u 1:2 via A\n";
 	gp.send1d(data);
 
 	gp << "set key top left\n";
-	gp << "set xrange [0:9.8]\n";
+	gp << "set xrange [" << xMin << ":" << xMax << "]\n";
 	gp << "set yrange [0:]\n";
 	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
 	// 10 x-tics
-	gp << "set xtics 0,1,10\n";
+	gp << "set xtics " << xMin << ",1," << xMax << "\n";
 	gp << "set tics out nomirror\n";
 	gp << "set xlabel '" << xlabel << "'\n";
 	gp << "set ylabel '" << ylabel << "'\n";
@@ -285,12 +305,13 @@ void plot2D(vector<vector<T> > data, const char xlabel[] = "x",
 	// the gnuplot window doesn't get closed.
 	std::cout << "Weiter mit Enter." << std::endl;
 	std::cin.get();
-};
+}
+;
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<coordinate > data, coordinate mins, coordinate maxs,
+void plot3D(vector<coordinate> data, coordinate mins, coordinate maxs,
 		const char xlabel[] = "x", const char ylabel[] = "y",
 		const char zlabel[] = "z");
 

@@ -75,6 +75,8 @@ public:
 	coordinate getMaxs();
 	// gibt die Größe der Box zurück
 	coordinate getLengths();
+	// gibt die Mitte der Box zurück
+	coordinate getMid();
 	// gibt die größte Featuresize zurück, die Sinn macht (für periodische Randbedingungen)
 	double getMaxFeatureSize();
 	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. TODO: n-Dimensional
@@ -82,17 +84,20 @@ public:
 	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. Es werden nur diejenigen Verschiebungen zurückgegeben, in denen die Box um den Mittelpunkt mid mit der Seitenlänge 2*halfExtend liegt. Geht davon aus, das das Muster den Schwerpunkt im Ursprung hat. TODO: n-Dimensional
 	vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// Zählt die Punkte in einer gegebenen Kugel
-	int pointsInside(coordinate mid, double r);
+	int pointsInside(coordinate mid, double r, double rSqr);
 	// Zählt die Punkte in einer gegebenen Kugel
 	int pointsInsidePeriodic(coordinate mid, double r);
 	// gibt Statistiken der Liste als String zurück TODO: was noch?
 	string listStats(const char commentDelimeter[] = "\t");
+	// macht das Muster vergleichbar mit anderen: Punktdichte=1, Mittelpunkt=(0,0,0)
+	void normalize();
 
 	/* Berechnungen */
 	void neighbourDistribution();
 	void lengthDistribution();
 	void angleDistribution();
 	void hyperuniformity();
+	void writePOV();
 };
 
 #endif /* NODELIST_HPP_ */

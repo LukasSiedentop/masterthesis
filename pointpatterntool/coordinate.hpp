@@ -20,7 +20,7 @@
  */
 class coordinate: public std::vector<double> {
 private:
-	static const double tolerance = 2e-6;
+	static const double tolerance = 0.0000001;
 public:
 	/* Standardkonstruktor */
 	coordinate();

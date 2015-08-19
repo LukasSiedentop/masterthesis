@@ -18,6 +18,15 @@ nodelist::nodelist() :
 nodelist::nodelist(bool periodicity) :
 		min(coordinate()), max(coordinate()), periodic(periodicity) {
 }
+nodelist::~nodelist() {
+	vector<node*>().swap(*this);
+
+	min.~coordinate();
+	max.~coordinate();
+
+	// Periodizität des Musters
+	//periodic;
+}
 
 void nodelist::setMins(coordinate mins) {
 	min = mins;
@@ -33,7 +42,7 @@ void nodelist::shiftList(coordinate shifter) {
 	max += shifter;
 
 	// Einträge shiften
-	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
+	for (nodelist::iterator it = begin(); it != end(); ++it) {
 		(*it)->shift(shifter);
 	}
 }
@@ -54,8 +63,8 @@ bool nodelist::isPeriodic() {
 }
 
 void nodelist::setDensity(double density) {
-	double factor = density / getDensity();
-	scaleList(factor);
+	double factor = getDensity() / density;
+	scaleList(pow(factor, 1. / 3.));
 }
 
 double nodelist::getDensity() {
@@ -77,9 +86,25 @@ double nodelist::getVolume() {
 
 node * nodelist::getAt(coordinate point) {
 	// Iteration über alle Knoten
-	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
+	for (nodelist::iterator it = begin(); it != end(); ++it) {
+		if (periodic) {
+			coordinate pos = (*(*it)->getPosition());
+			//coordinate diff = point - pos;
+			if ((std::min(fabs(point[0] - pos[0]),
+					(fabs(fabs(point[0] - pos[0]) - getLengths()[0])))
+					< 0.000001)
+					&& (std::min(fabs(point[1] - pos[1]),
+							(fabs(fabs(point[1] - pos[1]) - getLengths()[1])))
+							< 0.000001)
+					&& (std::min(fabs(point[2] - pos[2]),
+							(fabs(fabs(point[2] - pos[2]) - getLengths()[2])))
+							< 0.000001)) {
+				return (*it);
+			}
+		}
+
 		// Vergleich der Koordinaten
-		if (*(*it)->getPosition() == point) {
+		if (!periodic && (*(*it)->getPosition() == point)) {
 			return (*it);
 		}
 	}
@@ -98,6 +123,10 @@ coordinate nodelist::getLengths() {
 	return max - min;
 }
 
+coordinate nodelist::getMid() {
+	return (max + min) / 2;
+}
+
 double nodelist::getMaxFeatureSize() {
 	return getLengths().length() / 2;
 }
@@ -107,22 +136,19 @@ void nodelist::display() {
 
 	int i = 1;
 
+	// Knoteniteration
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-
-		cout << char(9) << i << "-tes Element: " << (*it)->getPosition()
+		cout << char(9) << i << "-tes Element: " << (*(*it)->getPosition())
 				<< " mit " << (*it)->countNeighbours() << " Nachbarn bei: ";
-
+		// Nachbarniteration
 		for (vector<class node *>::iterator neighIt =
 				(*it)->getNeighbours()->begin();
 				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
-			cout << (*neighIt)->getPosition();
+			cout << (*(*neighIt)->getPosition());
 		}
-
 		cout << endl;
-
 		// weiterzählen
 		i++;
-
 	}
 }
 
@@ -158,7 +184,7 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 					for (int iz = -1; iz < 2; iz++) {
 						if ((fabs(mid[2] + (iz * halfExtend))
 								> fabs(iz * (lz / 2.0)))) {
-							// ... die Verschiebung hinzufügen
+							// ... die Verschiebung hinzufügen (Kugel entgegengesetzt zu Muster verschieben!)
 							shifters.push_back(
 									mid
 											- coordinate(ix * lx, iy * ly,
@@ -174,14 +200,19 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 }
 
 // TODO: paralellisieren TODO: prüfen
-int nodelist::pointsInside(coordinate mid, double r) {
+int nodelist::pointsInside(coordinate mid, double r, double rSqr) {
 	// Zähler
 	int ctr = 0;
 
 	// Iteration über alle Punkte
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		if ((*((*it)->getPosition()) - mid).lengthSqr() < r * r) {
-			ctr++;
+		// Boundingbox
+		if ((fabs((*(*it)->getPosition())[0] - mid[0]) < r)
+				&& (fabs((*(*it)->getPosition())[1] - mid[1]) < r)
+				&& (fabs((*(*it)->getPosition())[2] - mid[2]) < r)) {
+			if ((*((*it)->getPosition()) - mid).lengthSqr() < rSqr) {
+				ctr++;
+			}
 		}
 	}
 	return ctr;
@@ -193,30 +224,25 @@ int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 	int ctr = 0;
 
 	// Verschiebevektoren
-	//vector<coordinate> shifters = getShifters(); // funktioniert
-	vector<coordinate> shifted = getShifted(mid, r); // funktioniert nicht
+	vector<coordinate> shifted = getShifted(mid, r);
 
 	// Abstandsvergleich mit in jeder Raumrichtung verschobenen Kugel
 	for (unsigned int s = 0; s < shifted.size(); s++) {
-
 		// Iteration über alle Punkte
 		for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
+			// Boundingbox
+			if ((fabs((*(*it)->getPosition())[0] + shifted[s][0]) < r)
+					&& (fabs((*(*it)->getPosition())[1] + shifted[s][1]) < r)
+					&& (fabs((*(*it)->getPosition())[2] + shifted[s][2]) < r)) {
 
-			/*
-			 // Box statt Kugel
-			 if ((( tmp + shifters[s] )[0] < r)&&( tmp + shifters[s] )[1] > r)&&(( tmp + shifters[s] )[2] > r)) {
-			 ctr++;
-			 }
-			 }
-			 */
+				// Würfel sind leider nicht strikt konvex... (Local density fluctuations, hyperuniformity, and order metrics. Salvatore Torquato et. al.)
+				//ctr++;
 
-			//if (((*((*it)->getPosition()) - mid) - shifters[s]).length() < r) {
-			//if ((*it)->euklidian((mid + shifters[s])) < r) {
-			//cout << "r: " << r <<" p: " << (*(*it)->getPosition()) << " s: " << shifted[s] << " p->euklidian(s): " << (*it)->euklidian(shifted[s]) << endl;
-			if ((((*(*it)->getPosition()) + shifted[s]).lengthSqr())
-					< (r * r)) {
-				ctr++;
-				//cout << "r: " << r << " r*r: " << (r*r) <<" p: " << (*(*it)->getPosition()) << " s: " << shifted[s] << " p->euklidian(s)^2: " << (((*(*it)->getPosition()) + shifted[s]).lengthSqr()) << endl;
+				// liegt der Punkt in der Kugel?
+				if ((((*(*it)->getPosition()) + shifted[s]).lengthSqr())
+						< (r * r)) {
+					ctr++;
+				}
 			}
 		}
 	}
@@ -225,13 +251,26 @@ int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 
 string nodelist::listStats(const char commentDelimeter[]) {
 	stringstream stream;
+	stream << commentDelimeter << (periodic ? "Periodisch" : "Nicht periodisch")
+			<< endl;
 	stream << commentDelimeter << "Anzahl Knoten: " << size() << endl;
 	stream << commentDelimeter << "Extremalwerte: " << min << ", " << max
 			<< endl;
+	stream << commentDelimeter << "Mitte: " << getMid() << endl;
 	stream << commentDelimeter << "Volumen: " << getVolume() << endl;
 	stream << commentDelimeter << "Punktdichte: " << getDensity() << endl;
 
 	return stream.str();
+}
+
+void nodelist::normalize() {
+	cout << "Vorher: " << listStats() << endl;
+
+	shiftList(getMid() * -1);
+
+	setDensity(1);
+
+	cout << "Nacher: " << listStats() << endl;
 }
 
 /**
@@ -314,7 +353,9 @@ void nodelist::lengthDistribution() {
 	cout << stats(halfData);
 
 	// Daten ploten
-	plotHist(halfData, 0.6, 1.05, 25, "Länge");
+	plotHist(halfData, floor((*halfData.begin())) - 0.5,
+			ceil((*halfData.end())) + 0.5, 30, "Länge");
+
 }
 
 /**
@@ -396,36 +437,64 @@ void nodelist::hyperuniformity() {
 	double dr = 0.2, rMax = 11;
 
 	// Anzahl Kugeln bzw. iterationen
-	const int n = 20;
-
-	// Fortschrittsbalken
-	boost::progress_display show_progress(n);
+	const int n = 1000;
 
 	// Datenstruktur um Anzahl der Punkte in Kugel zu speichern
 	vector<vector<double> > data;
 
-	unsigned const int nr = ceil(rMax / dr);
+	unsigned int nr = ceil(rMax / dr);
 
 	data.resize(nr + 1);
 	for (unsigned int i = 0; i < nr; ++i) {
 		data[i].resize(n);
 	}
 
-	// erstelle n Kugeln...
-	for (int i = 0; i < n; i++) {
-		// Zufälligen Mittelpunkt auswählen (ist ~2 clicks schneller als einzeln die koordinaten generieren)
-		// TODO: Rand beachten bei nicht periodisch -> zufälligen Mittelpunkt wählen, sodass kugel immer im muster liegt
-		coordinate mid(3);
-		mid *= getLengths();
-		mid -= getLengths() / 2;
+	// Seed für Zufallsgenerator
+	srand(time(NULL));
+	if (periodic) {
 
+		// Fortschrittsbalken
+		boost::progress_display show_progress(n);
+
+		// erstelle n Kugeln...
+		for (int i = 0; i < n; i++) {
+			// Zufälligen Mittelpunkt auswählen
+			coordinate mid(3);
+			mid *= getLengths();
+			mid -= getLengths() / 2;
+
+			// Über Radius iterieren
+			for (unsigned int j = 0; j < nr; j++) {
+				data[j][i] = pointsInsidePeriodic(mid, j * dr);
+			}
+
+			// Fortschritt
+			++show_progress;
+		}
+	} else {
+
+		// Fortschrittsbalken
+		boost::progress_display show_progress(nr);
+
+		double r;
+		double rSqr;
 		// Über Radius iterieren
 		for (unsigned int j = 0; j < nr; j++) {
-			data[j][i] = pointsInsidePeriodic(mid, j * dr);
-		}
+			r = j * dr;
+			rSqr = r * r;
+			for (int i = 0; i < n; i++) {
+				// zufälligen Mittelpunkt wählen, sodass Kugel immer im Muster liegt
+				coordinate mid(3);
+				coordinate range = getLengths() - coordinate(2 * r, 2 * r, 2 * r);
+				mid *= range;
+				mid -= range / 2;
 
-		// Fortschritt
-		++show_progress;
+				data[j][i] = pointsInside(mid, r, rSqr);
+			}
+
+			// Fortschritt
+			++show_progress;
+		}
 	}
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
@@ -468,7 +537,66 @@ void nodelist::hyperuniformity() {
 		outfile << variance[j][0] << char(9) << variance[j][1] << endl;
 	}
 
+	double fitMax = std::min(getLengths()[0], std::min(getLengths()[1], getLengths()[2]));
+
+
 	// Varianz über Radius plotten
-	plot2D(variance, "Radius R", "Varianz  {/Symbol s}^2(R)");
+	plot2D(variance, 0, dr, rMax, periodic?:fitMax/2, "Radius R", "Varianz  {/Symbol s}^2(R)");
+}
+
+/**
+ * Schreibt eine pov-datei der Stäbe
+ */
+void nodelist::writePOV() {
+
+	const char outfileName[] = "./data/staebe.pov";
+
+	vector<string> data;
+
+	for (nodelist::iterator nodeIter = begin(); nodeIter != end(); ++nodeIter) {
+		stringstream stream;
+
+		// Kugel am Gelenk
+		stream << "sphere{"
+				<< (*nodeIter)->getPosition()->toString("<", ",", ">") << ",r}"
+				<< endl;
+
+		for (vector<node*>::iterator neighIter =
+				(*nodeIter)->getNeighbours()->begin();
+				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+			//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
+			if (isPeriodic()
+					&& (*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize()) {
+				// Zylinder von A nach B TODO: den zurück nicht...
+				stream << "cylinder{"
+						<< (*nodeIter)->getPosition()->toString("<", ",", ">")
+						<< ","
+						<< (*neighIter)->getPosition()->toString("<", ",", ">")
+						<< ",r}" << endl;
+
+			} else if (!isPeriodic()) {
+				// Zylinder von A nach B TODO: den zurück nicht...
+				stream << "cylinder{"
+						<< (*nodeIter)->getPosition()->toString("<", ",", ">")
+						<< ","
+						<< (*neighIter)->getPosition()->toString("<", ",", ">")
+						<< ",r}" << endl;
+			}
+		}
+		data.push_back(stream.str());
+	}
+
+	// Outfile
+	ofstream outfile;
+	outfile.open(outfileName);
+
+	// Daten schreiben
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i];
+	}
+
+	cout << "Stäbe in " << outfileName << " geschrieben." << endl;
 
 }

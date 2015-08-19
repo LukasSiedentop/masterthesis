@@ -54,8 +54,7 @@ double node::euklidianPeriodic(node * node) {
 
 	// Wenn die Länge größer als die Featuresize ist...
 	double length = differenceVec.length();
-	if (list->getLengths().length()/2 > length) {
-		// Fehler nicht schlimm, ist von Eclipse
+	if (list->getMaxFeatureSize() < length) { // TODO: <?
 		differenceVec = coordinate::getVec(position, *node->getPosition(), list->getShifters());
 		length = differenceVec.length();
 	}
@@ -88,7 +87,6 @@ double node::anglePeriodic(node * nodeA, node * nodeB) {
 	double maxFeatureSize = list->getLengths().lengthSqr()/4;
 
 	if ((len1sqr > maxFeatureSize) || (len2sqr > maxFeatureSize)) {
-		// Fehler nicht schlimm, ist von Eclipse
 		vec1 = coordinate::getVec(position, *nodeA->getPosition(), list->getShifters());
 		vec2 = coordinate::getVec(position, *nodeB->getPosition(), list->getShifters());
 		len1sqr = vec1.lengthSqr();

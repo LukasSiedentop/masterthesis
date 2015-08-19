@@ -48,16 +48,12 @@ int coordinate::numDimensions() {
 }
 
 bool coordinate::operator ==(const coordinate &rhs) {
-
-	bool equals = 0;
-
-	//TODO vergleich mit
-	//for (vector<double>::iterator it = begin(); it != end(); ++it) {}
 	for (unsigned i = 0; i < size(); i++) {
-		equals += abs(rhs[i] - (*this)[i]) < tolerance;
+		if (abs(rhs[i] - (*this)[i]) > tolerance) {
+			return false;
+		}
 	}
-
-	return equals;
+	return true;
 }
 
 bool coordinate::operator !=(const coordinate &rhs) {

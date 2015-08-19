@@ -12,7 +12,7 @@
 
 #include <ctime>
 
-#include <voro++/voro++.hh>
+//#include <voro++/voro++.hh>
 
 #include <boost/tuple/tuple.hpp>
 
@@ -38,15 +38,12 @@ int gui() {
 	cout << "7 - Muster gnuplotten" << endl;
 	cout << "8 - POV-Ray Datei schreiben" << endl;
 
-	cout << "9 - Muster schreiben (voro++)" << endl;
-	cout << "10 - Voro++ ausprobieren" << endl;
-
-	cout << "11 - weitere Liste einlesen" << endl;
-	cout << "12 - Listen vergleichen" << endl;
+	cout << "9 - Muster normalisieren" << endl;
+	cout << "10 - Listen vergleichen" << endl;
 
 	cout << "0 - Nichts." << endl;
 	cout << "---------------------------------------------------" << endl;
-	cout << "Was möchtest du über die Punkte wissen? (0-12; default: 0) << ";
+	cout << "Was möchtest du über die Punkte wissen? (0-10; default: 0) << ";
 
 	int option = 0;
 
@@ -88,11 +85,11 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 	double nx, ny, nz;
 
 	// Extremalwerte
-	double minX = 0, minY = 0, minZ = 0, maxX = 0, maxY = 0, maxZ = 0;
-
+	double inf = numeric_limits<double>::infinity();
+	double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
+			-inf;
 	// einlesen der Dateien
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
-
 		node * n = list->getAt(coordinate(x, y, z));
 		// Wenn an der Knoten Position noch kein Knoten existiert...
 		if (!n) {
@@ -132,8 +129,10 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 		list->setMaxs(coordinate(maxX, maxY, maxZ));
 	}
 
-	cout << "Dateien eingelesen und Liste mit " << list->size()
-			<< " Knoten erstellt." << endl;
+	cout << (periodic ? "Periodisches " : "")
+			<< "Muster eingelesen und Liste erstellt. Statistik:" << endl
+			<< list->listStats() << endl;
+
 	return list;
 }
 
@@ -187,65 +186,6 @@ void gnuplotPattern(nodelist * list) {
 	plot3D(data, list->getMins(), list->getMaxs());
 }
 
-/**
- * Schreibt eine pov-datei der Stäbe
- *//*
- void writePOV(nodelist * list, const char outfileName[]) {
- vector<string> data;
-
- node * nodeIter = list->getFirst();
- while (nodeIter) {
-
- stringstream stream;
-
- // Kugel am Gelenk
- stream << "sphere{<" << nodeIter->getX() << "," << nodeIter->getY()
- << "," << nodeIter->getZ() << ">,r}" << endl;
-
- Neighbour * neighIter = nodeIter->getNeighbours();
- while (neighIter) {
-
- //  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
- if (list->isPeriodic()
- && nodeIter->euklidian(neighIter->getNode())
- < list->lengthX() / 2) {
- // Zylinder von A nach B TODO: den zurück nicht...
- stream << "cylinder{<" << nodeIter->getX() << ","
- << nodeIter->getY() << "," << nodeIter->getZ() << ">,<"
- << neighIter->getNode()->getX() << ","
- << neighIter->getNode()->getY() << ","
- << neighIter->getNode()->getZ() << ">,r}" << endl;
-
- } else if (!list->isPeriodic()) {
- // Zylinder von A nach B TODO: den zurück nicht...
- stream << "cylinder{<" << nodeIter->getX() << ","
- << nodeIter->getY() << "," << nodeIter->getZ() << ">,<"
- << neighIter->getNode()->getX() << ","
- << neighIter->getNode()->getY() << ","
- << neighIter->getNode()->getZ() << ">,r}" << endl;
- }
-
- neighIter = neighIter->getNext();
- }
-
- data.push_back(stream.str());
-
- nodeIter = nodeIter->getNext();
- }
-
- // Outfile
- ofstream outfile;
- outfile.open(outfileName);
-
- // Daten schreiben
- for (unsigned int i = 0; i < data.size(); i++) {
- outfile << data[i];
- }
-
- cout << "Stäbe in " << outfileName << " geschrieben." << endl;
-
- }
- */
 /**
  * Schreibt die Koordinaten der Knoten mit einer Nummerierung davor, für voro++.
  *//*
@@ -323,34 +263,39 @@ void gnuplotPattern(nodelist * list) {
  cout << "Statistik Liste 1:" << endl << listA->listStats();
  cout << "Statistik Liste 2:" << endl << listB->listStats();
  }
-*/
- void benchmark() {
- double pos1[] = { M_PI, 3.0, 5.0 };
- double pos2[] = { 2,2,2 };
- double pos3[] = { 1.0, 1.0, 1.0 };
+ */
 
- coordinate coord1(pos1, 3);
- coordinate coord2(pos1, 3);
- coordinate coord3(pos2, 3);
- coordinate coord4(pos3, 3);
+void benchmark() {
+	double pos1[] = { M_PI, 3.0, 5.0 };
+	double pos2[] = { 2, 2, 2 };
+	double pos3[] = { 1.0, 1.0, 1.0 };
 
- cout << "1 " << coord1 << endl;
- cout << "2 " << coord2 << endl;
- cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
- cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
- cout << "3+4 " << coord4+coord3 << " lsqr: " <<  (coord4+coord3).lengthSqr() << endl;
- cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
+	coordinate coord1(pos1, 3);
+	coordinate coord2(pos1, 3);
+	coordinate coord3(pos2, 3);
+	coordinate coord4(pos3, 3);
 
- clock_t t;
- t = clock();
- for (unsigned i = 0; i < 1000; i++) {
-	 coord3.lengthSqr();
-	 coord4.lengthSqr();
- }
+	cout << "1 " << coord1 << endl;
+	cout << "2 " << coord2 << endl;
+	cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
+	cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
+	cout << "3+4 " << coord4 + coord3 << " lsqr: "
+			<< (coord4 + coord3).lengthSqr() << endl;
+	cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
+	cout << "3==4 " << (coord3 == coord4) << endl;
+	cout << "4==3 " << (coord4 == coord3) << endl;
+	cout << "3==3 " << (coord3 == coord3) << endl;
 
- t = clock() - t;
- cout << "Hat " << t << " Clicks gedauert (" << (((float)t)/CLOCKS_PER_SEC) << "s)" << endl;
- }
+	clock_t t;
+	t = clock();
+	for (unsigned i = 0; i < 1000; i++) {
+		(coord3 == coord4);
+	}
+
+	t = clock() - t;
+	cout << "Hat " << t << " Clicks gedauert ("
+			<< (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
+}
 
 /**
  * Hier wird ausgeführt was gewählt wurde.
@@ -362,19 +307,19 @@ int main(int argc, char *argv[]) {
 	// Muster einlesen
 	vector<nodelist *> lists;
 	for (int i = 1; i < argc; i += 3) {
-		lists.push_back(readfile(argv[i], argv[i + 1], argv[i + 2]));
+		lists.push_back(
+				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false)));
+
 	}
-
-	//nodelist * list = readfile(argv[1], argv[2], argv[3]);
-	//nodelist * list2 = readfile(argv[4], argv[5], argv[6]);
-
-	benchmark();
 
 	int option = -1;
 	while (option != 0) {
+		//benchmark();
+
 		// Optionen anzeigen und wählen lassen
 		option = gui();
 
+		int ctr = 0;
 		for (vector<nodelist*>::iterator list = lists.begin();
 				list != lists.end(); ++list) {
 
@@ -396,21 +341,19 @@ int main(int argc, char *argv[]) {
 				break;
 			case 5:
 				(*list)->display();
-				//list2->display();
 				break;
 			case 6:
-				cout << "Liste 1: " << (*list)->listStats();
-				//cout << "Liste 2: " << list2->listStats();
+				cout << "Liste " << ctr << ": " << (*list)->listStats();
 				break;
 			case 7:
-				gnuplotPattern((*list));
+				gnuplotPattern(*list);
 				break;
-				/*case 8:
-				 writePOV(list, "./data/staebe.pov");
-				 break;
-				 case 9:
-				 writePointsVoro(list, "./data/voro++.dat");
-				 break;
+			case 8:
+				(*list)->writePOV();
+				break;
+			case 9:
+				(*list)->normalize();
+				break;/*
 				 case 10:
 				 testVoro();
 				 break;
@@ -423,6 +366,8 @@ int main(int argc, char *argv[]) {
 			default:
 				cout << "Das gibts leider (noch) nicht." << endl;
 			}
+
+			ctr++;
 		}
 
 		if (option != 0) {
