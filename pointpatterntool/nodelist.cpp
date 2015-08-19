@@ -161,7 +161,7 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 							// ... die Verschiebung hinzufügen
 							shifters.push_back(
 									mid
-											+ coordinate(ix * lx, iy * ly,
+											- coordinate(ix * lx, iy * ly,
 													iz * lz));
 							//cout << "r: " << halfExtend << " s: " << mid+coordinate(ix * halfExtend, iy * halfExtend, iz * halfExtend) << " p: " << coordinate(ix * lx, iy * ly, iz * lz) << endl;
 						}
