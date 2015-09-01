@@ -20,6 +20,7 @@ class node {
 private:
 	// Liste, zu der der Knoten gehört (gebraucht für periodizität)
 	class nodelist * list;
+
 	// Position
 	coordinate position;
 
@@ -62,6 +63,9 @@ public:
 	void shift(coordinate shifter);
 	// multipliziert die Knotenposition um den gegebenen Faktor
 	void scale(double a);
+
+	/* Kleiner gleich: Test ob rhs weiter vom Mittelpunkt entfernt ist */
+	bool operator <=(node &rhs);
 };
 
 #endif /* NODE_HPP_ */

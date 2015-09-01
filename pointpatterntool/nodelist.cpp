@@ -63,8 +63,7 @@ bool nodelist::isPeriodic() {
 }
 
 void nodelist::setDensity(double density) {
-	double factor = getDensity() / density;
-	scaleList(pow(factor, 1. / 3.));
+	scaleList(pow((getDensity() / density), 1. / 3.));
 }
 
 double nodelist::getDensity() {
@@ -263,14 +262,16 @@ string nodelist::listStats(const char commentDelimeter[]) {
 	return stream.str();
 }
 
-void nodelist::normalize() {
-	cout << "Vorher: " << listStats() << endl;
+double nodelist::normalize() {
+	//cout << "Vorher: " << listStats() << endl;
+
+	double factor = pow(getDensity(), 1. / 3.);
 
 	shiftList(getMid() * -1);
 
 	setDensity(1);
-
-	cout << "Nacher: " << listStats() << endl;
+	return factor;
+	//cout << "Nacher: " << listStats() << endl;
 }
 
 /**

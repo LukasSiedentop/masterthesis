@@ -17,6 +17,8 @@
 
 #include <typeinfo>
 
+#include <map>
+
 #include "gnuplot-iostream.h"
 #include "nodelist.hpp"
 #include "coordinate.hpp"
@@ -178,13 +180,17 @@ void writeHist(vector<T> data, bool includeStats, const char header[],
 
 /**
  * Templates um einen Vektor zu (merge-) sortieren. Geändert von http://www.bogotobogo.com/Algorithms/mergesort.php, code A
- * TODO: umbaubar auf die NodeList? Diese als Vector?
+ */
+/**
+ *
  */
 template<typename T>
 vector<T> merge(vector<T> left, vector<T> right) {
 	vector<T> result;
 	while ((int) left.size() > 0 || (int) right.size() > 0) {
 		if ((int) left.size() > 0 && (int) right.size() > 0) {
+
+			// Hier passiert der Vergleich
 			if ((T) left.front() <= (T) right.front()) {
 				result.push_back((T) left.front());
 				left.erase(left.begin());
@@ -192,6 +198,7 @@ vector<T> merge(vector<T> left, vector<T> right) {
 				result.push_back((T) right.front());
 				right.erase(right.begin());
 			}
+
 		} else if ((int) left.size() > 0) {
 			for (int i = 0; i < (int) left.size(); i++)
 				result.push_back(left[i]);
@@ -228,11 +235,15 @@ vector<T> mergeSort(vector<T> m) {
 	return result;
 }
 
+
+
 /* Plotmethoden Gnuplot */
 // TODO: anzeigen UND svg speichern
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
+
+
 template<typename T>
 void plotHist(vector<T> data, double min, double max, int n,
 		const char xlabel[] = "x") {
@@ -311,7 +322,7 @@ void plot2D(vector<vector<T> > data, double xMin, double dx, double xMax,
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<coordinate> data, coordinate mins, coordinate maxs,
+void plot3D(vector<vector<coordinate> > data,
 		const char xlabel[] = "x", const char ylabel[] = "y",
 		const char zlabel[] = "z");
 

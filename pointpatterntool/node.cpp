@@ -54,7 +54,7 @@ double node::euklidianPeriodic(node * node) {
 
 	// Wenn die Länge größer als die Featuresize ist...
 	double length = differenceVec.length();
-	if (list->getMaxFeatureSize() < length) { // TODO: <?
+	if (list->getMaxFeatureSize() < length) {
 		differenceVec = coordinate::getVec(position, *node->getPosition(), list->getShifters());
 		length = differenceVec.length();
 	}
@@ -154,4 +154,8 @@ bool node::equals(node * node) {
 
 	// Positionen vergleichen
 	return (position == *node->getPosition());
+}
+
+bool node::operator <=(node &rhs) {
+	return position.lengthSqr() <= (*(rhs.getPosition())).lengthSqr();
 }
