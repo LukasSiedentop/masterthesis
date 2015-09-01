@@ -37,7 +37,8 @@ public:
 	node(class nodelist * list, double x, double y, double z);
 	~node();
 
-	coordinate * getPosition();
+	// Gibt die Position des Knotens zurück
+	coordinate * getPosition() const;
 
 	std::vector<class node *> * getNeighbours();
 	//std::vector<int> * isInBox();
@@ -65,7 +66,7 @@ public:
 	void scale(double a);
 
 	/* Kleiner gleich: Test ob rhs weiter vom Mittelpunkt entfernt ist */
-	bool operator <=(node &rhs);
+	bool operator <=(const node &rhs);
 };
 
 #endif /* NODE_HPP_ */

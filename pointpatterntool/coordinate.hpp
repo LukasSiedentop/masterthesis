@@ -81,7 +81,7 @@ public:
 	/* Gibt den euklidschen Abstand zwischen dieser Koordinate und point zurück */
 	double euklidian(coordinate point);
 	/* Gibt die quadrierte euklidsche Länge des Vektors vom Ursprung zu dieser Koordinate zurück. Etwa doppelt so schnell wie length() */
-	double lengthSqr();
+	double lengthSqr() const;
 	/* Gibt die euklidsche Länge des Vektors vom Ursprung zu dieser Koordinate zurück */
 	double length();
 

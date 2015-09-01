@@ -122,7 +122,7 @@ double coordinate::euklidian(coordinate point) {
 	return coordinate(*this - point).length();
 }
 
-double coordinate::lengthSqr() {
+double coordinate::lengthSqr() const {
 	double sumSqr = 0;
 	for (unsigned i = 0; i < size(); i++) {
 		sumSqr += (*this)[i] * (*this)[i];

@@ -29,8 +29,8 @@ node::~node() {
 	// TODO: was ist hier zu tun?
 }
 
-coordinate * node::getPosition() {
-	return &position;
+coordinate * node::getPosition() const {
+	return new coordinate(position);
 }
 
 std::vector<class node * > * node::getNeighbours() {
@@ -156,6 +156,6 @@ bool node::equals(node * node) {
 	return (position == *node->getPosition());
 }
 
-bool node::operator <=(node &rhs) {
-	return position.lengthSqr() <= (*(rhs.getPosition())).lengthSqr();
+bool node::operator <=(const node &rhs) {
+	return position.lengthSqr() <= rhs.getPosition()->lengthSqr();
 }

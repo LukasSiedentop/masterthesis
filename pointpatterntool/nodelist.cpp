@@ -28,6 +28,14 @@ nodelist::~nodelist() {
 	//periodic;
 }
 
+vector<class node> nodelist::getVector() {
+	vector<class node> nodes;
+	for (unsigned i = 0; i < this->size(); i++) {
+		nodes.push_back(*this->at(i));
+	}
+	return nodes;
+}
+
 void nodelist::setMins(coordinate mins) {
 	min = mins;
 }

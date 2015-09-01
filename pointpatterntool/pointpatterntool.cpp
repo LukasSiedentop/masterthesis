@@ -182,6 +182,28 @@ void gnuplotPattern(vector<nodelist *> lists) {
 	plot3D(datas);
 }
 
+void compareLists(vector<nodelist *> lists) {
+	// Sortieren (Punkte Nahe dem Mittelpunkt zu weit entfernten)
+	vector<vector<class node> > sortedLists;
+	for (unsigned l = 0; l < lists.size(); l++) {
+		sortedLists.push_back(mergeSort(lists[l]->getVector()));
+	}
+
+	// Ersten Knoten übereinanderlegen, Skalierung anpassen
+
+
+	// Differenzvektoren bilden
+	vector<double> diffs;
+	unsigned comparisons = min(sortedLists[0].size(), sortedLists[1].size());
+	for (unsigned i = 0; i < comparisons; i++) {
+		coordinate diff = ((*sortedLists[0][i].getPosition()) - (*sortedLists[1][i].getPosition()));
+		diffs.push_back(diff.length());
+	}
+
+	// Histogramm der Längen der Differenzvektoren
+	plotHist(diffs, 0, 15, 15, "Differenzlängen");
+}
+
 /**
  * Schreibt die Koordinaten der Knoten mit einer Nummerierung davor, für voro++.
  *//*
@@ -367,10 +389,10 @@ int main(int argc, char *argv[]) {
 				(*list)->writePOV();
 			}
 			break;
-			/*
+
 			 case 9:
 			 compareLists(lists);
-			 break;
+			 break;/*
 			 case 10:
 			 testVoro();
 			 break;

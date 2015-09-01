@@ -51,6 +51,8 @@ public:
 	void display();
 
 	/* Datenspezifisches */
+	// Gitb die Liste als einfachen Vektor zurück mit den Daten der Knoten (keine Pointer)
+	std::vector<class node> getVector();
 	// Minimalwerte setzen
 	void setMins(coordinate mins);
 	// Maximalwerte setzen
