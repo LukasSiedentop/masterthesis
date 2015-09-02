@@ -324,6 +324,6 @@ void plot2D(vector<vector<T> > data, double xMin, double dx, double xMax,
  */
 void plot3D(vector<vector<coordinate> > data,
 		const char xlabel[] = "x", const char ylabel[] = "y",
-		const char zlabel[] = "z");
+		const char zlabel[] = "z", const char style[] = "w l");
 
 #endif /* NODELIST_HPP_ */

@@ -94,7 +94,7 @@ public:
 	int pointsInsidePeriodic(coordinate mid, double r);
 	// gibt Statistiken der Liste als String zurück
 	string listStats(const char commentDelimeter[] = "\t");
-	// macht das Muster vergleichbar mit anderen: Punktdichte=1, Mittelpunkt=(0,0,0)
+	// macht das Muster vergleichbar mit anderen: Punktdichte=1, Mittelpunkt=dem Mittelpunkt am nächsten liegende Knoten
 	double normalize();
 
 	/* Berechnungen */

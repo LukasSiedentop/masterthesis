@@ -71,8 +71,7 @@ int gui() {
  * 3 4 5		1 2 3
  * 3 4 5		2 3 4
  */
-nodelist* readfile(const char* nodes, const char* neighbours,
-		bool periodic) {
+nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
 			<< " ein." << endl;
 
@@ -193,40 +192,46 @@ void gnuplotPattern(vector<nodelist*> lists) {
 }
 
 void compareLists(vector<nodelist*> lists) {
-	// Sortieren (Punkte Nahe dem Mittelpunkt zu weit entfernten)
+	// Sortieren (Punkte Nahe dem Mittelpunkt vor weiter entfernten)
 	vector<nodelist*> sortedLists;
 	nodelist* tmp;
 	for (unsigned l = 0; l < lists.size(); l++) {
-
 		vector<class node> a = mergeSort(lists[l]->getVector());
-		tmp = new nodelist(a, false);
+		bool periodic = ((*lists[l]).isPeriodic());
+		tmp = new nodelist(a, periodic);
 		sortedLists.push_back(tmp);
 	}
 
-	// Ersten Knoten übereinanderlegen, Skalierung anpassen
+	// Ersten Knoten in den Ursprung legen
+	sortedLists[0]->shiftList(*(*sortedLists[0])[0]->getPosition() * -1);
+	sortedLists[1]->shiftList(*(*sortedLists[1])[0]->getPosition() * -1);
+
+	//TODO: Skalierung anpassen
 
 	// Differenzvektoren bilden
-	vector<double> diffs;
+	vector<vector<coordinate> > plotData;
+	vector<coordinate> diffs;
+	vector<double> diffLengths;
 	coordinate diff;
 	unsigned comparisons = min(sortedLists[0]->size(), sortedLists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
-
-		cout << (*sortedLists[0])[i]->getPosition()->toString() << ", "
-						<< (*sortedLists[1])[i]->getPosition()->toString() << endl;
-
-		cout << (*lists[0])[i]->getPosition()->toString() << ", "
-						<< (*lists[1])[i]->getPosition()->toString() << endl;
-
 		coordinate* vec1 = (*sortedLists[0])[i]->getPosition();
 		coordinate* vec2 = (*sortedLists[1])[i]->getPosition();
-
 		diff = *vec1 - *vec2;
 
-		diffs.push_back(diff.length());
+		diffs.push_back(diff);
+		diffs.push_back(coordinate(0, 0, 0));
+		diffs.push_back(coordinate(nan(""), nan(""), nan("")));
+
+		diffLengths.push_back(diff.length());
 	}
 
+	plotData.push_back(diffs);
+
 	// Histogramm der Längen der Differenzvektoren
-	plotHist(diffs, 0, 15, 15, "Differenzlängen");
+	plotHist(diffLengths, 0, 15, 15, "Differenzlängen");
+	plot3D(plotData, "x", "y", "z", "w dots");
+	gnuplotPattern(sortedLists);
 }
 
 /**

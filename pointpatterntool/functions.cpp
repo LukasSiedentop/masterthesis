@@ -8,7 +8,7 @@
 #include "functions.hpp"
 
 void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
-		const char ylabel[], const char zlabel[]) {
+		const char ylabel[], const char zlabel[], const char style[]) {
 	Gnuplot gp;
 	gp << "reset\n";
 
@@ -39,7 +39,7 @@ void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
 	stringstream plotstring;
 	plotstring << "splot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
-		plotstring << "'-' w l lt rgb '" << colors[i] << "' t 'Muster " << i << "'";
+		plotstring << "'-' " << style << " lt rgb '" << colors[i] << "' t 'Muster " << i << "'";
 		if (i != datas.size() - 1) {
 			plotstring << ",";
 		}

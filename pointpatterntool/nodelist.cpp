@@ -237,13 +237,12 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 	return shifters;
 }
 
-// TODO: paralellisieren TODO: prüfen
 int nodelist::pointsInside(coordinate mid, double r, double rSqr) {
 	// Zähler
 	int ctr = 0;
 
 	// Iteration über alle Punkte
-	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
+	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
 		// Boundingbox
 		if ((fabs((*(*it)->getPosition())[0] - mid[0]) < r)
 				&& (fabs((*(*it)->getPosition())[1] - mid[1]) < r)
@@ -256,7 +255,6 @@ int nodelist::pointsInside(coordinate mid, double r, double rSqr) {
 	return ctr;
 }
 
-// TODO: paralellisieren TODO: noch falsch
 int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 	// Zähler
 	int ctr = 0;
@@ -267,7 +265,7 @@ int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 	// Abstandsvergleich mit in jeder Raumrichtung verschobenen Kugel
 	for (unsigned int s = 0; s < shifted.size(); s++) {
 		// Iteration über alle Punkte
-		for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
+		for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
 			// Boundingbox
 			if ((fabs((*(*it)->getPosition())[0] + shifted[s][0]) < r)
 					&& (fabs((*(*it)->getPosition())[1] + shifted[s][1]) < r)
@@ -302,15 +300,25 @@ string nodelist::listStats(const char commentDelimeter[]) {
 }
 
 double nodelist::normalize() {
-	//cout << "Vorher: " << listStats() << endl;
-
+	// Dichte auf 1 setzen
 	double factor = pow(getDensity(), 1. / 3.);
-
-	shiftList(getMid() * -1);
-
+	//double factor = ((M_PI * pow(300, 2./3.)) / 6) / getMaxFeatureSize();//pow(getDensity(), 1. / 3.);
+	//scaleList(factor);
 	setDensity(1);
+
+	// Mittelpunkt anpassen
+	shiftList(getMid() * -1);
+	/*
+	coordinate* shifter = (*this)[0]->getPosition();
+	// Dem Ursprung nächsten Knoten finden
+	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
+		if (shifter->lengthSqr() > (*it)->getPosition()->lengthSqr()) {
+			shifter = (*it)->getPosition();
+		}
+	}
+	shiftList(*shifter * -1);
+	 */
 	return factor;
-	//cout << "Nacher: " << listStats() << endl;
 }
 
 /**

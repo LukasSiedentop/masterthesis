@@ -10,7 +10,7 @@
 using namespace std;
 
 node::node() :
-		position(coordinate()){ //, inBox(NULL) {
+		position(coordinate()) { //, inBox(NULL) {
 	// TODO: geht das besser?
 	nodelist* l = new nodelist();
 	list = l;
@@ -20,26 +20,40 @@ node::node() :
 }
 
 node::node(nodelist* list, double x, double y, double z) :
-		list(list), position(coordinate(x, y, z)){//, inBox(NULL) {
+		list(list), position(coordinate(x, y, z)) {	//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
 }
 
-node::node(node& n, class nodelist* list) : list(list) {
+node::node(node& n, class nodelist* list) :
+		list(list) {
 	position = *(n.getPosition());
-	// TODO: neighbours richtig kopieren, die referenzen stimmen so nicht...(?)
-	neighbours = *(n.getNeighbours());
+
+	std::vector<class node*> neighs;
+
+	// TODO: neighbours richtig kopieren, die referenzen stimmen so (?)
+	for (vector<node*>::iterator neighIter = n.getNeighbours()->begin();
+			neighIter != n.getNeighbours()->end(); ++neighIter) {
+		if (list->getAt(*(*neighIter)->getPosition())) {
+			neighs.push_back(list->getAt(*(*neighIter)->getPosition()));
+		}
+	}
+	neighbours = neighs;
+
+	//old
+	//neighbours = *(n.getNeighbours());
+
 }
 
 node::~node() {
-	// TODO: was ist hier zu tun?
+// TODO: was ist hier zu tun?
 }
 
 coordinate* node::getPosition() const {
 	return new coordinate(position);
 }
 
-std::vector<class node* >* node::getNeighbours() {
+std::vector<class node*>* node::getNeighbours() {
 	return &neighbours;
 }
 
@@ -58,10 +72,11 @@ double node::euklidian(coordinate point) {
 double node::euklidianPeriodic(node* node) {
 	coordinate differenceVec = position - *node->getPosition();
 
-	// Wenn die Länge größer als die Featuresize ist...
+// Wenn die Länge größer als die Featuresize ist...
 	double length = differenceVec.length();
 	if (list->getMaxFeatureSize() < length) {
-		differenceVec = coordinate::getVec(position, *node->getPosition(), list->getShifters());
+		differenceVec = coordinate::getVec(position, *node->getPosition(),
+				list->getShifters());
 		length = differenceVec.length();
 	}
 
@@ -69,7 +84,7 @@ double node::euklidianPeriodic(node* node) {
 }
 
 double node::angle(node * nodeA, node * nodeB) {
-	// cos alpha = skp(a,b) / |a|*|b|
+// cos alpha = skp(a,b) / |a|*|b|
 
 	coordinate vec1 = *nodeA->getPosition() - position;
 
@@ -90,19 +105,21 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
 
-	double maxFeatureSize = list->getLengths().lengthSqr()/4;
+	double maxFeatureSize = list->getLengths().lengthSqr() / 4;
 
 	if ((len1sqr > maxFeatureSize) || (len2sqr > maxFeatureSize)) {
-		vec1 = coordinate::getVec(position, *nodeA->getPosition(), list->getShifters());
-		vec2 = coordinate::getVec(position, *nodeB->getPosition(), list->getShifters());
+		vec1 = coordinate::getVec(position, *nodeA->getPosition(),
+				list->getShifters());
+		vec2 = coordinate::getVec(position, *nodeB->getPosition(),
+				list->getShifters());
 		len1sqr = vec1.lengthSqr();
 		len2sqr = vec2.lengthSqr();
 	}
 
-	// Skalarprodukt
+// Skalarprodukt
 	double skp = coordinate::scp(vec1, vec2);
 
-	// Winkel ausgeben
+// Winkel ausgeben
 	return acos(skp / sqrt(len1sqr * len2sqr));
 }
 
@@ -133,7 +150,6 @@ bool node::isNeighbour(node* node) {
 	for (vector<class node*>::iterator it = neighbours.begin();
 			it != neighbours.end(); ++it) {
 
-
 		// TODO: geht das wirklich?
 		exists += ((*it) == node);
 	}
@@ -158,7 +174,7 @@ bool node::equals(node* node) {
 	 //return ((position == node->getPosition()) && equals);
 	 */
 
-	// Positionen vergleichen
+// Positionen vergleichen
 	return (position == *node->getPosition());
 }
 
