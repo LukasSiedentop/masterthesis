@@ -17,7 +17,7 @@ coordinate::coordinate(unsigned int n) {
 	}
 }
 
-coordinate::coordinate(const coordinate & coord) {
+coordinate::coordinate(const coordinate& coord) {
 	*this = coord;
 }
 

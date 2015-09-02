@@ -12,44 +12,50 @@ using namespace std;
 node::node() :
 		position(coordinate()){ //, inBox(NULL) {
 	// TODO: geht das besser?
-	nodelist * l = new nodelist();
+	nodelist* l = new nodelist();
 	list = l;
 
+	std::vector<class node*> neighs;
+	neighbours = neighs;
+}
+
+node::node(nodelist* list, double x, double y, double z) :
+		list(list), position(coordinate(x, y, z)){//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
 }
 
-node::node(nodelist * list, double x, double y, double z) :
-		list(list), position(coordinate(x, y, z)){//, inBox(NULL) {
-	std::vector<class node *> neighs;
-	neighbours = neighs;
+node::node(node& n, class nodelist* list) : list(list) {
+	position = *(n.getPosition());
+	// TODO: neighbours richtig kopieren, die referenzen stimmen so nicht...(?)
+	neighbours = *(n.getNeighbours());
 }
 
 node::~node() {
 	// TODO: was ist hier zu tun?
 }
 
-coordinate * node::getPosition() const {
+coordinate* node::getPosition() const {
 	return new coordinate(position);
 }
 
-std::vector<class node * > * node::getNeighbours() {
+std::vector<class node* >* node::getNeighbours() {
 	return &neighbours;
 }
 
-/*std::vector<int> * node::isInBox() {
-	return inBox;
-}*/
+void node::setList(nodelist* l) {
+	list = l;
+}
 
-double node::euklidian(node * node) {
-	return euklidian(* node->getPosition());
+double node::euklidian(node* node) {
+	return euklidian(*node->getPosition());
 }
 
 double node::euklidian(coordinate point) {
 	return position.euklidian(point);
 }
 
-double node::euklidianPeriodic(node * node) {
+double node::euklidianPeriodic(node* node) {
 	coordinate differenceVec = position - *node->getPosition();
 
 	// Wenn die Länge größer als die Featuresize ist...
@@ -77,7 +83,7 @@ double node::angle(node * nodeA, node * nodeB) {
 	return acos(skp / sqrt(len1sqr * len2sqr));
 }
 
-double node::anglePeriodic(node * nodeA, node * nodeB) {
+double node::anglePeriodic(node* nodeA, node* nodeB) {
 	coordinate vec1 = position - *nodeA->getPosition();
 	coordinate vec2 = position - *nodeB->getPosition();
 
@@ -112,7 +118,7 @@ void node::scale(double a) {
 	position *= a;
 }
 
-void node::addNeighbour(node * node) {
+void node::addNeighbour(node* node) {
 // aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
 	if (this->isNeighbour(node) || (this->equals(node))) {
 		return;
@@ -121,10 +127,10 @@ void node::addNeighbour(node * node) {
 	neighbours.push_back(node);
 }
 
-bool node::isNeighbour(node * node) {
+bool node::isNeighbour(node* node) {
 
 	bool exists = 0;
-	for (vector<class node *>::iterator it = neighbours.begin();
+	for (vector<class node*>::iterator it = neighbours.begin();
 			it != neighbours.end(); ++it) {
 
 
@@ -134,7 +140,7 @@ bool node::isNeighbour(node * node) {
 	return exists;
 }
 
-bool node::equals(node * node) {
+bool node::equals(node* node) {
 	/*
 	 // Nachbarn vergleichen
 	 bool equals = 0;

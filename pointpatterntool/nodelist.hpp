@@ -43,7 +43,10 @@ private:
 	bool periodic;
 public:
 	nodelist();
+	// Konstruktor für eine leere Liste mit gegebener Periodizität
 	nodelist(bool periodicity);
+	// Konstruiert eine nichtperiodische Nodelist aus einem Vektor von Nodes.
+	nodelist(std::vector<node>& vec, bool periodicity);
 	~nodelist();
 
 	/* Listenspezifisches */

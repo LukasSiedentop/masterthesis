@@ -18,6 +18,37 @@ nodelist::nodelist() :
 nodelist::nodelist(bool periodicity) :
 		min(coordinate()), max(coordinate()), periodic(periodicity) {
 }
+
+nodelist::nodelist(vector<node>& vec, bool periodicity) :
+		periodic(periodicity) {
+	// Extremalwerte bestimmen
+	double inf = numeric_limits<double>::infinity();
+	double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
+			-inf;
+
+	//coordinate minimum({inf, inf, inf},3);
+	//coordinate maximum({-inf, -inf, -inf},3);
+
+	for (unsigned n = 0; n < vec.size(); n++) {
+
+		minX = std::min(minX, (*vec[n].getPosition())[0]);
+		minY = std::min(minY, (*vec[n].getPosition())[1]);
+		minZ = std::min(minZ, (*vec[n].getPosition())[2]);
+
+		maxX = std::max(maxX, (*vec[n].getPosition())[0]);
+		maxY = std::max(maxY, (*vec[n].getPosition())[1]);
+		maxZ = std::max(maxZ, (*vec[n].getPosition())[2]);
+
+		// Liste des Knotens neu setzen
+		//vec[n].setList(this);
+		// Knoten dieser Liste hinzufügen
+		this->push_back(new node(vec[n], this));
+	}
+
+	setMins(coordinate(minX, minY, minZ));
+	setMaxs(coordinate(maxX, maxY, maxZ));
+}
+
 nodelist::~nodelist() {
 	vector<node*>().swap(*this);
 
@@ -494,7 +525,8 @@ void nodelist::hyperuniformity() {
 			for (int i = 0; i < n; i++) {
 				// zufälligen Mittelpunkt wählen, sodass Kugel immer im Muster liegt
 				coordinate mid(3);
-				coordinate range = getLengths() - coordinate(2 * r, 2 * r, 2 * r);
+				coordinate range = getLengths()
+						- coordinate(2 * r, 2 * r, 2 * r);
 				mid *= range;
 				mid -= range / 2;
 
@@ -546,11 +578,12 @@ void nodelist::hyperuniformity() {
 		outfile << variance[j][0] << char(9) << variance[j][1] << endl;
 	}
 
-	double fitMax = std::min(getLengths()[0], std::min(getLengths()[1], getLengths()[2]));
-
+	double fitMax = std::min(getLengths()[0],
+			std::min(getLengths()[1], getLengths()[2]));
 
 	// Varianz über Radius plotten
-	plot2D(variance, 0, dr, rMax, periodic?:fitMax/2, "Radius R", "Varianz  {/Symbol s}^2(R)");
+	plot2D(variance, 0, dr, rMax, periodic ? : fitMax / 2, "Radius R",
+			"Varianz  {/Symbol s}^2(R)");
 }
 
 /**

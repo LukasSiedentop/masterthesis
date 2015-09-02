@@ -5,6 +5,18 @@
  *      Author: lukas
  */
 
+/*
+ int main()
+ {
+ int* k; // Pointer to int
+ int x =25; // int
+ k= &x;
+ cout<<k<<endl;     // Address of Operator
+ cout<<*k<<endl;    // The Dereferencing Operator
+ return 0;
+ }
+ */
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -59,7 +71,7 @@ int gui() {
  * 3 4 5		1 2 3
  * 3 4 5		2 3 4
  */
-nodelist * readfile(const char * nodes, const char * neighbours,
+nodelist* readfile(const char* nodes, const char* neighbours,
 		bool periodic) {
 	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
 			<< " ein." << endl;
@@ -70,7 +82,7 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 	neighbourFile.open(neighbours, std::ifstream::in);
 
 	// Listenkopf
-	nodelist * list = new nodelist(periodic);
+	nodelist* list = new nodelist(periodic);
 
 	if (periodic) {
 		cout << "Nehme eine Box von (-5,5)^3 an..." << endl;
@@ -89,7 +101,7 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 			-inf;
 	// einlesen der Dateien
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
-		node * n = list->getAt(coordinate(x, y, z));
+		node* n = list->getAt(coordinate(x, y, z));
 		// Wenn an der Knoten Position noch kein Knoten existiert...
 		if (!n) {
 			// ... füge ihn der Liste hinzu
@@ -97,7 +109,7 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 			list->push_back(n);
 		}
 
-		node * neighbour = list->getAt(coordinate(nx, ny, nz));
+		node* neighbour = list->getAt(coordinate(nx, ny, nz));
 		// Wenn an der Nachbarknoten Position noch kein Knoten existiert...
 		if (!neighbour) {
 			// ... füge ihn der Liste hinzu
@@ -130,9 +142,9 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 
 	double factor = list->normalize();
 	cout << (periodic ? "Periodisches " : "")
-			<< "Muster eingelesen, normalisiert (skaliert mit Faktor "
-			<< factor << ") und Liste erstellt. Statistik:" << endl
-			<< list->listStats() << endl;
+			<< "Muster eingelesen, normalisiert (skaliert mit Faktor " << factor
+			<< ") und Liste erstellt. Statistik:" << endl << list->listStats()
+			<< endl;
 
 	return list;
 }
@@ -140,7 +152,7 @@ nodelist * readfile(const char * nodes, const char * neighbours,
 /**
  * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
  */
-void gnuplotPattern(vector<nodelist *> lists) {
+void gnuplotPattern(vector<nodelist*> lists) {
 	vector<vector<coordinate> > datas;
 
 	// Listeniteration
@@ -164,14 +176,12 @@ void gnuplotPattern(vector<nodelist *> lists) {
 					data.push_back(*(*neighIter)->getPosition());
 
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
-					//data.push_back(coordinate(nan(""), nan(""), nan("")));
 
 				} else if (!(*list)->isPeriodic()) {
 					data.push_back(*(*nodeIter)->getPosition());
 					data.push_back(*(*neighIter)->getPosition());
 
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
-					//data.push_back(coordinate(nan(""), nan(""), nan("")));
 				}
 			}
 		}
@@ -182,21 +192,36 @@ void gnuplotPattern(vector<nodelist *> lists) {
 	plot3D(datas);
 }
 
-void compareLists(vector<nodelist *> lists) {
+void compareLists(vector<nodelist*> lists) {
 	// Sortieren (Punkte Nahe dem Mittelpunkt zu weit entfernten)
-	vector<vector<class node> > sortedLists;
+	vector<nodelist*> sortedLists;
+	nodelist* tmp;
 	for (unsigned l = 0; l < lists.size(); l++) {
-		sortedLists.push_back(mergeSort(lists[l]->getVector()));
+
+		vector<class node> a = mergeSort(lists[l]->getVector());
+		tmp = new nodelist(a, false);
+		sortedLists.push_back(tmp);
 	}
 
 	// Ersten Knoten übereinanderlegen, Skalierung anpassen
 
-
 	// Differenzvektoren bilden
 	vector<double> diffs;
-	unsigned comparisons = min(sortedLists[0].size(), sortedLists[1].size());
+	coordinate diff;
+	unsigned comparisons = min(sortedLists[0]->size(), sortedLists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
-		coordinate diff = ((*sortedLists[0][i].getPosition()) - (*sortedLists[1][i].getPosition()));
+
+		cout << (*sortedLists[0])[i]->getPosition()->toString() << ", "
+						<< (*sortedLists[1])[i]->getPosition()->toString() << endl;
+
+		cout << (*lists[0])[i]->getPosition()->toString() << ", "
+						<< (*lists[1])[i]->getPosition()->toString() << endl;
+
+		coordinate* vec1 = (*sortedLists[0])[i]->getPosition();
+		coordinate* vec2 = (*sortedLists[1])[i]->getPosition();
+
+		diff = *vec1 - *vec2;
+
 		diffs.push_back(diff.length());
 	}
 
@@ -390,9 +415,9 @@ int main(int argc, char *argv[]) {
 			}
 			break;
 
-			 case 9:
-			 compareLists(lists);
-			 break;/*
+		case 9:
+			compareLists(lists);
+			break;/*
 			 case 10:
 			 testVoro();
 			 break;
