@@ -27,9 +27,15 @@ coordinate::coordinate(double x, double y) {
 }
 
 coordinate::coordinate(double x, double y, double z) {
+	/*this->resize(3);
+	this[0]=x;
+	this[1]=y;
+	this[2]=z;*/
+
 	push_back(x);
 	push_back(y);
 	push_back(z);
+
 }
 
 coordinate::coordinate(double point[], unsigned n) {

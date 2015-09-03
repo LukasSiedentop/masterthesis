@@ -15,6 +15,19 @@
  cout<<*k<<endl;    // The Dereferencing Operator
  return 0;
  }
+
+
+
+
+
+ func(int& a){
+ do sth with a
+ } -> die Referenz wird übergeben -> a wird selbst verändert
+
+
+ new -> auf den heap
+ nichts -> auf den stack
+
  */
 
 #include <iostream>
@@ -51,6 +64,9 @@ int gui() {
 	cout << "8 - POV-Ray Datei schreiben" << endl;
 
 	cout << "9 - Muster vergleichen" << endl;
+	cout
+			<< "10 - Muster normalisieren (Dichte = 1, Schwerpunkt in den Ursprung verschieben)"
+			<< endl;
 
 	cout << "0 - Nichts." << endl;
 	cout << "---------------------------------------------------" << endl;
@@ -133,17 +149,25 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 		}
 	}
 
-	// Extremalwerte setzen
+	// Extremalwerte setzen und Randknoten bestimmen
 	if (!periodic) {
 		list->setMins(coordinate(minX, minY, minZ));
 		list->setMaxs(coordinate(maxX, maxY, maxZ));
+
+		// TODO: evtl doppelte oder halbe länge
+		double characteristicLength = stats(list->lengthDistribution(false))[1]
+				* 1.5;
+		cout << "Knoten die vom Rand weiter weg sind als "
+				<< characteristicLength << " werden als Randknoten deklariert."
+				<< endl;
+		for (vector<node*>::iterator n = list->begin(); n != list->end(); ++n) {
+			(*n)->setEdgenode(characteristicLength);
+		}
 	}
 
-	double factor = list->normalize();
 	cout << (periodic ? "Periodisches " : "")
-			<< "Muster eingelesen, normalisiert (skaliert mit Faktor " << factor
-			<< ") und Liste erstellt. Statistik:" << endl << list->listStats()
-			<< endl;
+			<< "Muster eingelesen und Liste erstellt. Statistik:" << endl
+			<< list->listStats() << endl;
 
 	return list;
 }
@@ -151,7 +175,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 /**
  * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
  */
-void gnuplotPattern(vector<nodelist*> lists) {
+void gnuplotPattern(vector<nodelist*>& lists) {
 	vector<vector<coordinate> > datas;
 
 	// Listeniteration
@@ -177,10 +201,13 @@ void gnuplotPattern(vector<nodelist*> lists) {
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
 
 				} else if (!(*list)->isPeriodic()) {
+					//if ((*neighIter)->isEdgenode()) {
+					//if ((*nodeIter)->isEdgenode()) {
 					data.push_back(*(*nodeIter)->getPosition());
 					data.push_back(*(*neighIter)->getPosition());
 
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
+
 				}
 			}
 		}
@@ -191,33 +218,37 @@ void gnuplotPattern(vector<nodelist*> lists) {
 	plot3D(datas);
 }
 
-void compareLists(vector<nodelist*> lists) {
-	// Sortieren (Punkte Nahe dem Mittelpunkt vor weiter entfernten)
-	vector<nodelist*> sortedLists;
-	nodelist* tmp;
-	for (unsigned l = 0; l < lists.size(); l++) {
-		vector<class node> a = mergeSort(lists[l]->getVector());
-		bool periodic = ((*lists[l]).isPeriodic());
-		tmp = new nodelist(a, periodic);
-		sortedLists.push_back(tmp);
-	}
+void compareLists(vector<nodelist*>& lists) {
+	// Skalierung anpassen
+	// TODO: evtl guiabfrage
+	lists[1]->scaleList(1. / 50.);
 
-	// Ersten Knoten in den Ursprung legen
-	sortedLists[0]->shiftList(*(*sortedLists[0])[0]->getPosition() * -1);
-	sortedLists[1]->shiftList(*(*sortedLists[1])[0]->getPosition() * -1);
-
-	//TODO: Skalierung anpassen
+	// Schwerpunkt in die Mitte setzen
+	lists[1]->shiftList(lists[1]->getMid() * -1);
 
 	// Differenzvektoren bilden
 	vector<vector<coordinate> > plotData;
 	vector<coordinate> diffs;
 	vector<double> diffLengths;
 	coordinate diff;
-	unsigned comparisons = min(sortedLists[0]->size(), sortedLists[1]->size());
+	unsigned comparisons = min(lists[0]->size(), lists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
-		coordinate* vec1 = (*sortedLists[0])[i]->getPosition();
-		coordinate* vec2 = (*sortedLists[1])[i]->getPosition();
+		coordinate* vec1 = (*lists[0])[i]->getPosition();
+
+		// Vektor mit kleinstem Abstand in zweiter liste finden
+		coordinate* vec2 = (*lists[1])[i]->getPosition();
 		diff = *vec1 - *vec2;
+
+		for (nodelist::iterator n = lists[1]->begin(); n != lists[1]->end();
+				++n) {
+			if (!(*n)->isEdgenode()) {
+				if ((*vec1 - *((*n)->getPosition())).lengthSqr()
+						< diff.lengthSqr()) {
+					vec2 = (*n)->getPosition();
+					diff = *vec1 - *vec2;
+				}
+			}
+		}
 
 		diffs.push_back(diff);
 		diffs.push_back(coordinate(0, 0, 0));
@@ -229,9 +260,11 @@ void compareLists(vector<nodelist*> lists) {
 	plotData.push_back(diffs);
 
 	// Histogramm der Längen der Differenzvektoren
-	plotHist(diffLengths, 0, 15, 15, "Differenzlängen");
+	plotHist(diffLengths, 0, 0.1, 10, "Differenzlängen");
 	plot3D(plotData, "x", "y", "z", "w dots");
-	gnuplotPattern(sortedLists);
+
+	gnuplotPattern(lists);
+
 }
 
 /**
@@ -349,12 +382,11 @@ void compareLists(vector<nodelist*> lists) {
 /**
  * Hier wird ausgeführt was gewählt wurde.
  */
-int main(int argc, char *argv[]) {
-	cout << "Es gilt also ein Punktmuster zu charakterisieren. Also los!"
-			<< endl;
+int main(int argc, char* argv[]) {
+	cout << "Es gilt Punktmuster zu charakterisieren. Also los!" << endl;
 
 	// Muster einlesen
-	vector<nodelist *> lists;
+	vector<nodelist*> lists;
 	for (int i = 1; i < argc; i += 3) {
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false)));
@@ -422,13 +454,17 @@ int main(int argc, char *argv[]) {
 
 		case 9:
 			compareLists(lists);
-			break;/*
-			 case 10:
-			 testVoro();
-			 break;
-			 case 12:
-			 compareLists(list, list2);
-			 break;*/
+			break;
+		case 10:
+			ctr = 0;
+			for (vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				double factor = (*list)->normalize();
+				cout << "Muster " << ctr << "normalisiert (skaliert mit Faktor "
+						<< factor << ").";
+				ctr++;
+			}
+			break;
 		default:
 			cout << "Das gibts leider (noch) nicht." << endl;
 		}
@@ -437,5 +473,12 @@ int main(int argc, char *argv[]) {
 			cout << "Und nun?" << endl;
 		}
 	}
+
+	// TODO: alles löschen
+	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
+			++list) {
+		(*list)->~nodelist();
+	}
+
 	return 0;
 }

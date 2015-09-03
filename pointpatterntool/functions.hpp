@@ -28,78 +28,26 @@ using namespace std;
 /* Statistiken */
 
 /**
- * Berechnet und schreibt die Statistiken eines Vektors auf die Konsole. Dieser muss aus Daten bestehen, die Darstell-, Addier-, und Teilbar sind.
- * Zurzeit: Anzahl, Erwartungswert mit Standardabweichung und FWHM, Median mit Standardabweichung und FWHM
+ * Berechnet die Statistiken eine Zahlenliste unter der Annahme, die Liste ist von klein nach groß Sortiert. TODO: Rückgabe evtl als map
+ * Vektorposition Bedeutung
+ * 0		Modus (TODO) https://de.wikipedia.org/wiki/Modus_(Statistik)
+ * 1		Erwartungswert
+ * 2		Varianz
+ * 3		Schiefe
+ * 4		Wölbung
+ * 10		Anzahl
+ * 11		Minimum
+ * 12		Maximum
+ * 13		Median
+ * 14		variance Median
  */
-template<typename T>
-string stats(vector<T> data, const char commentDelimeter[] = "\t") {
-	// Erwartungswert: E = 1/N \sum_i=0^N x_i
-	// Varianz: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
-	// Schiefe: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
-	// Exzess = Wölbung - 3: w =  (1/N \sum_i=0^N ((x_i - E)/\sigma)^4) - 3
+vector<double> stats(vector<double> data);
 
-	// Summe
-	double sum = 0;
-	for (unsigned int i = 0; i < data.size(); i++) {
-		sum += data[i];
-	}
-
-	// Erwartungswert (1. Moment) & Median
-	double expectedValue = sum / data.size();
-	double median = data[data.size() / 2];
-
-	// Varianzen (2. Moment)
-	double variance = 0;
-	double varMedian = 0;
-
-	for (unsigned int i = 0; i < data.size(); i++) {
-		variance += pow((data[i] - expectedValue), 2);
-		varMedian += pow((data[i] - median), 2);
-	}
-	variance = variance / data.size();
-	varMedian = varMedian / data.size();
-
-	double skewness = 0;
-	double kurtosis = 0;
-	for (unsigned int i = 0; i < data.size(); i++) {
-		skewness += pow(((data[i] - expectedValue) / sqrt(variance)), 3);
-		kurtosis += pow(((data[i] - expectedValue) / sqrt(variance)), 4);
-	}
-	skewness = skewness / data.size();
-	kurtosis = kurtosis / data.size();
-
-	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
-	// Moment	Bedeutung
-	// 0		=0
-	// 1		Erwartungswert
-	// 2		Varianz
-	// 3		Schiefe
-	// 4		Wölbung
-
-	// TODO: Modus https://de.wikipedia.org/wiki/Modus_(Statistik)
-
-	stringstream stream;
-
-	// Daten schreiben
-	stream << commentDelimeter << "Anzahl: " << data.size() << endl;
-	stream << commentDelimeter << "Minimum: " << data[0] << ", Maximum: "
-			<< data[data.size() - 1] << endl;
-	stream << commentDelimeter << "Erwartungswert +- Standardabweichung: "
-			<< expectedValue << "+-" << sqrt(variance) << ", FWHM: "
-			<< 2 * sqrt(2 * log(2) * variance) << endl;
-	stream << commentDelimeter << "Varianz: " << variance << endl;
-	stream << commentDelimeter << "Schiefe: " << skewness << " ("
-			<< (((skewness > 0) - (skewness < 0)) < 0 ?
-					"linksschief" : "rechtschief") << ")" << endl;
-	stream << commentDelimeter << "Exzess: " << kurtosis - 3 << " ("
-			<< (((kurtosis - 3 > 0) - (kurtosis - 3 < 0)) < 0 ?
-					"flachgipflig" : "steilgipflig") << ")" << endl;
-	stream << commentDelimeter << "Median +- Standardabweichung: " << median
-			<< "+-" << sqrt(varMedian) << ", FWHM: "
-			<< 2 * sqrt(2 * log(2) * varMedian) << endl;
-
-	return stream.str();
-}
+/**
+ * Gibt eine Liste mit Statistiken als menschenlesbaren String zurück.
+ */
+string statsAsString(const vector<double>& data, const char commentDelimeter[] =
+		"\t");
 
 /* I/O */
 
@@ -160,7 +108,7 @@ void writeHist(vector<T> data, bool includeStats, const char header[],
 
 	// Statistiken
 	if (includeStats) {
-		outfile << stats(data, "# ") << endl;
+		outfile << statsAsString(stats(data), "# ") << endl;
 	}
 
 	// Kopfzeile
@@ -235,15 +183,11 @@ vector<T> mergeSort(vector<T> m) {
 	return result;
 }
 
-
-
 /* Plotmethoden Gnuplot */
 // TODO: anzeigen UND svg speichern
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
-
-
 template<typename T>
 void plotHist(vector<T> data, double min, double max, int n,
 		const char xlabel[] = "x") {
@@ -322,8 +266,8 @@ void plot2D(vector<vector<T> > data, double xMin, double dx, double xMax,
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<vector<coordinate> > data,
-		const char xlabel[] = "x", const char ylabel[] = "y",
-		const char zlabel[] = "z", const char style[] = "w l");
+void plot3D(vector<vector<coordinate> > data, const char xlabel[] = "x",
+		const char ylabel[] = "y", const char zlabel[] = "z",
+		const char style[] = "w l");
 
 #endif /* NODELIST_HPP_ */

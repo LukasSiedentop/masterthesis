@@ -27,8 +27,8 @@ private:
 	// Verbundene Nachbarn
 	std::vector<class node* > neighbours;
 
-	// Liste ob eine Koordinate über die grenze reicht (-1:in negativer Richtung drüber, 0: drin, +1: in positiver Richtung drüber)
-	//std::vector<int> inBox;
+	// gibt an ob dieser Knoten am Rand des Musters liegt und somit von einigen Berechnungen ausgeschlossen wird.
+	bool edgenode;
 
 	// prüft ob der gegebene Knoten schon ein Nachbar ist
 	bool isNeighbour(node* node);
@@ -40,14 +40,23 @@ public:
 	node(node& n, class nodelist* list);
 	~node();
 
+
+	// Setzt die Liste zu der dieser Knoten gehört neu
+	void setList(class nodelist* list);
+
+	// bestimmt ob dieser Knoten am Rand liegt: tut er, wenn die box mit seitenlänge 2distance über den Musterrand hinausragt
+	void setEdgenode(double distance);
+
+	// gibt an ob dieser Knoten am Rand liegt
+	bool isEdgenode();
+
 	// Gibt die Position des Knotens zurück
 	coordinate* getPosition() const;
 
 	// gibt den Vektor der Nachbarn zurück
 	std::vector<class node* >* getNeighbours();
 
-	// Setzt die Liste zu der dieser Knoten gehört neu
-	void setList(class nodelist* list);
+
 
 
 	/* Datenspezifisches */

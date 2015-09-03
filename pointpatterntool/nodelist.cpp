@@ -19,7 +19,7 @@ nodelist::nodelist(bool periodicity) :
 		min(coordinate()), max(coordinate()), periodic(periodicity) {
 }
 
-nodelist::nodelist(vector<node>& vec, bool periodicity) :
+nodelist::nodelist(vector<node> vec, bool periodicity) :
 		periodic(periodicity) {
 	// Extremalwerte bestimmen
 	double inf = numeric_limits<double>::infinity();
@@ -50,16 +50,20 @@ nodelist::nodelist(vector<node>& vec, bool periodicity) :
 }
 
 nodelist::~nodelist() {
-	vector<node*>().swap(*this);
+	// Periodizität des Musters
+	//periodic;
 
+	// Extremalwerte
 	min.~coordinate();
 	max.~coordinate();
 
-	// Periodizität des Musters
-	//periodic;
+	// Vektor
+	vector<node*>().swap(*this);
+	//this->~vector();
+	//this = vector<node*>();
 }
 
-vector<class node> nodelist::getVector() {
+vector<class node> nodelist::getVector() const {
 	vector<class node> nodes;
 	for (unsigned i = 0; i < this->size(); i++) {
 		nodes.push_back(*this->at(i));
@@ -97,7 +101,7 @@ void nodelist::scaleList(double a) {
 	}
 }
 
-bool nodelist::isPeriodic() {
+bool nodelist::isPeriodic() const {
 	return periodic;
 }
 
@@ -167,6 +171,20 @@ coordinate nodelist::getMid() {
 
 double nodelist::getMaxFeatureSize() {
 	return getLengths().length() / 2;
+}
+
+int nodelist::countEdgenodes() {
+	if (periodic) {
+		return 0;
+	}
+	int ctr = 0;
+	for (vector<class node *>::iterator n = begin(); n != end(); ++n) {
+		if ((*n)->isEdgenode()) {
+			ctr++;
+		}
+	}
+	return ctr;
+
 }
 
 void nodelist::display() {
@@ -289,6 +307,10 @@ string nodelist::listStats(const char commentDelimeter[]) {
 	stringstream stream;
 	stream << commentDelimeter << (periodic ? "Periodisch" : "Nicht periodisch")
 			<< endl;
+	if (!periodic) {
+		stream << commentDelimeter << "Randknoten: " << countEdgenodes()
+				<< endl;
+	}
 	stream << commentDelimeter << "Anzahl Knoten: " << size() << endl;
 	stream << commentDelimeter << "Extremalwerte: " << min << ", " << max
 			<< endl;
@@ -309,14 +331,14 @@ double nodelist::normalize() {
 	// Mittelpunkt anpassen
 	shiftList(getMid() * -1);
 	/*
-	coordinate* shifter = (*this)[0]->getPosition();
-	// Dem Ursprung nächsten Knoten finden
-	for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
-		if (shifter->lengthSqr() > (*it)->getPosition()->lengthSqr()) {
-			shifter = (*it)->getPosition();
-		}
-	}
-	shiftList(*shifter * -1);
+	 coordinate* shifter = (*this)[0]->getPosition();
+	 // Dem Ursprung nächsten Knoten finden
+	 for (vector<class node*>::iterator it = begin(); it != end(); ++it) {
+	 if (shifter->lengthSqr() > (*it)->getPosition()->lengthSqr()) {
+	 shifter = (*it)->getPosition();
+	 }
+	 }
+	 shiftList(*shifter * -1);
 	 */
 	return factor;
 }
@@ -336,17 +358,19 @@ void nodelist::neighbourDistribution() {
 
 	// Iteration über jeden Knoten
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		counter = 0;
-		for (vector<class node *>::iterator neighIt =
-				(*it)->getNeighbours()->begin();
-				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
-			// Nachbarn zählen
-			// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
-			counter++;
-		}
+		if (!(*it)->isEdgenode()) {
+			counter = 0;
+			for (vector<class node *>::iterator neighIt =
+					(*it)->getNeighbours()->begin();
+					neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
+				// Nachbarn zählen
+				// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
+				counter++;
+			}
 
-		// Wert schreiben
-		data.push_back(counter);
+			// Wert schreiben
+			data.push_back(counter);
+		}
 	}
 
 	// Daten schreiben
@@ -354,7 +378,7 @@ void nodelist::neighbourDistribution() {
 
 	// Statistiken
 	cout << "Nachbarstatistik:" << endl;
-	cout << stats(data);
+	cout << statsAsString(stats(data));
 
 	// Daten ploten
 	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
@@ -363,7 +387,7 @@ void nodelist::neighbourDistribution() {
 /**
  * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei.
  */
-void nodelist::lengthDistribution() {
+vector<double> nodelist::lengthDistribution(bool plot) {
 	const char outfileName[] = "./data/statistics/lenghtDistribution.dat";
 	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
 
@@ -372,14 +396,17 @@ void nodelist::lengthDistribution() {
 
 	// Iteration über jeden Knoten
 	for (vector<class node *>::iterator n = begin(); n != end(); ++n) {
-		// über Nachbarn iterieren
-		for (vector<class node *>::iterator nn = (*n)->getNeighbours()->begin();
-				nn != (*n)->getNeighbours()->end(); ++nn) {
-			// je nach Periodizität Wert schreiben
-			if (periodic) {
-				data.push_back((*n)->euklidianPeriodic((*nn)));
-			} else {
-				data.push_back((*n)->euklidian((*nn)));
+		if (!(*n)->isEdgenode()) {
+			// über Nachbarn iterieren
+			for (vector<class node *>::iterator nn =
+					(*n)->getNeighbours()->begin();
+					nn != (*n)->getNeighbours()->end(); ++nn) {
+				// je nach Periodizität Wert schreiben
+				if (periodic) {
+					data.push_back((*n)->euklidianPeriodic((*nn)));
+				} else {
+					data.push_back((*n)->euklidian((*nn)));
+				}
 			}
 		}
 	}
@@ -392,18 +419,19 @@ void nodelist::lengthDistribution() {
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
 	}
+	if (plot) {
+		// Daten schreiben
+		writeHist(halfData, true, "# Längen", outfileName);
 
-	// Daten schreiben
-	writeHist(halfData, true, "# Längen", outfileName);
+		// Statistiken
+		cout << "Längenstatistik:" << endl;
+		cout << statsAsString(stats(halfData));
 
-	// Statistiken
-	cout << "Längenstatistik:" << endl;
-	cout << stats(halfData);
-
-	// Daten ploten
-	plotHist(halfData, floor((*halfData.begin())) - 0.5,
-			ceil((*halfData.end())) + 0.5, 30, "Länge");
-
+		// Daten ploten
+		plotHist(halfData, floor((*(halfData.begin()))) - 0.5,
+				ceil((*halfData.end())) + 0.5, 30, "Länge");
+	}
+	return halfData;
 }
 
 /**
@@ -417,34 +445,39 @@ void nodelist::angleDistribution() {
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
 
+	// TODO: welche Randknoten nicht beachten?
+
 	// Iteration über jeden Knoten
 	for (vector<node*>::iterator nodeIter = begin(); nodeIter != end();
 			++nodeIter) {
-		// über Nachbarn iterieren
-		for (vector<node*>::iterator neighIter1 =
-				(*nodeIter)->getNeighbours()->begin();
-				neighIter1 != (*nodeIter)->getNeighbours()->end();
-				++neighIter1) {
+		if (!(*nodeIter)->isEdgenode()) {
+			// über Nachbarn iterieren
+			for (vector<node*>::iterator neighIter1 =
+					(*nodeIter)->getNeighbours()->begin();
+					neighIter1 != (*nodeIter)->getNeighbours()->end();
+					++neighIter1) {
 
-			// über Nachbarn des Nachbarn iterieren
-			for (vector<node*>::iterator neighIter2 =
-					(*neighIter1)->getNeighbours()->begin();
-					neighIter2 != (*neighIter1)->getNeighbours()->end();
-					++neighIter2) {
-				// wenn nicht der Winkel zwischen sich berechnet werden soll...
-				if (!(*nodeIter)->equals(*neighIter2)) {
-					// ...Wert berechnen & schreiben, umgerechnet in Grad
-					if (periodic) {
-						data.push_back(
-								((180.0) / M_PI)
-										* (*neighIter1)->anglePeriodic(
-												(*nodeIter), (*neighIter2)));
-					} else {
+				// über Nachbarn des Nachbarn iterieren
+				for (vector<node*>::iterator neighIter2 =
+						(*neighIter1)->getNeighbours()->begin();
+						neighIter2 != (*neighIter1)->getNeighbours()->end();
+						++neighIter2) {
+					// wenn nicht der Winkel zwischen sich berechnet werden soll...
+					if (!(*nodeIter)->equals(*neighIter2)) {
+						// ...Wert berechnen & schreiben, umgerechnet in Grad
+						if (periodic) {
+							data.push_back(
+									((180.0) / M_PI)
+											* (*neighIter1)->anglePeriodic(
+													(*nodeIter),
+													(*neighIter2)));
+						} else {
 
-						data.push_back(
-								((180.0) / M_PI)
-										* (*neighIter1)->angle((*nodeIter),
-												(*neighIter2)));
+							data.push_back(
+									((180.0) / M_PI)
+											* (*neighIter1)->angle((*nodeIter),
+													(*neighIter2)));
+						}
 					}
 				}
 			}
@@ -465,7 +498,7 @@ void nodelist::angleDistribution() {
 
 	// Statistiken
 	cout << "Winkelstatistik:" << endl;
-	cout << stats(halfData);
+	cout << statsAsString(stats(halfData));
 
 	// Daten ploten
 	plotHist(halfData, 0, 180, 180, "Winkel");

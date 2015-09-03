@@ -10,7 +10,7 @@
 using namespace std;
 
 node::node() :
-		position(coordinate()) { //, inBox(NULL) {
+		position(coordinate()), edgenode(false) { //, inBox(NULL) {
 	// TODO: geht das besser?
 	nodelist* l = new nodelist();
 	list = l;
@@ -20,13 +20,13 @@ node::node() :
 }
 
 node::node(nodelist* list, double x, double y, double z) :
-		list(list), position(coordinate(x, y, z)) {	//, inBox(NULL) {
+		list(list), position(coordinate(x, y, z)), edgenode(false) {//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
 }
 
 node::node(node& n, class nodelist* list) :
-		list(list) {
+		list(list), edgenode(false) {
 	position = *(n.getPosition());
 
 	std::vector<class node*> neighs;
@@ -49,16 +49,26 @@ node::~node() {
 // TODO: was ist hier zu tun?
 }
 
+void node::setList(nodelist* l) {
+	list = l;
+}
+
+void node::setEdgenode(double distance) {
+	// Alle knoten die mehr als den 0-shifter haben sind randknoten
+	edgenode = (list->getShifted(position - list->getMid(), distance).size()
+			- 1);
+}
+
+bool node::isEdgenode() {
+	return edgenode;
+}
+
 coordinate* node::getPosition() const {
 	return new coordinate(position);
 }
 
 std::vector<class node*>* node::getNeighbours() {
 	return &neighbours;
-}
-
-void node::setList(nodelist* l) {
-	list = l;
 }
 
 double node::euklidian(node* node) {

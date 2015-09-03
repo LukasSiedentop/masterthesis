@@ -46,7 +46,7 @@ public:
 	// Konstruktor für eine leere Liste mit gegebener Periodizität
 	nodelist(bool periodicity);
 	// Konstruiert eine nichtperiodische Nodelist aus einem Vektor von Nodes.
-	nodelist(std::vector<node>& vec, bool periodicity);
+	nodelist(std::vector<node> vec, bool periodicity);
 	~nodelist();
 
 	/* Listenspezifisches */
@@ -55,7 +55,7 @@ public:
 
 	/* Datenspezifisches */
 	// Gitb die Liste als einfachen Vektor zurück mit den Daten der Knoten (keine Pointer)
-	std::vector<class node> getVector();
+	std::vector<class node> getVector() const;
 	// Minimalwerte setzen
 	void setMins(coordinate mins);
 	// Maximalwerte setzen
@@ -65,7 +65,7 @@ public:
 	// Skaliert die Liste um die gegebenen Faktoren a,b, c
 	void scaleList(double a);
 	// Periodizität zurückgeben
-	bool isPeriodic();
+	bool isPeriodic() const;
 	// skaliert die Liste, sodass die Dichte der gewünschten entspricht
 	void setDensity(double density);
 	// berechnet die Punktdichte der Liste
@@ -84,9 +84,11 @@ public:
 	coordinate getMid();
 	// gibt die größte Featuresize zurück, die Sinn macht (für periodische Randbedingungen)
 	double getMaxFeatureSize();
+	// gitb die Anzahl der Randknoten zurück. Wert wird nicht gespeichert, ist teuer!
+	int countEdgenodes();
 	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. TODO: n-Dimensional
 	vector<coordinate> getShifters();
-	// Gibt die Vektoren zurück um das Muster periodisch fortzusetzen. Es werden nur diejenigen Verschiebungen zurückgegeben, in denen die Box um den Mittelpunkt mid mit der Seitenlänge 2*halfExtend liegt. TODO: n-Dimensional
+	// Gibt die Vektoren zurück um das Muster periodisch fortzusetzen. Geht davon aus, das das Muster um den Ursprung liegt. Es werden nur diejenigen Verschiebungen zurückgegeben, in denen die Box um den Mittelpunkt mid mit der Seitenlänge 2*halfExtend liegt. TODO: n-Dimensional
 	vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// Zählt die Punkte in einer gegebenen Kugel
 	int pointsInside(coordinate mid, double r, double rSqr);
@@ -99,7 +101,7 @@ public:
 
 	/* Berechnungen */
 	void neighbourDistribution();
-	void lengthDistribution();
+	vector<double> lengthDistribution(bool plot = true);
 	void angleDistribution();
 	void hyperuniformity();
 	void writePOV();
