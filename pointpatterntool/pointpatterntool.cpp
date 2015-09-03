@@ -223,7 +223,7 @@ void compareLists(vector<nodelist*>& lists) {
 	// TODO: evtl guiabfrage
 	lists[1]->scaleList(1. / 50.);
 
-	// Schwerpunkt in die Mitte setzen
+	// Schwerpunkt grob anpassen
 	lists[1]->shiftList(lists[1]->getMid() * -1);
 
 	// Differenzvektoren bilden
@@ -231,36 +231,55 @@ void compareLists(vector<nodelist*>& lists) {
 	vector<coordinate> diffs;
 	vector<double> diffLengths;
 	coordinate diff;
+	coordinate centreOfMass(0,0,0);
+
 	unsigned comparisons = min(lists[0]->size(), lists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
-		coordinate* vec1 = (*lists[0])[i]->getPosition();
+		if (!(*lists[0])[i]->isEdgenode()) {
 
-		// Vektor mit kleinstem Abstand in zweiter liste finden
-		coordinate* vec2 = (*lists[1])[i]->getPosition();
-		diff = *vec1 - *vec2;
+			coordinate* vec1 = (*lists[0])[i]->getPosition();
 
-		for (nodelist::iterator n = lists[1]->begin(); n != lists[1]->end();
-				++n) {
-			if (!(*n)->isEdgenode()) {
+			// Vektor mit kleinstem Abstand in zweiter liste finden
+			coordinate* vec2 = (*lists[1])[i]->getPosition();
+			diff = *vec1 - *vec2;
+
+			for (nodelist::iterator n = lists[1]->begin(); n != lists[1]->end();
+					++n) {
+
 				if ((*vec1 - *((*n)->getPosition())).lengthSqr()
 						< diff.lengthSqr()) {
 					vec2 = (*n)->getPosition();
 					diff = *vec1 - *vec2;
+
 				}
 			}
+
+			diffs.push_back(diff);
+			centreOfMass += diff;
+			//diffs.push_back(coordinate(0, 0, 0));
+			//diffs.push_back(coordinate(nan(""), nan(""), nan("")));
+
+			//diffLengths.push_back(diff.length());
 		}
+	}
 
-		diffs.push_back(diff);
-		diffs.push_back(coordinate(0, 0, 0));
-		diffs.push_back(coordinate(nan(""), nan(""), nan("")));
+	// Schwerpunkt in die Mitte setzen
+	centreOfMass /= diffs.size();
+	cout << centreOfMass << endl;
 
-		diffLengths.push_back(diff.length());
+	//lists[1]->shiftList(lists[1]->getMid() * -1);
+	lists[1]->shiftList(centreOfMass);// * -1);
+
+	// diffs anpassen
+	for (vector<coordinate>::iterator diffIter = diffs.begin(); diffIter != diffs.end(); ++diffIter) {
+		(*diffIter) -= centreOfMass;
+		diffLengths.push_back((*diffIter).length());
 	}
 
 	plotData.push_back(diffs);
 
 	// Histogramm der Längen der Differenzvektoren
-	plotHist(diffLengths, 0, 0.1, 10, "Differenzlängen");
+	plotHist(diffLengths, 0, 0.1, 30, "Differenzlängen");
 	plot3D(plotData, "x", "y", "z", "w dots");
 
 	gnuplotPattern(lists);
