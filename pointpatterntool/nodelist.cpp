@@ -18,35 +18,69 @@ nodelist::nodelist() :
 nodelist::nodelist(bool periodicity) :
 		min(coordinate()), max(coordinate()), periodic(periodicity) {
 }
+/*
+ nodelist::nodelist(vector<node> vec, bool periodicity) :
+ periodic(periodicity) {
+ // Extremalwerte bestimmen
+ double inf = numeric_limits<double>::infinity();
+ double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
+ -inf;
 
-nodelist::nodelist(vector<node> vec, bool periodicity) :
-		periodic(periodicity) {
-	// Extremalwerte bestimmen
-	double inf = numeric_limits<double>::infinity();
-	double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
-			-inf;
+ //coordinate minimum({inf, inf, inf},3);
+ //coordinate maximum({-inf, -inf, -inf},3);
 
-	//coordinate minimum({inf, inf, inf},3);
-	//coordinate maximum({-inf, -inf, -inf},3);
+ for (unsigned n = 0; n < vec.size(); n++) {
 
-	for (unsigned n = 0; n < vec.size(); n++) {
+ minX = std::min(minX, (*vec[n].getPosition())[0]);
+ minY = std::min(minY, (*vec[n].getPosition())[1]);
+ minZ = std::min(minZ, (*vec[n].getPosition())[2]);
 
-		minX = std::min(minX, (*vec[n].getPosition())[0]);
-		minY = std::min(minY, (*vec[n].getPosition())[1]);
-		minZ = std::min(minZ, (*vec[n].getPosition())[2]);
+ maxX = std::max(maxX, (*vec[n].getPosition())[0]);
+ maxY = std::max(maxY, (*vec[n].getPosition())[1]);
+ maxZ = std::max(maxZ, (*vec[n].getPosition())[2]);
 
-		maxX = std::max(maxX, (*vec[n].getPosition())[0]);
-		maxY = std::max(maxY, (*vec[n].getPosition())[1]);
-		maxZ = std::max(maxZ, (*vec[n].getPosition())[2]);
+ // Liste des Knotens neu setzen
+ //vec[n].setList(this);
+ // Knoten dieser Liste hinzufügen
+ this->push_back(new node(vec[n], this));
+ }
 
-		// Liste des Knotens neu setzen
-		//vec[n].setList(this);
-		// Knoten dieser Liste hinzufügen
-		this->push_back(new node(vec[n], this));
+ setMins(coordinate(minX, minY, minZ));
+ setMaxs(coordinate(maxX, maxY, maxZ));
+ }*/
+
+nodelist::nodelist(int pattern, bool periodicity) :
+		min(coordinate(-5, -5, -5)), max(coordinate(5, 5, 5)), periodic(
+				periodicity) {
+
+	// TODO: periodische RBD
+
+	switch (pattern) {
+	case 1: // Zufallsmuster
+		cout << "Generiere Zufallsmuster mit 1000 Punkten in 10^3 Box..."
+				<< endl;
+		// Seed für Zufallsgenerator
+		srand(time(NULL));
+		for (unsigned n = 0; n < 1000; n++) {
+			node* tmp = new node(this,
+					(coordinate(3) * 10) - coordinate(5, 5, 5));
+			tmp->setEdgenode(1);
+			this->push_back(tmp);
+		}
+		break;
+	case 2: // Diamantmuster TODO
+		*this = nodelist(periodicity);
+		break;
+	default:
+		*this = nodelist(periodicity);
+		break;
 	}
 
-	setMins(coordinate(minX, minY, minZ));
-	setMaxs(coordinate(maxX, maxY, maxZ));
+	// Nachbarn generieren
+	setNeighbours();
+
+	cout << "Zufallsmuster generiert. Statistik:" << endl << listStats()
+			<< endl;
 }
 
 nodelist::~nodelist() {
@@ -63,12 +97,43 @@ nodelist::~nodelist() {
 	//this = vector<node*>();
 }
 
-vector<class node> nodelist::getVector() const {
-	vector<class node> nodes;
-	for (unsigned i = 0; i < this->size(); i++) {
-		nodes.push_back(*this->at(i));
+/*
+ vector<class node> nodelist::getVector() const {
+ vector<class node> nodes;
+ for (unsigned i = 0; i < this->size(); i++) {
+ nodes.push_back(*this->at(i));
+ }
+ return nodes;
+ }
+ */
+
+void nodelist::setNeighbours() {
+	// TODO: periodisch
+	// vier nächsten Knoten bekommen
+	for (unsigned neighs = 0; neighs < 4; neighs++) {
+		// Knoteniteration
+		for (nodelist::iterator n = begin(); n != end(); ++n) {
+			node* neigh = NULL;
+			double distSqr = numeric_limits<double>::infinity();
+			// 2. Knoteniteration
+			for (nodelist::iterator nextn = begin(); nextn != end(); ++nextn) {
+				// wenn er schon Nachbar ist, nächster
+				if ((*n)->isNeighbour((*nextn)) || n == nextn) {
+					continue;
+				}
+				// Differenzvektor
+				coordinate diff = *((*nextn)->getPosition())
+						- *((*n)->getPosition());
+				if (diff.lengthSqr() < distSqr) {
+					distSqr = diff.lengthSqr();
+					neigh = *nextn;
+				}
+			}
+			if (neigh) {
+				(*n)->addNeighbour(neigh);
+			}
+		}
 	}
-	return nodes;
 }
 
 void nodelist::setMins(coordinate mins) {
@@ -364,7 +429,6 @@ void nodelist::neighbourDistribution() {
 					(*it)->getNeighbours()->begin();
 					neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
 				// Nachbarn zählen
-				// TODO: wenn nicht periodisch nur nachbarn die nicht am Rand sind.
 				counter++;
 			}
 
@@ -514,11 +578,11 @@ void nodelist::hyperuniformity() {
 
 	const char outfileName[] = "./data/statistics/hyperuniformity.dat";
 
-	// Radiusincrement
+	// Radiusincrement TODO: Radius ist auf eine Boslänge von 10 optimiert
 	double dr = 0.2, rMax = 11;
 
 	// Anzahl Kugeln bzw. iterationen
-	const int n = 1000;
+	const int n = 500;
 
 	// Datenstruktur um Anzahl der Punkte in Kugel zu speichern
 	vector<vector<double> > data;
@@ -571,6 +635,7 @@ void nodelist::hyperuniformity() {
 				mid *= range;
 				mid -= range / 2;
 
+				// Punkte in Kugel zählen
 				data[j][i] = pointsInside(mid, r, rSqr);
 			}
 
@@ -623,7 +688,7 @@ void nodelist::hyperuniformity() {
 			std::min(getLengths()[1], getLengths()[2]));
 
 	// Varianz über Radius plotten
-	plot2D(variance, 0, dr, rMax, periodic ? : fitMax / 2, "Radius R",
+	plot2D(variance, 0, dr, periodic ? rMax - 1 : fitMax / 2, periodic ? rMax - 1 : fitMax / 2, "Radius R",
 			"Varianz  {/Symbol s}^2(R)");
 }
 

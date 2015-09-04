@@ -16,10 +16,6 @@
  return 0;
  }
 
-
-
-
-
  func(int& a){
  do sth with a
  } -> die Referenz wird übergeben -> a wird selbst verändert
@@ -218,20 +214,23 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 	plot3D(datas);
 }
 
+/**
+ * Vergleich zwei Listen.
+ */
 void compareLists(vector<nodelist*>& lists) {
 	// Skalierung anpassen
 	// TODO: evtl guiabfrage
-	lists[1]->scaleList(1. / 50.);
+	///////////////////////////////////////////////////////////////////////
+	//lists[1]->scaleList(1. / 50.);
 
 	// Schwerpunkt grob anpassen
 	lists[1]->shiftList(lists[1]->getMid() * -1);
 
 	// Differenzvektoren bilden
-	vector<vector<coordinate> > plotData;
 	vector<coordinate> diffs;
-	vector<double> diffLengths;
-	coordinate diff;
-	coordinate centreOfMass(0,0,0);
+	//coordinate diff;
+	// Schwerpunkt der Differenzen
+	coordinate centreOfMass(0, 0, 0);
 
 	unsigned comparisons = min(lists[0]->size(), lists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
@@ -241,49 +240,46 @@ void compareLists(vector<nodelist*>& lists) {
 
 			// Vektor mit kleinstem Abstand in zweiter liste finden
 			coordinate* vec2 = (*lists[1])[i]->getPosition();
-			diff = *vec1 - *vec2;
-
+			coordinate diff = *vec1 - *vec2;
 			for (nodelist::iterator n = lists[1]->begin(); n != lists[1]->end();
 					++n) {
-
 				if ((*vec1 - *((*n)->getPosition())).lengthSqr()
 						< diff.lengthSqr()) {
 					vec2 = (*n)->getPosition();
 					diff = *vec1 - *vec2;
-
 				}
 			}
 
+			// Differenzvektor merken
 			diffs.push_back(diff);
+			// zum Schwerpunkt berechnen
 			centreOfMass += diff;
-			//diffs.push_back(coordinate(0, 0, 0));
-			//diffs.push_back(coordinate(nan(""), nan(""), nan("")));
-
-			//diffLengths.push_back(diff.length());
 		}
 	}
 
 	// Schwerpunkt in die Mitte setzen
 	centreOfMass /= diffs.size();
-	cout << centreOfMass << endl;
+	// ZWEITE Liste um POSITIVEN Schwerpunktsvektor verschieben
+	lists[1]->shiftList(centreOfMass);
 
-	//lists[1]->shiftList(lists[1]->getMid() * -1);
-	lists[1]->shiftList(centreOfMass);// * -1);
-
-	// diffs anpassen
-	for (vector<coordinate>::iterator diffIter = diffs.begin(); diffIter != diffs.end(); ++diffIter) {
+	// diffs anpassen, Längen berechnen
+	vector<double> diffLengths;
+	for (vector<coordinate>::iterator diffIter = diffs.begin();
+			diffIter != diffs.end(); ++diffIter) {
 		(*diffIter) -= centreOfMass;
 		diffLengths.push_back((*diffIter).length());
 	}
 
+	// Diffdaten plotbar machen
+	vector<vector<coordinate> > plotData;
 	plotData.push_back(diffs);
 
 	// Histogramm der Längen der Differenzvektoren
-	plotHist(diffLengths, 0, 0.1, 30, "Differenzlängen");
-	plot3D(plotData, "x", "y", "z", "w dots");
-
+	plotHist(diffLengths, 0, 0.1, 50, "Differenzlängen");
+	// Punktewolke
+	plot3D(plotData, "x", "y", "z", "w p ls 7");
+	// Angepasste Muster
 	gnuplotPattern(lists);
-
 }
 
 /**
@@ -406,6 +402,12 @@ int main(int argc, char* argv[]) {
 
 	// Muster einlesen
 	vector<nodelist*> lists;
+
+	// keine Argumente übergeben -> generiere Zufallsmuster und Diamantmuster
+	if (argc == 1) {
+		lists.push_back(new nodelist(1, false));
+		//lists.push_back(new nodelist(1, false));
+	}
 	for (int i = 1; i < argc; i += 3) {
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false)));

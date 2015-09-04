@@ -42,20 +42,23 @@ private:
 	// Periodizität des Musters
 	bool periodic;
 public:
+	// Standardkonstruktor
 	nodelist();
 	// Konstruktor für eine leere Liste mit gegebener Periodizität
 	nodelist(bool periodicity);
 	// Konstruiert eine nichtperiodische Nodelist aus einem Vektor von Nodes.
-	nodelist(std::vector<node> vec, bool periodicity);
+	//nodelist(std::vector<node> vec, bool periodicity);
+	// Konstruiert ein Muster (Dichte 1, 10^3 Kubus) mit: pattern=1 - zufälliger Verteilung, pattern=2 - Diamantverteilung.
+	nodelist(int pattern, bool periodicity);
+	// Destruktor
 	~nodelist();
 
-	/* Listenspezifisches */
 	// zeigt die Liste an.
 	void display();
-
-	/* Datenspezifisches */
 	// Gitb die Liste als einfachen Vektor zurück mit den Daten der Knoten (keine Pointer)
-	std::vector<class node> getVector() const;
+	//std::vector<class node> getVector() const;
+	// Setzt die Nachbarn eines Knotens auf die vier nächsten Knoten
+	void setNeighbours();
 	// Minimalwerte setzen
 	void setMins(coordinate mins);
 	// Maximalwerte setzen

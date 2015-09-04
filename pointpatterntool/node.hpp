@@ -29,13 +29,12 @@ private:
 
 	// gibt an ob dieser Knoten am Rand des Musters liegt und somit von einigen Berechnungen ausgeschlossen wird.
 	bool edgenode;
-
-	// prüft ob der gegebene Knoten schon ein Nachbar ist
-	bool isNeighbour(node* node);
 public:
 	node();
 	// Konstruiert einen neuen Knoten der gegebenen Liste an der gegebenen Stelle.
 	node(class nodelist* list, double x, double y, double z);
+	// Konstruiert einen neuen Knoten der gegebenen Liste an der gegebenen Koordinate.
+	node(class nodelist* list, coordinate pos);
 	// Copy-Konstruktor
 	node(node& n, class nodelist* list);
 	~node();
@@ -56,10 +55,10 @@ public:
 	// gibt den Vektor der Nachbarn zurück
 	std::vector<class node* >* getNeighbours();
 
+	// prüft ob der gegebene Knoten schon ein Nachbar ist
+	bool isNeighbour(node* node);
 
 
-
-	/* Datenspezifisches */
 	// Gibt die Euklidsche Distanz zu node zurück.
 	double euklidian(node* node);
 	// Gibt die Euklidsche Distanz zu einem gegebenen Punkt zurück.

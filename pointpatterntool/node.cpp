@@ -25,6 +25,12 @@ node::node(nodelist* list, double x, double y, double z) :
 	neighbours = neighs;
 }
 
+node::node(class nodelist* list, coordinate pos) :
+		list(list), position(pos), edgenode(false) {	//, inBox(NULL) {
+	std::vector<class node *> neighs;
+	neighbours = neighs;
+}
+
 node::node(node& n, class nodelist* list) :
 		list(list), edgenode(false) {
 	position = *(n.getPosition());
@@ -55,8 +61,8 @@ void node::setList(nodelist* l) {
 
 void node::setEdgenode(double distance) {
 	// Alle knoten die mehr als den 0-shifter haben sind randknoten
-	edgenode = (list->getShifted(position - list->getMid(), distance).size()
-			- 1);
+	edgenode =
+			(list->getShifted(position - list->getMid(), distance).size() - 1);
 }
 
 bool node::isEdgenode() {
@@ -161,6 +167,7 @@ bool node::isNeighbour(node* node) {
 			it != neighbours.end(); ++it) {
 
 		// TODO: geht das wirklich?
+		// TODO: abbrechen wenn er existiert
 		exists += ((*it) == node);
 	}
 	return exists;
