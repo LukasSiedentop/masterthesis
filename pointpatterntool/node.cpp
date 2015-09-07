@@ -61,8 +61,7 @@ void node::setList(nodelist* l) {
 
 void node::setEdgenode(double distance) {
 	// Alle knoten die mehr als den 0-shifter haben sind randknoten
-	edgenode =
-			(list->getShifted(position - list->getMid(), distance).size() - 1);
+	edgenode = (list->getShifted(position - list->getMid(), distance).size() - 1);
 }
 
 bool node::isEdgenode() {

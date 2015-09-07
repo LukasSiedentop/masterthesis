@@ -161,6 +161,9 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 		}
 	}
 
+	list->scaleList(1. / 50.);
+	list->shiftList(coordinate(-5,-5,-5));
+
 	cout << (periodic ? "Periodisches " : "")
 			<< "Muster eingelesen und Liste erstellt. Statistik:" << endl
 			<< list->listStats() << endl;
@@ -197,13 +200,16 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
 
 				} else if (!(*list)->isPeriodic()) {
-					//if ((*neighIter)->isEdgenode()) {
-					//if ((*nodeIter)->isEdgenode()) {
-					data.push_back(*(*nodeIter)->getPosition());
-					data.push_back(*(*neighIter)->getPosition());
+					//if (!(*neighIter)->isEdgenode()) {
+						//if (!(*nodeIter)->isEdgenode()) {
+							data.push_back(*(*nodeIter)->getPosition());
+							data.push_back(*(*neighIter)->getPosition());
 
-					data.push_back(coordinate(nan(""), nan(""), nan("")));
+							data.push_back(
+									coordinate(nan(""), nan(""), nan("")));
 
+						//}
+					//}
 				}
 			}
 		}
@@ -221,7 +227,7 @@ void compareLists(vector<nodelist*>& lists) {
 	// Skalierung anpassen
 	// TODO: evtl guiabfrage
 	///////////////////////////////////////////////////////////////////////
-	//lists[1]->scaleList(1. / 50.);
+	lists[1]->scaleList(1. / 50.);
 
 	// Schwerpunkt grob anpassen
 	lists[1]->shiftList(lists[1]->getMid() * -1);
@@ -405,7 +411,7 @@ int main(int argc, char* argv[]) {
 
 	// keine Argumente übergeben -> generiere Zufallsmuster und Diamantmuster
 	if (argc == 1) {
-		lists.push_back(new nodelist(1, false));
+		lists.push_back(new nodelist(2, false));
 		//lists.push_back(new nodelist(1, false));
 	}
 	for (int i = 1; i < argc; i += 3) {

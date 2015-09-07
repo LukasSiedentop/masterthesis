@@ -56,7 +56,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 	// TODO: periodische RBD
 
 	switch (pattern) {
-	case 1: // Zufallsmuster
+	case 1: { // Zufallsmuster
 		cout << "Generiere Zufallsmuster mit 1000 Punkten in 10^3 Box..."
 				<< endl;
 		// Seed für Zufallsgenerator
@@ -67,20 +67,79 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			tmp->setEdgenode(1);
 			this->push_back(tmp);
 		}
+		cout << "Zufallsmuster";
 		break;
-	case 2: // Diamantmuster TODO
-		*this = nodelist(periodicity);
+	}
+	case 2: { // Diamantmuster
+		cout << "Generiere Diamantmuster..." // mit 1000 Punkten in 10^3 Box..." TODO
+				<< endl;
+
+		// Diamantgitterkoordinaten (8 Punkte in Zelle)
+		vector<coordinate> dia;
+		//dia.push_back(coordinate(0, 0, 0));
+		//dia.push_back(coordinate(1, 1, 0));
+		//dia.push_back(coordinate(1, 0, 1));
+		//dia.push_back(coordinate(0, 1, 1));
+		dia.push_back(coordinate(1, 0, 0));
+		dia.push_back(coordinate(0, 1, 0));
+		dia.push_back(coordinate(0, 0, 1));
+		dia.push_back(coordinate(1, 1, 1));
+
+		dia.push_back(coordinate(0.5, 0.5, 0));
+		//dia.push_back(coordinate(0.5, 0.5, 1));
+		dia.push_back(coordinate(0.5, 0, 0.5));
+		//dia.push_back(coordinate(0.5, 1, 0.5));
+		dia.push_back(coordinate(0, 0.5, 0.5));
+		//dia.push_back(coordinate(1, 0.5, 0.5));
+
+		dia.push_back(coordinate(0.25, 0.25, 0.75));
+		dia.push_back(coordinate(0.75, 0.25, 0.25));
+		dia.push_back(coordinate(0.25, 0.75, 0.25));
+		dia.push_back(coordinate(0.75, 0.75, 0.75));
+
+		for (unsigned x = 0; x < 5; x++) {
+			for (unsigned y = 0; y < 5; y++) {
+				for (unsigned z = 0; z < 5; z++) {
+					coordinate shifter(x, y, z);
+					for (vector<coordinate>::iterator d = dia.begin();
+							d != dia.end(); ++d) {
+						this->push_back(
+								new node(this,
+										((((*d) + shifter) * 2)
+												+ coordinate(-5, -5, -5))));
+						cout
+								<< ((((*d) + shifter) * 2)
+										+ coordinate(-5, -5, -5)) << endl;
+					}
+				}
+			}
+		}
+
+		if (!periodic) {
+			// missing edgenodes
+			this->push_back(new node(this, coordinate(-5, -5, -5)));
+			this->push_back(new node(this, coordinate(5, 5, -5)));
+			this->push_back(new node(this, coordinate(5, -5, 5)));
+			this->push_back(new node(this, coordinate(-5, 5, 5)));
+			// TODO: flächenzentrierte hinzufügen
+		}
+
+		// set edgenodes
+		for (nodelist::iterator n = this->begin(); n != this->end(); ++n) {
+			(*n)->setEdgenode(0.5);
+		}
+
+		cout << "Diamantmuster";
 		break;
+	}
 	default:
 		*this = nodelist(periodicity);
-		break;
 	}
 
 	// Nachbarn generieren
 	setNeighbours();
 
-	cout << "Zufallsmuster generiert. Statistik:" << endl << listStats()
-			<< endl;
+	cout << " generiert. Statistik:" << endl << listStats() << endl;
 }
 
 nodelist::~nodelist() {
@@ -688,7 +747,8 @@ void nodelist::hyperuniformity() {
 			std::min(getLengths()[1], getLengths()[2]));
 
 	// Varianz über Radius plotten
-	plot2D(variance, 0, dr, periodic ? rMax - 1 : fitMax / 2, periodic ? rMax - 1 : fitMax / 2, "Radius R",
+	plot2D(variance, 0, dr, periodic ? rMax - 1 : fitMax / 2,
+			periodic ? rMax - 1 : fitMax / 2, "Radius R",
 			"Varianz  {/Symbol s}^2(R)");
 }
 
