@@ -72,14 +72,15 @@ vector<double> stats(vector<double> data) {
 	statistics[4] = kurtosis;
 	statistics[10] = data.size();
 	statistics[11] = data[0];
-	statistics[12] = data[data.size()-1];
+	statistics[12] = data[data.size() - 1];
 	statistics[13] = median;
 	statistics[14] = varMedian;
 
 	return statistics;
 }
 
-string statsAsString(const vector<double>& data, const char commentDelimeter[]) {
+string statsAsString(const vector<double>& data,
+		const char commentDelimeter[]) {
 	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
 	// Moment	Bedeutung
 	// 0		=0
@@ -124,6 +125,138 @@ string statsAsString(const vector<double>& data, const char commentDelimeter[]) 
 	return stream.str();
 }
 
+vector<string> getColors() {
+	// Farben
+	vector<string> colors;
+	//argb
+	colors.push_back("#55E41A1C");
+	colors.push_back("#55377EB8");
+	colors.push_back("#554DAF4A");
+	colors.push_back("#55984EA3");
+	colors.push_back("#55FF7F00");
+	colors.push_back("#55FFFF33");
+	colors.push_back("#55A65628");
+	colors.push_back("#55F781BF");
+
+	return colors;
+
+}
+
+void plotHist(vector<vector<double> > datas, double min, double max, int n,
+		vector<string> names, const char xlabel[]) {
+	Gnuplot gp;
+	// Don't forget to put "\n" at the end of each line!
+
+	gp << "reset\n";
+
+	gp << "n=" << n << "\n";
+	gp << "max=" << max << "\n";
+	gp << "min=" << min << "\n";
+	gp << "width=" << (max - min) / n << "\n";
+
+	gp << "hist(x,width)=width*floor(x/width) #+width/2.0\n";
+
+	gp << "set xrange [min:max]\n";
+	gp << "set yrange [0:]\n";
+	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
+	// 10 x-tics
+	gp << "set xtics min," << (max - min) / 10 << ",max\n";
+	gp << "set boxwidth width*0.9\n";
+	gp << "set style fill solid 0.5\n";
+	gp << "set tics out nomirror\n";
+	gp << "set xlabel '" << xlabel << "'\n";
+	gp << "set ylabel 'Häufigkeit'\n";
+
+	vector<string> colors = getColors();
+	// Plotstring bauen und an Gnuplot schicken
+	stringstream plotstring;
+	plotstring << "plot ";
+	for (unsigned i = 0; i < datas.size(); i++) {
+		// '-' means read from stdin
+		plotstring << "'-' u (hist($1, width)):(1.0/" << datas[i].size()
+				<< ") w boxes smooth freq lc rgb '" << colors[i] << "' t '"
+				<< names[i] << "'";
+		if (i != datas.size() - 1) {
+			plotstring << ",";
+		}
+	}
+	gp << plotstring.str() << "\n";
+
+	// Daten senden
+	for (vector<vector<double> >::iterator data = datas.begin();
+			data != datas.end(); ++data) {
+		// The send1d() function sends data to gnuplot's stdin.
+		gp.send1d(*data);
+	}
+
+	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
+	// the gnuplot window doesn't get closed.
+	cout << "Weiter mit Enter." << endl;
+	cin.get();
+}
+
+void plotHyperuniformity(vector<vector<vector<double> > > datas,
+		double xMax, vector<string> names, const char xlabel[],
+		const char ylabel[]) {
+
+	double xMin = 0;
+
+	Gnuplot gp;
+	gp << "reset\n";
+
+	gp << "set key top left\n";
+	gp << "set xrange [" << xMin << ":" << xMax << "]\n";
+	gp << "set yrange [0:]\n";
+	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
+	// 10 x-tics
+	gp << "set xtics " << xMin << ",1," << xMax << "\n";
+	gp << "set tics out nomirror\n";
+	gp << "set xlabel '" << xlabel << "'\n";
+	gp << "set ylabel '" << ylabel << "'\n";
+
+	vector<string> colors = getColors();
+
+	stringstream plotstring;
+	for (unsigned i = 0; i < datas.size(); i++) {
+
+		gp << "A" << i << " = 1\n";
+		gp << "B" << i << " = 2\n";
+		gp << "f" << i << "(x) = A" << i << "*x**B" << i << "\n";
+		gp << "fit [0:" << xMax << "] f" << i << "(x) '-' u 1:2 via A"
+				<< i << "\n"; // , B" << i << "
+		gp.send1d(datas[i]);
+
+
+		if (i ==0) {
+			plotstring << "plot ";
+		}
+
+		// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
+		plotstring << "'-' u 1:2 ls 7 lc rgb'"<< colors[i] <<"' t 'Varianz "
+				<< names[i] << "', f" << i << "(x) lc rgb'"<< colors[i] <<"' t sprintf('Fit Varianz "
+				<< names[i] << ": f_" << i << "(R) = %.3fR^{%.3f}',A" << i << ", B" << i
+				<< ")";
+
+		if (i != datas.size() - 1) {
+			plotstring << ",";
+		}
+	}
+
+	gp << plotstring.str() << "\n";
+
+	// Daten senden
+	for (vector<vector<vector<double> > >::iterator data = datas.begin();
+			data != datas.end(); ++data) {
+
+		gp.send1d(*data);
+	}
+
+	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
+	// the gnuplot window doesn't get closed.
+	std::cout << "Weiter mit Enter." << std::endl;
+	std::cin.get();
+}
+
 void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
 		const char ylabel[], const char zlabel[], const char style[]) {
 	Gnuplot gp;
@@ -142,21 +275,14 @@ void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
 	gp << "set view equal xyz\n";
 
 	// Farben
-	vector<string> colors;
-	colors.push_back("#1B9E77");
-	colors.push_back("#D95F02");
-	colors.push_back("#7570B3");
-	colors.push_back("#E7298A");
-	colors.push_back("#66A61E");
-	colors.push_back("#E6AB02");
-	colors.push_back("#A6761D");
-	colors.push_back("#666666");
+	vector<string> colors = getColors();
 
 	// Plotstring bauen und an Gnuplot schicken
 	stringstream plotstring;
 	plotstring << "splot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
-		plotstring << "'-' " << style << " lt rgb '" << colors[i] << "' t 'Muster " << i << "'";
+		plotstring << "'-' " << style << " lt rgb '" << colors[i]
+				<< "' t 'Muster " << i << "'";
 		if (i != datas.size() - 1) {
 			plotstring << ",";
 		}

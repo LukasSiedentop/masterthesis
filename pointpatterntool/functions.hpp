@@ -186,82 +186,22 @@ vector<T> mergeSort(vector<T> m) {
 /* Plotmethoden Gnuplot */
 // TODO: anzeigen UND svg speichern
 /**
+ * Gibt 8 Farben zum Ploten zurück
+ */
+vector<string> getColors();
+
+/**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
-template<typename T>
-void plotHist(vector<T> data, double min, double max, int n,
-		const char xlabel[] = "x") {
-	Gnuplot gp;
-	// Don't forget to put "\n" at the end of each line!
-
-	gp << "reset\n";
-
-	gp << "n=" << n << "\n";
-	gp << "max=" << max << "\n";
-	gp << "min=" << min << "\n";
-	gp << "width=" << (max - min) / n << "\n";
-
-	gp << "hist(x,width)=width*floor(x/width) #+width/2.0\n";
-
-	gp << "set xrange [min:max]\n";
-	gp << "set yrange [0:]\n";
-	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
-	// 10 x-tics
-	gp << "set xtics min," << (max - min) / 10 << ",max\n";
-	gp << "set boxwidth width*0.9\n";
-	gp << "set style fill solid 0.5\n";
-	gp << "set tics out nomirror\n";
-	gp << "set xlabel '" << xlabel << "'\n";
-	gp << "set ylabel 'Häufigkeit'\n";
-
-	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-	gp
-			<< "plot '-' u (hist($1, width)):(1.0) w boxes smooth freq lc rgb'blue' notitle\n";
-	gp.send1d(data);
-
-	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
-	// the gnuplot window doesn't get closed.
-	cout << "Weiter mit Enter." << endl;
-	cin.get();
-}
+void plotHist(vector<vector<double> > data, double min, double max, int n,
+		vector<string> names, const char xlabel[] = "x");
 
 /**
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
-template<typename T>
-void plot2D(vector<vector<T> > data, double xMin, double dx, double xMax,
-		double fitMax, const char xlabel[] = "x", const char ylabel[] = "y") {
-
-	Gnuplot gp;
-	gp << "reset\n";
-
-	gp << "A = 1\n";
-	gp << "f(x) = A*x**2\n";
-	//gp << "f(x) = A*log(B*x)\n";
-	gp << "fit [0:" << fitMax << "] f(x) '-' u 1:2 via A\n";
-	gp.send1d(data);
-
-	gp << "set key top left\n";
-	gp << "set xrange [" << xMin << ":" << xMax << "]\n";
-	gp << "set yrange [0:]\n";
-	//gp << "set offset graph 0.05,0.05,0.05,0.0\n";
-	// 10 x-tics
-	gp << "set xtics " << xMin << ",1," << xMax << "\n";
-	gp << "set tics out nomirror\n";
-	gp << "set xlabel '" << xlabel << "'\n";
-	gp << "set ylabel '" << ylabel << "'\n";
-
-	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-	gp
-			<< "plot '-' u 1:2 ls 7 lc rgb'blue' t 'Numerische Daten', f(x) lc rgb'blue' t sprintf('Fit: f(R) = %.3fR^2',A)\n";
-	gp.send1d(data);
-
-	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
-	// the gnuplot window doesn't get closed.
-	std::cout << "Weiter mit Enter." << std::endl;
-	std::cin.get();
-}
-;
+void plotHyperuniformity(vector<vector<vector<double> > > data, double xMax,
+		vector<string> names, const char xlabel[] = "x", const char ylabel[] =
+				"y");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.

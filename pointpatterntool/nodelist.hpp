@@ -41,13 +41,14 @@ private:
 
 	// Periodizität des Musters
 	bool periodic;
+
+	// Name of the pattern
+	string name;
 public:
 	// Standardkonstruktor
 	nodelist();
 	// Konstruktor für eine leere Liste mit gegebener Periodizität
-	nodelist(bool periodicity);
-	// Konstruiert eine nichtperiodische Nodelist aus einem Vektor von Nodes.
-	//nodelist(std::vector<node> vec, bool periodicity);
+	nodelist(bool periodicity, string name);
 	// Konstruiert ein Muster (Dichte 1, 10^3 Kubus) mit: pattern=1 - zufälliger Verteilung, pattern=2 - Diamantverteilung.
 	nodelist(int pattern, bool periodicity);
 	// Destruktor
@@ -71,6 +72,8 @@ public:
 	bool isPeriodic() const;
 	// skaliert die Liste, sodass die Dichte der gewünschten entspricht
 	void setDensity(double density);
+	// returns the name of the list
+	string getName();
 	// berechnet die Punktdichte der Liste
 	double getDensity();
 	// berechnet das Volumen
@@ -103,10 +106,10 @@ public:
 	double normalize();
 
 	/* Berechnungen */
-	void neighbourDistribution();
+	vector<double> neighbourDistribution();
 	vector<double> lengthDistribution(bool plot = true);
-	void angleDistribution();
-	void hyperuniformity();
+	vector<double> angleDistribution();
+	vector<vector<double> > hyperuniformity();
 	void writePOV();
 };
 

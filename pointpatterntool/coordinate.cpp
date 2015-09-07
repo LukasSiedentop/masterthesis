@@ -49,10 +49,6 @@ coordinate::~coordinate() {
 	vector<double>().swap(*this);
 }
 
-int coordinate::numDimensions() {
-	return size();
-}
-
 bool coordinate::operator ==(const coordinate &rhs) {
 	for (unsigned i = 0; i < size(); i++) {
 		if (abs(rhs[i] - (*this)[i]) > tolerance) {
@@ -74,9 +70,23 @@ coordinate & coordinate::operator +=(const coordinate &rhs) {
 	return *this;
 }
 
+coordinate & coordinate::operator +=(const double &summand) {
+	for (unsigned i = 0; i < size(); i++) {
+		(*this)[i] -= summand;
+	}
+	return *this;
+}
+
 coordinate & coordinate::operator -=(const coordinate &rhs) {
 	for (unsigned i = 0; i < size(); i++) {
 		(*this)[i] -= rhs[i];
+	}
+	return *this;
+}
+
+coordinate & coordinate::operator -=(const double &subtrahend) {
+	for (unsigned i = 0; i < size(); i++) {
+		(*this)[i] -= subtrahend;
 	}
 	return *this;
 }
@@ -122,6 +132,14 @@ string coordinate::toString(const char begin[], const char delimiter[],
 	stream << back() << end;
 
 	return stream.str();
+}
+
+double coordinate::min() {
+	double minimu = numeric_limits<double>::infinity();
+	for (unsigned i = 0; i < size(); i++) {
+		minimu = std::min(minimu, (*this)[i]);
+	}
+	return minimu;
 }
 
 double coordinate::euklidian(coordinate point) {
@@ -170,22 +188,30 @@ coordinate coordinate::getVec(const coordinate & a, const coordinate & b,
 	return vec;
 }
 
-coordinate operator+(const coordinate & lhs, const coordinate & rhs) {
+coordinate operator+(const coordinate& lhs, const coordinate& rhs) {
 	return coordinate(lhs) += rhs;
 }
 
-coordinate operator-(const coordinate & lhs, const coordinate & rhs) {
+coordinate operator+(const coordinate& lhs, const double& summand) {
+	return coordinate(lhs) += summand;
+}
+
+coordinate operator-(const coordinate& lhs, const coordinate& rhs) {
 	return coordinate(lhs) -= rhs;
 }
 
-coordinate operator*(const coordinate & lhs, const coordinate & rhs) {
+coordinate operator-(const coordinate& lhs, const double& subtrahend) {
+	return coordinate(lhs) -= subtrahend;
+}
+
+coordinate operator*(const coordinate& lhs, const coordinate& rhs) {
 	return coordinate(lhs) *= rhs;
 }
 
-coordinate operator*(const coordinate & lhs, const double &factor) {
+coordinate operator*(const coordinate& lhs, const double& factor) {
 	return coordinate(lhs) *= factor;
 }
 
-coordinate operator/(const coordinate & lhs, const double &factor) {
+coordinate operator/(const coordinate& lhs, const double& factor) {
 	return coordinate(lhs) /= factor;
 }

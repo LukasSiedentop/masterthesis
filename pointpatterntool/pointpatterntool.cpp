@@ -83,7 +83,8 @@ int gui() {
  * 3 4 5		1 2 3
  * 3 4 5		2 3 4
  */
-nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
+nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
+		string name) {
 	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
 			<< " ein." << endl;
 
@@ -93,7 +94,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 	neighbourFile.open(neighbours, std::ifstream::in);
 
 	// Listenkopf
-	nodelist* list = new nodelist(periodic);
+	nodelist* list = new nodelist(periodic, name);
 
 	if (periodic) {
 		cout << "Nehme eine Box von (-5,5)^3 an..." << endl;
@@ -161,8 +162,10 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic) {
 		}
 	}
 
-	list->scaleList(1. / 50.);
-	list->shiftList(coordinate(-5,-5,-5));
+	/*
+	 list->scaleList(1. / 50.);
+	 list->shiftList(coordinate(-5,-5,-5));
+	 */
 
 	cout << (periodic ? "Periodisches " : "")
 			<< "Muster eingelesen und Liste erstellt. Statistik:" << endl
@@ -200,16 +203,15 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
 
 				} else if (!(*list)->isPeriodic()) {
-					if (!(*neighIter)->isEdgenode()) {
-						if (!(*nodeIter)->isEdgenode()) {
-							data.push_back(*(*nodeIter)->getPosition());
-							data.push_back(*(*neighIter)->getPosition());
+					//if (!(*neighIter)->isEdgenode()) {
+					//if (!(*nodeIter)->isEdgenode()) {
+					data.push_back(*(*nodeIter)->getPosition());
+					data.push_back(*(*neighIter)->getPosition());
 
-							data.push_back(
-									coordinate(nan(""), nan(""), nan("")));
+					data.push_back(coordinate(nan(""), nan(""), nan("")));
 
-						}
-					}
+					//}
+					//}
 				}
 			}
 		}
@@ -280,8 +282,15 @@ void compareLists(vector<nodelist*>& lists) {
 	vector<vector<coordinate> > plotData;
 	plotData.push_back(diffs);
 
+	vector<vector<double> > histData;
+	histData.push_back(diffLengths);
+
+	vector<string> title;
+
+	title.push_back("Differenz");
+
 	// Histogramm der Längen der Differenzvektoren
-	plotHist(diffLengths, 0, 0.1, 50, "Differenzlängen");
+	plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
 	// Punktewolke
 	plot3D(plotData, "x", "y", "z", "w p ls 7");
 	// Angepasste Muster
@@ -411,12 +420,19 @@ int main(int argc, char* argv[]) {
 
 	// keine Argumente übergeben -> generiere Zufallsmuster und Diamantmuster
 	if (argc == 1) {
+		lists.push_back(new nodelist(1, false));
 		lists.push_back(new nodelist(2, false));
-		//lists.push_back(new nodelist(1, false));
 	}
 	for (int i = 1; i < argc; i += 3) {
+		string name = "Pattern";
+		if (i == 1) {
+			name = "HPU_Chi_4C_Chi_0.13_NP_1000_UC";
+		} else if (i == 4) {
+			name = "Validation";
+		}
 		lists.push_back(
-				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false)));
+				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
+						name));
 	}
 
 	int option = -1;
@@ -431,58 +447,117 @@ int main(int argc, char* argv[]) {
 		case 0:
 			cout << "Beende." << endl;
 			break;
-		case 1:
+		case 1: {
+			cout << "Zähle die Nachbarn jedes Knotens..." << endl;
+			vector<vector<double> > data;
+			vector<string> names;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				(*list)->neighbourDistribution();
+				vector<double> neighbours = (*list)->neighbourDistribution();
+				data.push_back(neighbours);
+
+				names.push_back((*list)->getName());
+
+				cout << "Nachbarnstatistik Muster " << (*list)->getName() << ":"
+						<< endl;
+				cout << statsAsString(stats(neighbours));
 			}
+
+			plotHist(data, 0, 10, 10, names, "Nachbarn");
+
 			break;
-		case 2:
+		}
+		case 2: {
+			cout << "Bestimme die Längen zwischen benachbarten Punkten..."
+					<< endl;
+			vector<vector<double> > data;
+			vector<string> names;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				(*list)->lengthDistribution();
+				vector<double> lengths = (*list)->lengthDistribution();
+				data.push_back(lengths);
+
+				names.push_back((*list)->getName());
+
+				cout << "Längenstatistik Muster " << (*list)->getName() << ":"
+						<< endl;
+				cout << statsAsString(stats(lengths));
 			}
+			plotHist(data, 0, 1, 50, names, "Längen");
 			break;
-		case 3:
+		}
+		case 3: {
+			cout << "Bestimme die Winkel zwischen benachbarten Punkten..."
+					<< endl;
+			vector<vector<double> > data;
+			vector<string> names;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				(*list)->angleDistribution();
+				vector<double> angles = (*list)->angleDistribution();
+				data.push_back(angles);
+
+				names.push_back((*list)->getName());
+
+				cout << "Winkelstatistik Muster " << (*list)->getName() << ":"
+						<< endl;
+				cout << statsAsString(stats(angles));
 			}
+			plotHist(data, 0, 180, 180, names, "Winkel");
 			break;
-		case 4:
+		}
+		case 4: {
+			cout << "Bestimme den Grad der Hyperuniformity für " << endl;
+			vector<vector<vector<double> > > variances;
+			vector<string> names;
+			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				(*list)->hyperuniformity();
+				cout << (*list)->getName() << endl;
+				vector<vector<double> > variance = (*list)->hyperuniformity();
+				variances.push_back(variance);
+				names.push_back((*list)->getName());
+				cout << variance.size() << endl;
+				xMax = std::max(xMax, variance[variance.size()-2][0]);
 			}
+			cout << xMax << endl;
+			plotHyperuniformity(variances, xMax, names, "Radius R",
+					"Varianz  {/Symbol s}^2(R)");
 			break;
-		case 5:
+		}
+		case 5: {
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				(*list)->display();
 			}
 			break;
-		case 6:
+		}
+		case 6: {
 			ctr = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				cout << "Liste " << ctr << ": " << (*list)->listStats();
+				cout << "Liste " << ctr << ": " << (*list)->getName() << endl
+						<< char(9) << (*list)->listStats();
 				ctr++;
 			}
 			break;
-		case 7:
+		}
+		case 7: {
 			gnuplotPattern(lists);
 			break;
-		case 8:
+		}
+		case 8: {
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				(*list)->writePOV();
 			}
 			break;
+		}
 
-		case 9:
+		case 9: {
 			compareLists(lists);
 			break;
-		case 10:
+		}
+		case 10: {
 			ctr = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
@@ -492,6 +567,7 @@ int main(int argc, char* argv[]) {
 				ctr++;
 			}
 			break;
+		}
 		default:
 			cout << "Das gibts leider (noch) nicht." << endl;
 		}

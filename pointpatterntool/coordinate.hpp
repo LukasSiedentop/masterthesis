@@ -13,6 +13,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <limits>
+
 #include <cstdlib>
 
 /**
@@ -37,9 +39,6 @@ public:
 	/* Destruktor */
 	~coordinate();
 
-	/* Anzahl der Dimensionen */
-	int numDimensions();
-
 	/* Vergleichsoperatoren: alle Komponenten müssen gleich sein */
 	bool operator ==(const coordinate& rhs);
 	/* negierter Vergleichsoperatoren: mindestens eine Komponente ist ungleich */
@@ -52,8 +51,12 @@ public:
 
 	/* verschiebt diese Koordinate um rhs */
 	coordinate & operator +=(const coordinate& rhs);
+	/* shifts this coordinate with summand in every component */
+	coordinate & operator +=(const double& summand);
 	/* verschiebt diese Koordinate um -rhs */
 	coordinate & operator -=(const coordinate& rhs);
+	/* shifts this coordinate with -subtrahend in every component */
+	coordinate & operator -=(const double& subtrahend);
 	/* multipliziert diese Koordinate Komponentenweise mit dem gegebenen */
 	coordinate & operator *=(const coordinate& rhs);
 	/* skaliert diesen Vektor um einen factor */
@@ -69,14 +72,21 @@ public:
 
 	/* Addiert die Vektoren Komponentenweise. Teuer! */
 	friend coordinate operator+(const coordinate& lhs, const coordinate& rhs);
+	/* Adds a summand to every component */
+	friend coordinate operator-(const coordinate& lhs, const double& summand);
 	/* Subtrahiert die Vektoren Komponentenweise. Teuer! */
 	friend coordinate operator-(const coordinate& lhs, const coordinate& rhs);
+	/* Subtracts a subtrahend from every component */
+	friend coordinate operator-(const coordinate& lhs, const double& subtrahend);
 	/* multipliziert jede Komponente mit factor */
 	friend coordinate operator*(const coordinate& lhs, const coordinate& rhs);
 	/* multipliziert jede Komponente mit factor */
 	friend coordinate operator*(const coordinate& lhs, const double& factor);
 	/* dividiert jede Komponente mit factor */
 	friend coordinate operator/(const coordinate& lhs, const double& factor);
+
+	/* Returns the minimal component of the coordinate */
+	double min();
 
 	/* Gibt den euklidschen Abstand zwischen dieser Koordinate und point zurück */
 	double euklidian(coordinate point);

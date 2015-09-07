@@ -12,42 +12,12 @@ using namespace std;
 /* Nodelist */
 
 nodelist::nodelist() :
-		min(coordinate()), max(coordinate()), periodic(0) {
+		min(coordinate()), max(coordinate()), periodic(0), name("") {
 }
 
-nodelist::nodelist(bool periodicity) :
-		min(coordinate()), max(coordinate()), periodic(periodicity) {
+nodelist::nodelist(bool periodicity, string n) :
+		min(coordinate()), max(coordinate()), periodic(periodicity), name(n) {
 }
-/*
- nodelist::nodelist(vector<node> vec, bool periodicity) :
- periodic(periodicity) {
- // Extremalwerte bestimmen
- double inf = numeric_limits<double>::infinity();
- double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
- -inf;
-
- //coordinate minimum({inf, inf, inf},3);
- //coordinate maximum({-inf, -inf, -inf},3);
-
- for (unsigned n = 0; n < vec.size(); n++) {
-
- minX = std::min(minX, (*vec[n].getPosition())[0]);
- minY = std::min(minY, (*vec[n].getPosition())[1]);
- minZ = std::min(minZ, (*vec[n].getPosition())[2]);
-
- maxX = std::max(maxX, (*vec[n].getPosition())[0]);
- maxY = std::max(maxY, (*vec[n].getPosition())[1]);
- maxZ = std::max(maxZ, (*vec[n].getPosition())[2]);
-
- // Liste des Knotens neu setzen
- //vec[n].setList(this);
- // Knoten dieser Liste hinzufügen
- this->push_back(new node(vec[n], this));
- }
-
- setMins(coordinate(minX, minY, minZ));
- setMaxs(coordinate(maxX, maxY, maxZ));
- }*/
 
 nodelist::nodelist(int pattern, bool periodicity) :
 		min(coordinate(-5, -5, -5)), max(coordinate(5, 5, 5)), periodic(
@@ -59,6 +29,9 @@ nodelist::nodelist(int pattern, bool periodicity) :
 	case 1: { // Zufallsmuster
 		cout << "Generiere Zufallsmuster mit 1000 Punkten in 10^3 Box..."
 				<< endl;
+
+		name = "Zufallsmuster";
+
 		// Seed für Zufallsgenerator
 		srand(time(NULL));
 		for (unsigned n = 0; n < 1000; n++) {
@@ -74,16 +47,16 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		cout << "Generiere Diamantmuster mit 1000 Punkten in 10^3 Box..."
 				<< endl;
 
+		name = "Diamantmuster";
+
 		int x = -5, y = -5, z = -5;
 		int numx = 5, numy = 5, numz = 5;
 
-		double eps = 2e-5;
-
-		while (numz - z > eps) {
+		while (numz - z > 0) {
 			y = -5;
-			while (numy - y > eps) {
+			while (numy - y > 0) {
 				x = -5;
-				while (numx - x > eps) {
+				while (numx - x > 0) {
 					if (not ((x + y + z) % 2)) {
 						// erster Punkt: (0.25,0.25,0.25)
 						this->push_back(
@@ -111,10 +84,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		cout << "Diamantmuster";
 		break;
 	}
-	default:
-		*this = nodelist(periodicity);
 	}
-
 	// Nachbarn generieren
 	setNeighbours();
 
@@ -152,7 +122,7 @@ void nodelist::setNeighbours() {
 		// Knoteniteration
 		for (nodelist::iterator n = begin(); n != end(); ++n) {
 			node* neigh = NULL;
-			double distSqr = numeric_limits<double>::infinity();
+			double distSqr = std::numeric_limits<double>::infinity();
 			// 2. Knoteniteration
 			for (nodelist::iterator nextn = begin(); nextn != end(); ++nextn) {
 				// wenn er schon Nachbar ist, nächster
@@ -210,6 +180,10 @@ bool nodelist::isPeriodic() const {
 
 void nodelist::setDensity(double density) {
 	scaleList(pow((getDensity() / density), 1. / 3.));
+}
+
+string nodelist::getName() {
+	return name;
 }
 
 double nodelist::getDensity() {
@@ -449,10 +423,7 @@ double nodelist::normalize() {
 /**
  * Schreibt die Anzahl der Nachbarn jedes Knotens untereinander in eine Datei.
  */
-void nodelist::neighbourDistribution() {
-	const char outfileName[] = "./data/statistics/neighbourDistribution.dat";
-	cout << "Zähle die Nachbarn jedes Knotens..." << endl;
-
+vector<double> nodelist::neighbourDistribution() {
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
 
@@ -475,24 +446,13 @@ void nodelist::neighbourDistribution() {
 		}
 	}
 
-	// Daten schreiben
-	writeHist(data, true, "# Anzahl Nächster Nachbarn", outfileName);
-
-	// Statistiken
-	cout << "Nachbarstatistik:" << endl;
-	cout << statsAsString(stats(data));
-
-	// Daten ploten
-	plotHist(data, 0, 10, 10, "Anzahl Nächster Nachbarn");
+	return data;
 }
 
 /**
  * Schreibt alle Distanzen zwischen den Knoten und ihrer Nachbarn in eine Datei.
  */
 vector<double> nodelist::lengthDistribution(bool plot) {
-	const char outfileName[] = "./data/statistics/lenghtDistribution.dat";
-	cout << "Bestimme die Längen zwischen benachbarten Punkten..." << endl;
-
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
 
@@ -521,33 +481,16 @@ vector<double> nodelist::lengthDistribution(bool plot) {
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
 	}
-	if (plot) {
-		// Daten schreiben
-		writeHist(halfData, true, "# Längen", outfileName);
 
-		// Statistiken
-		cout << "Längenstatistik:" << endl;
-		cout << statsAsString(stats(halfData));
-
-		// Daten ploten
-		plotHist(halfData, floor((*(halfData.begin()))) - 0.5,
-				ceil((*halfData.end())) + 0.5, 30, "Länge");
-	}
 	return halfData;
 }
 
 /**
  * Schreibt die Winkel zwischen den Nachbarn in eine Datei.
  */
-void nodelist::angleDistribution() {
-	const char outfileName[] = "./data/statistics/angleDistribution.dat";
-
-	cout << "Bestimme die Winkel zwischen benachbarten Punkten..." << endl;
-
+vector<double> nodelist::angleDistribution() {
 	// Datenstruktur um die Werte aufzunehmen
 	vector<double> data;
-
-	// TODO: welche Randknoten nicht beachten?
 
 	// Iteration über jeden Knoten
 	for (vector<node*>::iterator nodeIter = begin(); nodeIter != end();
@@ -595,37 +538,28 @@ void nodelist::angleDistribution() {
 		halfData.push_back(data[i]);
 	}
 
-	// Daten schreiben
-	writeHist(halfData, true, "# Winkel", outfileName);
-
-	// Statistiken
-	cout << "Winkelstatistik:" << endl;
-	cout << statsAsString(stats(halfData));
-
-	// Daten ploten
-	plotHist(halfData, 0, 180, 180, "Winkel");
-
-	cout << "Winkeldaten in " << outfileName << " geschrieben." << endl;
-
+	return halfData;
 }
 
 /**
  * Errechnet die Hyperuniformität des Musters.
  */
-void nodelist::hyperuniformity() {
+vector<vector<double> > nodelist::hyperuniformity() {
 
-	const char outfileName[] = "./data/statistics/hyperuniformity.dat";
+	//const char outfileName[] = "./data/statistics/hyperuniformity.dat";
 
-	// Radiusincrement TODO: Radius ist auf eine Boslänge von 10 optimiert
-	double dr = 0.2, rMax = 11;
+	// Anzahl Radii
+	unsigned int nr = 50;
+
+	// Radiusincrement
+	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
+			rMax / nr;
 
 	// Anzahl Kugeln bzw. iterationen
-	const int n = 500;
+	const int n = 100;
 
 	// Datenstruktur um Anzahl der Punkte in Kugel zu speichern
 	vector<vector<double> > data;
-
-	unsigned int nr = ceil(rMax / dr);
 
 	data.resize(nr + 1);
 	for (unsigned int i = 0; i < nr; ++i) {
@@ -634,6 +568,7 @@ void nodelist::hyperuniformity() {
 
 	// Seed für Zufallsgenerator
 	srand(time(NULL));
+
 	if (periodic) {
 
 		// Fortschrittsbalken
@@ -667,7 +602,7 @@ void nodelist::hyperuniformity() {
 			rSqr = r * r;
 			for (int i = 0; i < n; i++) {
 				// zufälligen Mittelpunkt wählen, sodass Kugel immer im Muster liegt
-				coordinate mid(3);
+				coordinate mid(3); // Coordinate in [0,1)^3
 				coordinate range = getLengths()
 						- coordinate(2 * r, 2 * r, 2 * r);
 				mid *= range;
@@ -713,6 +648,7 @@ void nodelist::hyperuniformity() {
 	}
 
 	// Outfile
+	/*
 	ofstream outfile;
 	outfile.open(outfileName);
 
@@ -721,14 +657,11 @@ void nodelist::hyperuniformity() {
 	for (unsigned int j = 0; j < nr; j++) {
 		outfile << variance[j][0] << char(9) << variance[j][1] << endl;
 	}
-
-	double fitMax = std::min(getLengths()[0],
-			std::min(getLengths()[1], getLengths()[2]));
-
+*/
 	// Varianz über Radius plotten
-	plot2D(variance, 0, dr, periodic ? rMax - 1 : fitMax / 2,
-			periodic ? rMax - 1 : fitMax / 2, "Radius R",
-			"Varianz  {/Symbol s}^2(R)");
+	//plot2D(variance, 0, dr, rMax, "Radius R", "Varianz  {/Symbol s}^2(R)");
+
+	return variance;
 }
 
 /**
