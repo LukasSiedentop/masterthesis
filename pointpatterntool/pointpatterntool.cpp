@@ -200,16 +200,16 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 					data.push_back(coordinate(nan(""), nan(""), nan("")));
 
 				} else if (!(*list)->isPeriodic()) {
-					//if (!(*neighIter)->isEdgenode()) {
-						//if (!(*nodeIter)->isEdgenode()) {
+					if (!(*neighIter)->isEdgenode()) {
+						if (!(*nodeIter)->isEdgenode()) {
 							data.push_back(*(*nodeIter)->getPosition());
 							data.push_back(*(*neighIter)->getPosition());
 
 							data.push_back(
 									coordinate(nan(""), nan(""), nan("")));
 
-						//}
-					//}
+						}
+					}
 				}
 			}
 		}

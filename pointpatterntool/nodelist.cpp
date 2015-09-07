@@ -70,63 +70,42 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		cout << "Zufallsmuster";
 		break;
 	}
-	case 2: { // Diamantmuster
-		cout << "Generiere Diamantmuster..." // mit 1000 Punkten in 10^3 Box..." TODO
+	case 2: { // Diamantmuster (Dirks method)
+		cout << "Generiere Diamantmuster mit 1000 Punkten in 10^3 Box..."
 				<< endl;
 
-		// Diamantgitterkoordinaten (8 Punkte in Zelle)
-		vector<coordinate> dia;
-		//dia.push_back(coordinate(0, 0, 0));
-		//dia.push_back(coordinate(1, 1, 0));
-		//dia.push_back(coordinate(1, 0, 1));
-		//dia.push_back(coordinate(0, 1, 1));
-		dia.push_back(coordinate(1, 0, 0));
-		dia.push_back(coordinate(0, 1, 0));
-		dia.push_back(coordinate(0, 0, 1));
-		dia.push_back(coordinate(1, 1, 1));
+		int x = -5, y = -5, z = -5;
+		int numx = 5, numy = 5, numz = 5;
 
-		dia.push_back(coordinate(0.5, 0.5, 0));
-		//dia.push_back(coordinate(0.5, 0.5, 1));
-		dia.push_back(coordinate(0.5, 0, 0.5));
-		//dia.push_back(coordinate(0.5, 1, 0.5));
-		dia.push_back(coordinate(0, 0.5, 0.5));
-		//dia.push_back(coordinate(1, 0.5, 0.5));
+		double eps = 2e-5;
 
-		dia.push_back(coordinate(0.25, 0.25, 0.75));
-		dia.push_back(coordinate(0.75, 0.25, 0.25));
-		dia.push_back(coordinate(0.25, 0.75, 0.25));
-		dia.push_back(coordinate(0.75, 0.75, 0.75));
-
-		for (unsigned x = 0; x < 5; x++) {
-			for (unsigned y = 0; y < 5; y++) {
-				for (unsigned z = 0; z < 5; z++) {
-					coordinate shifter(x, y, z);
-					for (vector<coordinate>::iterator d = dia.begin();
-							d != dia.end(); ++d) {
+		while (numz - z > eps) {
+			y = -5;
+			while (numy - y > eps) {
+				x = -5;
+				while (numx - x > eps) {
+					if (not ((x + y + z) % 2)) {
+						// erster Punkt: (0.25,0.25,0.25)
 						this->push_back(
 								new node(this,
-										((((*d) + shifter) * 2)
-												+ coordinate(-5, -5, -5))));
-						cout
-								<< ((((*d) + shifter) * 2)
-										+ coordinate(-5, -5, -5)) << endl;
+										(coordinate(0.25, 0.25, 0.25)
+												+ coordinate(x, y, z))));
+						// zweiter Punkt: (0.75,0.75,0.75)
+						this->push_back(
+								new node(this,
+										(coordinate(0.75, 0.75, 0.75)
+												+ coordinate(x, y, z))));
 					}
+					x++;
 				}
+				y++;
 			}
-		}
-
-		if (!periodic) {
-			// missing edgenodes
-			this->push_back(new node(this, coordinate(-5, -5, -5)));
-			this->push_back(new node(this, coordinate(5, 5, -5)));
-			this->push_back(new node(this, coordinate(5, -5, 5)));
-			this->push_back(new node(this, coordinate(-5, 5, 5)));
-			// TODO: flächenzentrierte hinzufügen
+			z++;
 		}
 
 		// set edgenodes
 		for (nodelist::iterator n = this->begin(); n != this->end(); ++n) {
-			(*n)->setEdgenode(0.5);
+			(*n)->setEdgenode(1);
 		}
 
 		cout << "Diamantmuster";
@@ -358,12 +337,12 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 
 	// alle Kombinationen durchgehen, aber nur wenn eine Seitenlänge der gegebenen Box über den Rand geht ...
 	for (int ix = -1; ix < 2; ix++) {
-		if ((fabs(mid[0] + (ix * halfExtend)) > fabs(ix * (lx / 2.0)))) {
+		if ((fabs(mid[0] + (ix * halfExtend)) >= fabs(ix * (lx / 2.0)))) {
 			for (int iy = -1; iy < 2; iy++) {
-				if ((fabs(mid[1] + (iy * halfExtend)) > fabs(iy * (ly / 2.0)))) {
+				if ((fabs(mid[1] + (iy * halfExtend)) >= fabs(iy * (ly / 2.0)))) {
 					for (int iz = -1; iz < 2; iz++) {
 						if ((fabs(mid[2] + (iz * halfExtend))
-								> fabs(iz * (lz / 2.0)))) {
+								>= fabs(iz * (lz / 2.0)))) {
 							// ... die Verschiebung hinzufügen (Kugel entgegengesetzt zu Muster verschieben!)
 							shifters.push_back(
 									mid
