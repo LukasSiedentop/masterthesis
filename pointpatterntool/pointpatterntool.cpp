@@ -288,13 +288,13 @@ void compareLists(vector<nodelist*>& lists) {
 	vector<string> title;
 
 	title.push_back("Differenz");
-
-	// Histogramm der Längen der Differenzvektoren
+/*
 	plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
 	// Punktewolke
 	plot3D(plotData, "x", "y", "z", "w p ls 7");
 	// Angepasste Muster
 	gnuplotPattern(lists);
+	*/
 }
 
 /**
@@ -426,9 +426,9 @@ int main(int argc, char* argv[]) {
 	for (int i = 1; i < argc; i += 3) {
 		string name = "Pattern";
 		if (i == 1) {
-			name = "HPU_Chi_4C_Chi_0.13_NP_1000_UC";
+			name = "HPU Chi 4C Chi 0.13 NP=1000 UC";
 		} else if (i == 4) {
-			name = "Validation";
+			name = "Validation recovered pattern";
 		}
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
@@ -512,16 +512,14 @@ int main(int argc, char* argv[]) {
 			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				cout << (*list)->getName() << endl;
+				cout << char(9) << (*list)->getName() << endl;
 				vector<vector<double> > variance = (*list)->hyperuniformity();
 				variances.push_back(variance);
 				names.push_back((*list)->getName());
-				cout << variance.size() << endl;
-				xMax = std::max(xMax, variance[variance.size()-2][0]);
+				xMax = std::max(xMax, variance[variance.size()-1][0]);
 			}
-			cout << xMax << endl;
 			plotHyperuniformity(variances, xMax, names, "Radius R",
-					"Varianz  {/Symbol s}^2(R)");
+					"Variance  {/Symbol s}^2(R)");
 			break;
 		}
 		case 5: {

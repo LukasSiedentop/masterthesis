@@ -12,8 +12,10 @@ coordinate::coordinate() {
 }
 
 coordinate::coordinate(unsigned int n) {
+	// faster that pushing back every single one
+	resize(n);
 	for (unsigned int i = 0; i < n; i++) {
-		push_back((double) rand() / RAND_MAX);
+		(*this)[i] = (double) rand() / RAND_MAX;
 	}
 }
 
@@ -22,25 +24,22 @@ coordinate::coordinate(const coordinate& coord) {
 }
 
 coordinate::coordinate(double x, double y) {
-	push_back(x);
-	push_back(y);
+	resize(2);
+	(*this)[0] = x;
+	(*this)[1] = y;
 }
 
 coordinate::coordinate(double x, double y, double z) {
-	/*this->resize(3);
-	this[0]=x;
-	this[1]=y;
-	this[2]=z;*/
-
-	push_back(x);
-	push_back(y);
-	push_back(z);
-
+	resize(3);
+	(*this)[0] = x;
+	(*this)[1] = y;
+	(*this)[2] = z;
 }
 
 coordinate::coordinate(double point[], unsigned n) {
+	resize(n);
 	for (unsigned i = 0; i < n; i++) {
-		push_back(point[i]);
+		(*this)[i] = point[i];
 	}
 }
 
@@ -135,11 +134,11 @@ string coordinate::toString(const char begin[], const char delimiter[],
 }
 
 double coordinate::min() {
-	double minimu = numeric_limits<double>::infinity();
+	double minimum = numeric_limits<double>::infinity();
 	for (unsigned i = 0; i < size(); i++) {
-		minimu = std::min(minimu, (*this)[i]);
+		minimum = std::min(minimum, (*this)[i]);
 	}
-	return minimu;
+	return minimum;
 }
 
 double coordinate::euklidian(coordinate point) {

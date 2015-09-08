@@ -17,12 +17,14 @@
 
 #include <cstdlib>
 
+static const double tolerance = 0.0000001;
+
 /**
  * Point in n-Dimensional space with various operators
  */
 class coordinate: public std::vector<double> {
 private:
-	static const double tolerance = 0.0000001;
+
 public:
 	/* Standardkonstruktor */
 	coordinate();

@@ -322,7 +322,6 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 									mid
 											- coordinate(ix * lx, iy * ly,
 													iz * lz));
-							//cout << "r: " << halfExtend << " s: " << mid+coordinate(ix * halfExtend, iy * halfExtend, iz * halfExtend) << " p: " << coordinate(ix * lx, iy * ly, iz * lz) << endl;
 						}
 					}
 				}
@@ -542,124 +541,99 @@ vector<double> nodelist::angleDistribution() {
 }
 
 /**
- * Errechnet die Hyperuniformität des Musters.
+ * Calculates the hyperuniformity of the pattern saved in the list.
  */
 vector<vector<double> > nodelist::hyperuniformity() {
-
-	//const char outfileName[] = "./data/statistics/hyperuniformity.dat";
-
-	// Anzahl Radii
+	// number of radii
 	unsigned int nr = 50;
-
-	// Radiusincrement
+	// radiusincrement + maximal radius
 	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
 			rMax / nr;
 
-	// Anzahl Kugeln bzw. iterationen
-	const int n = 100;
+	// number of spheres/iterations
+	unsigned int n = 500;
 
-	// Datenstruktur um Anzahl der Punkte in Kugel zu speichern
+	// datastructure to save the number of points in each sphere
 	vector<vector<double> > data;
-
-	data.resize(nr + 1);
+	data.resize(nr);
 	for (unsigned int i = 0; i < nr; ++i) {
 		data[i].resize(n);
 	}
-
-	// Seed für Zufallsgenerator
+	clock_t t;
+	t = clock();
+	// seed for generation of random numbers
 	srand(time(NULL));
-
+	coordinate mid;
 	if (periodic) {
-
-		// Fortschrittsbalken
 		boost::progress_display show_progress(n);
 
-		// erstelle n Kugeln...
-		for (int i = 0; i < n; i++) {
-			// Zufälligen Mittelpunkt auswählen
-			coordinate mid(3);
+		// iteration over n spheres
+		for (unsigned int i = 0; i < n; i++) {
+			// Choose the center of the sphere such that it is somewhere within the whole pattern.
+			mid = (coordinate(3) - 0.5) * getLengths(); // faster, TODO not tested
+			/*mid = coordinate(3); old
 			mid *= getLengths();
-			mid -= getLengths() / 2;
+			mid -= getLengths() / 2;*/
+			// Without this, the Pattern is expected to be centered around (0,0,0).
+			//mid += getMid();
 
-			// Über Radius iterieren
+			// iteration over radius: count points within sphere
 			for (unsigned int j = 0; j < nr; j++) {
 				data[j][i] = pointsInsidePeriodic(mid, j * dr);
 			}
 
-			// Fortschritt
 			++show_progress;
 		}
 	} else {
-
-		// Fortschrittsbalken
 		boost::progress_display show_progress(nr);
 
-		double r;
-		double rSqr;
-		// Über Radius iterieren
+		double r, rSqr;
+		// iteration over radius
 		for (unsigned int j = 0; j < nr; j++) {
 			r = j * dr;
 			rSqr = r * r;
-			for (int i = 0; i < n; i++) {
-				// zufälligen Mittelpunkt wählen, sodass Kugel immer im Muster liegt
-				coordinate mid(3); // Coordinate in [0,1)^3
-				coordinate range = getLengths()
-						- coordinate(2 * r, 2 * r, 2 * r);
-				mid *= range;
-				mid -= range / 2;
+			// iteration over n spheres
+			for (unsigned int i = 0; i < n; i++) {
+				// Choose the center of the sphere such that it is somewhere within the whole pattern.
+				mid = (coordinate(3) - 0.5) * (getLengths() - 2 * r);
 
-				// Punkte in Kugel zählen
 				data[j][i] = pointsInside(mid, r, rSqr);
 			}
-
-			// Fortschritt
 			++show_progress;
 		}
 	}
+	t = clock() - t;
+	cout << "Hat " << t << " Clicks gedauert ("
+			<< (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
-	// Erwartungswert aller Radii berechnen
-	// Der sollte genau die Dichte des Musters mal das Kugelvolumen sein!
+	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
 	vector<double> expectedValue;
-	expectedValue.resize(nr + 1);
-	// Radiusiteration
+	expectedValue.resize(nr);
+	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
-		// Kugeliteration
-		for (int i = 0; i < n; i++) {
+		// iteration over sphere
+		for (unsigned int i = 0; i < n; i++) {
 			expectedValue[j] += data[j][i];
 		}
 		expectedValue[j] = expectedValue[j] / n;
 		//cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
 	}
 
-	// Varianz für jeden Radius berechnen Gnuplot brauchts so: variance[i][j], (i,j) => (rows,colums)
+	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
 	vector<vector<double> > variance;
-	variance.resize(nr + 1);
-	// Radiusiteration
+	variance.resize(nr);
+	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
 		variance[j].resize(2);
 		variance[j][0] = j * dr;
 
-		// Kugeliteration
-		for (int i = 0; i < n; i++) {
+		// iteration over sphere
+		for (unsigned int i = 0; i < n; i++) {
 			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
 		}
 		variance[j][1] = variance[j][1] / n;
 	}
-
-	// Outfile
-	/*
-	ofstream outfile;
-	outfile.open(outfileName);
-
-	// Daten schreiben
-	outfile << "# Radius" << char(9) << "Varianz" << endl;
-	for (unsigned int j = 0; j < nr; j++) {
-		outfile << variance[j][0] << char(9) << variance[j][1] << endl;
-	}
-*/
-	// Varianz über Radius plotten
-	//plot2D(variance, 0, dr, rMax, "Radius R", "Varianz  {/Symbol s}^2(R)");
 
 	return variance;
 }

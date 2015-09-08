@@ -195,9 +195,8 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	cin.get();
 }
 
-void plotHyperuniformity(vector<vector<vector<double> > > datas,
-		double xMax, vector<string> names, const char xlabel[],
-		const char ylabel[]) {
+void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
+		vector<string> names, const char xlabel[], const char ylabel[]) {
 
 	double xMin = 0;
 
@@ -222,20 +221,19 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas,
 		gp << "A" << i << " = 1\n";
 		gp << "B" << i << " = 2\n";
 		gp << "f" << i << "(x) = A" << i << "*x**B" << i << "\n";
-		gp << "fit [0:" << xMax << "] f" << i << "(x) '-' u 1:2 via A"
-				<< i << "\n"; // , B" << i << "
+		gp << "fit [0:" << xMax << "] f" << i << "(x) '-' u 1:2 via A" << i
+				<< "\n"; // , B" << i << "
 		gp.send1d(datas[i]);
 
-
-		if (i ==0) {
+		if (i == 0) {
 			plotstring << "plot ";
 		}
 
 		// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-		plotstring << "'-' u 1:2 ls 7 lc rgb'"<< colors[i] <<"' t 'Varianz "
-				<< names[i] << "', f" << i << "(x) lc rgb'"<< colors[i] <<"' t sprintf('Fit Varianz "
-				<< names[i] << ": f_" << i << "(R) = %.3fR^{%.3f}',A" << i << ", B" << i
-				<< ")";
+		plotstring << "'-' u 1:2 ls 7 lc rgb'" << colors[i] << "' t 'Varianz "
+				<< names[i] << "', f" << i << "(x) lc rgb'" << colors[i]
+				<< "' t sprintf('Fit: f_" << i << "(R) = %.3fR^{%.1f}',A" << i // {\264}
+				<< ", B" << i << ")";
 
 		if (i != datas.size() - 1) {
 			plotstring << ",";
