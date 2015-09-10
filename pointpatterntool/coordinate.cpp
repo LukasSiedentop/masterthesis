@@ -31,6 +31,10 @@ coordinate::coordinate(double x, double y, double z) {
 	position[2] = z;
 }
 
+vector<double>* coordinate::getVector() {
+	return &position;
+}
+
 unsigned int coordinate::dimensions() const {
 	return position.size();
 }

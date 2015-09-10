@@ -21,7 +21,7 @@ static const double tolerance = 0.0000001;
 /**
  * Represents a point in n-Dimensional space with various operators
  */
-class coordinate{//: public std::vector<double> {
+class coordinate {
 private:
 	std::vector<double> position;
 public:
@@ -31,6 +31,8 @@ public:
 	coordinate(double x, double y, double z);
 	// Generates a random point with coordinate in (0,1)^n
 	coordinate(unsigned int n);
+
+	std::vector<double>* getVector();
 
 	unsigned int dimensions() const;
 
@@ -76,7 +78,8 @@ public:
 	// Subtracts lhs's components from rhs's.
 	friend coordinate operator-(const coordinate& lhs, const coordinate& rhs);
 	// Subtracts a subtrahend from every component.
-	friend coordinate operator-(const coordinate& lhs, const double& subtrahend);
+	friend coordinate operator-(const coordinate& lhs,
+			const double& subtrahend);
 	// Multiplies the components of both points.
 	friend coordinate operator*(const coordinate& lhs, const coordinate& rhs);
 	// Multiplies each component with a factor.

@@ -206,7 +206,8 @@ void plotHyperuniformity(vector<vector<vector<double> > > data, double xMax,
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<vector<coordinate> > data, const char xlabel[] = "x",
+void plot3D(vector<vector<vector<double> > > data,
+		vector<string> names, const char xlabel[] = "x",
 		const char ylabel[] = "y", const char zlabel[] = "z",
 		const char style[] = "w l");
 

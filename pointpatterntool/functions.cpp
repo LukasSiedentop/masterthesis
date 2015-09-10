@@ -255,7 +255,8 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	std::cin.get();
 }
 
-void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
+void plot3D(vector<vector<vector<double> > > datas,
+		vector<string> names, const char xlabel[],
 		const char ylabel[], const char zlabel[], const char style[]) {
 	Gnuplot gp;
 	gp << "reset\n";
@@ -280,7 +281,7 @@ void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
 	plotstring << "splot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
 		plotstring << "'-' " << style << " lt rgb '" << colors[i]
-				<< "' t 'Muster " << i << "'";
+				<< "' t '"<< names[i] << "'";
 		if (i != datas.size() - 1) {
 			plotstring << ",";
 		}
@@ -288,7 +289,7 @@ void plot3D(vector<vector<coordinate> > datas, const char xlabel[],
 	gp << plotstring.str() << "\n";
 
 	// Daten senden
-	for (vector<vector<coordinate> >::iterator data = datas.begin();
+	for (vector<vector<vector<double> > >::iterator data = datas.begin();
 			data != datas.end(); ++data) {
 
 		gp.send1d(*data);

@@ -19,47 +19,10 @@ node::node() :
 	neighbours = neighs;
 }
 
-node::node(nodelist* list, double x, double y, double z) :
-		list(list), position(coordinate(x, y, z)), edgenode(false) {//, inBox(NULL) {
-	std::vector<class node *> neighs;
-	neighbours = neighs;
-}
-
 node::node(class nodelist* list, coordinate pos) :
 		list(list), position(pos), edgenode(false) {	//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
-}
-
-node::node(node& n, class nodelist* list) :
-		list(list), edgenode(false) {
-	position = *(n.getPosition());
-
-	std::vector<class node*> neighs;
-
-	// TODO: neighbours richtig kopieren, die referenzen stimmen so (?)
-	for (vector<node*>::iterator neighIter = n.getNeighbours()->begin();
-			neighIter != n.getNeighbours()->end(); ++neighIter) {
-		if (list->getAt(*(*neighIter)->getPosition())) {
-			neighs.push_back(list->getAt(*(*neighIter)->getPosition()));
-		}
-	}
-	neighbours = neighs;
-
-	//old
-	//neighbours = *(n.getNeighbours());
-
-}
-
-node::~node() {
-	position.~coordinate();
-	list = NULL;
-	for (vector<node*>::iterator neigh = neighbours.begin();
-			neigh != neighbours.end(); ++neigh) {
-		(*neigh) = NULL;
-	}
-	neighbours.~vector();
-	// edgenode?
 }
 
 void node::setList(nodelist* l) {

@@ -31,14 +31,7 @@ private:
 	bool edgenode;
 public:
 	node();
-	// Konstruiert einen neuen Knoten der gegebenen Liste an der gegebenen Stelle.
-	node(class nodelist* list, double x, double y, double z);
-	// Konstruiert einen neuen Knoten der gegebenen Liste an der gegebenen Koordinate.
 	node(class nodelist* list, coordinate pos);
-	// Copy-Konstruktor
-	node(node& n, class nodelist* list);
-	~node();
-
 
 	// Setzt die Liste zu der dieser Knoten gehört neu
 	void setList(class nodelist* list);

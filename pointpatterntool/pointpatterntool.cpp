@@ -117,10 +117,10 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 	// actual readig of the files
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
+		//**// FIXME in this loop, needed memory increases exorbitantly
 		coordinate nPosition(x, y, z);
 		coordinate neighPosition(nx, ny, nz);
 
-		//**// FIXME in this loop, needed memory increases exorbitantly
 		// If there is no node at the read position...
 		node* n = list->getAt(nPosition);
 		if (!n) {
@@ -190,12 +190,17 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
  * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
  */
 void gnuplotPattern(vector<nodelist*>& lists) {
-	vector<vector<coordinate> > datas;
+	vector<vector<vector<double> > > datas;
+
+	vector<double> emptyLine;
+	for (unsigned int i = 0; i<3; i++) {
+		emptyLine.push_back(nan(""));
+	}
 
 	// Listeniteration
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
-		vector<coordinate> data;
+		vector<vector<double> > data;
 		// Knoteniteration
 		for (vector<node*>::iterator nodeIter = (*list)->begin();
 				nodeIter != (*list)->end(); ++nodeIter) {
@@ -209,18 +214,18 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 				if ((*list)->isPeriodic()
 						&& (*nodeIter)->euklidian(*neighIter)
 								< (*list)->getMaxFeatureSize()) {
-					data.push_back(*(*nodeIter)->getPosition());
-					data.push_back(*(*neighIter)->getPosition());
+					data.push_back(*(*nodeIter)->getPosition()->getVector());
+					data.push_back(*(*neighIter)->getPosition()->getVector());
 
-					data.push_back(coordinate(nan(""), nan(""), nan("")));
+					data.push_back(emptyLine);
 
 				} else if (!(*list)->isPeriodic()) {
 					//if (!(*neighIter)->isEdgenode()) {
 					//if (!(*nodeIter)->isEdgenode()) {
-					data.push_back(*(*nodeIter)->getPosition());
-					data.push_back(*(*neighIter)->getPosition());
+					data.push_back(*(*nodeIter)->getPosition()->getVector());
+					data.push_back(*(*neighIter)->getPosition()->getVector());
 
-					data.push_back(coordinate(nan(""), nan(""), nan("")));
+					data.push_back(emptyLine);
 
 					//}
 					//}
@@ -229,9 +234,13 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 		}
 		datas.push_back(data);
 	}
-
+	vector<string> names;
+	for (vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
+		names.push_back((*list)->getName());
+	}
 	// Plotten
-	plot3D(datas);
+	plot3D(datas, names);
 }
 
 /**
@@ -388,33 +397,33 @@ void compareLists(vector<nodelist*>& lists) {
  }
  */
 /*
-void benchmark() {
-	coordinate coord1(M_PI, 3.0, 5.0);
-	coordinate coord2(M_PI, 3.0, 5.0);
-	coordinate coord3(2, 2, 2);
-	coordinate coord4(1.0, 1.0, 1.0);
+ void benchmark() {
+ coordinate coord1(M_PI, 3.0, 5.0);
+ coordinate coord2(M_PI, 3.0, 5.0);
+ coordinate coord3(2, 2, 2);
+ coordinate coord4(1.0, 1.0, 1.0);
 
-	cout << "1 " << coord1 << endl;
-	cout << "2 " << coord2 << endl;
-	cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
-	cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
-	cout << "3+4 " << coord4 + coord3 << " lsqr: "
-			<< (coord4 + coord3).lengthSqr() << endl;
-	cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
-	cout << "3==4 " << (coord3 == coord4) << endl;
-	cout << "4==3 " << (coord4 == coord3) << endl;
-	cout << "3==3 " << (coord3 == coord3) << endl;
+ cout << "1 " << coord1 << endl;
+ cout << "2 " << coord2 << endl;
+ cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
+ cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
+ cout << "3+4 " << coord4 + coord3 << " lsqr: "
+ << (coord4 + coord3).lengthSqr() << endl;
+ cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
+ cout << "3==4 " << (coord3 == coord4) << endl;
+ cout << "4==3 " << (coord4 == coord3) << endl;
+ cout << "3==3 " << (coord3 == coord3) << endl;
 
-	clock_t t;
-	t = clock();
-	for (unsigned i = 0; i < 1000; i++) {
-		(coord3 == coord4);
-	}
+ clock_t t;
+ t = clock();
+ for (unsigned i = 0; i < 1000; i++) {
+ (coord3 == coord4);
+ }
 
-	t = clock() - t;
-	cout << "Hat " << t << " Clicks gedauert ("
-			<< (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
-}*/
+ t = clock() - t;
+ cout << "Hat " << t << " Clicks gedauert ("
+ << (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
+ }*/
 
 /**
  * Hier wird ausgeführt was gewählt wurde.

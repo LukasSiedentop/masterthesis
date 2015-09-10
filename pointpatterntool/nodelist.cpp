@@ -553,7 +553,7 @@ void nodelist::hyperuniformity(vector<vector<double> >& variance) {
 			rMax / nr;
 
 	// number of spheres/iterations
-	unsigned int n = 100;
+	unsigned int n = 500;
 
 	// datastructure to save the number of points in each sphere
 	vector<vector<double> > data;
