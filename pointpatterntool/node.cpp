@@ -52,7 +52,14 @@ node::node(node& n, class nodelist* list) :
 }
 
 node::~node() {
-// TODO: was ist hier zu tun?
+	position.~coordinate();
+	list = NULL;
+	for (vector<node*>::iterator neigh = neighbours.begin();
+			neigh != neighbours.end(); ++neigh) {
+		(*neigh) = NULL;
+	}
+	neighbours.~vector();
+	// edgenode?
 }
 
 void node::setList(nodelist* l) {
@@ -61,7 +68,8 @@ void node::setList(nodelist* l) {
 
 void node::setEdgenode(double distance) {
 	// Alle knoten die mehr als den 0-shifter haben sind randknoten
-	edgenode = (list->getShifted(position - list->getMid(), distance).size() - 1);
+	edgenode =
+			(list->getShifted(position - list->getMid(), distance).size() - 1);
 }
 
 bool node::isEdgenode() {

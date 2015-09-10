@@ -79,7 +79,7 @@ public:
 	// berechnet das Volumen
 	double getVolume();
 	// gibt den Knoten an einem Punkt zurück sofern er exisitiert
-	node * getAt(coordinate point);
+	node* getAt(coordinate point);
 	// gibt die Minimalwerte der Box zurück
 	coordinate getMins();
 	// gibt die Maximalwerte der Box zurück
@@ -109,7 +109,7 @@ public:
 	vector<double> neighbourDistribution();
 	vector<double> lengthDistribution(bool plot = true);
 	vector<double> angleDistribution();
-	vector<vector<double> > hyperuniformity();
+	void hyperuniformity(vector<vector<double> >& variance);
 	void writePOV();
 };
 

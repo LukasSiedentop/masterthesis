@@ -74,7 +74,7 @@ int gui() {
 }
 
 /**
- * Liest zwei Dateien ein. Die erste enthält Punkte im R^3, die zweite Nachbarn dieser Punkte. Beispiel:
+ * Reads two files in. The first contains coordinates in R^3, the second neighbours of those. Example:
  * nodeFile:	neighbourFile:
  * 1 2 3		2 3 4
  * 1 2 3		3 4 5
@@ -85,57 +85,60 @@ int gui() {
  */
 nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 		string name) {
-	cout << "Lese Knotendatei " << nodes << " und Nachbardatei " << neighbours
-			<< " ein." << endl;
+	cout << "Read nodesfile " << nodes << " and neighboursfile " << neighbours
+			<< "." << endl;
 
-	// input filestream beider Dateien
+	// input filestream of both files
 	ifstream nodeFile, neighbourFile;
 	nodeFile.open(nodes, std::ifstream::in);
 	neighbourFile.open(neighbours, std::ifstream::in);
 
-	// Listenkopf
+	// datastructure of the list
 	nodelist* list = new nodelist(periodic, name);
 
 	if (periodic) {
-		cout << "Nehme eine Box von (-5,5)^3 an..." << endl;
+		cout << "Assume a box of dimensions (-5,5)^3..." << endl;
 		list->setMins(coordinate(-5, -5, -5));
 		list->setMaxs(coordinate(5, 5, 5));
 	}
 
-	// Position des Punktes
+	// position of the node
 	double x, y, z;
-	// Position des Nachbarn
+	// position of the neighbour
 	double nx, ny, nz;
 
-	// Extremalwerte
+	// boundaries for nonperiodic patterns
 	double inf = numeric_limits<double>::infinity();
 	double minX = inf, minY = inf, minZ = inf, maxX = -inf, maxY = -inf, maxZ =
 			-inf;
-	// einlesen der Dateien
+
+	// actual readig of the files
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
+
+		//**// FIXME in this loop, needed memory increases exorbitantly
+		// If there is no node at the read position...
 		node* n = list->getAt(coordinate(x, y, z));
-		// Wenn an der Knoten Position noch kein Knoten existiert...
 		if (!n) {
-			// ... füge ihn der Liste hinzu
+			// ... add one at the position
 			n = new node(list, x, y, z);
 			list->push_back(n);
 		}
 
 		node* neighbour = list->getAt(coordinate(nx, ny, nz));
-		// Wenn an der Nachbarknoten Position noch kein Knoten existiert...
+		// If there is no neighbour at the read position of the second file...
 		if (!neighbour) {
-			// ... füge ihn der Liste hinzu
+			// ... add one at the position
 			neighbour = new node(list, nx, ny, nz);
 			list->push_back(neighbour);
 		}
+		//**//
 
-		// die Nachbarschaft setzen
+		// set neighbourhood
 		n->addNeighbour(neighbour);
 		neighbour->addNeighbour(n);
 
-		// wenn nicht periodisch...
+		// evaluate boundaries for nonperiodic patterns
 		if (!periodic) {
-			// ... Extremalwerte bekommen
 			minX = min(minX, x);
 			minY = min(minY, y);
 			minZ = min(minZ, z);
@@ -144,19 +147,22 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 			maxY = max(maxY, y);
 			maxZ = max(maxZ, z);
 		}
-	}
 
-	// Extremalwerte setzen und Randknoten bestimmen
+	}
+	// close files
+	nodeFile.close();
+	neighbourFile.close();
+
+	// set boundaries for nonperiodic patterns and evaluate edgenodes
 	if (!periodic) {
 		list->setMins(coordinate(minX, minY, minZ));
 		list->setMaxs(coordinate(maxX, maxY, maxZ));
 
-		// TODO: evtl doppelte oder halbe länge
+		// adaptable parameter
 		double characteristicLength = stats(list->lengthDistribution(false))[1]
 				* 1.5;
-		cout << "Knoten die vom Rand weiter weg sind als "
-				<< characteristicLength << " werden als Randknoten deklariert."
-				<< endl;
+		cout << "Nodes farther away of the edge than " << characteristicLength
+				<< " are declared to be edgenodes." << endl;
 		for (vector<node*>::iterator n = list->begin(); n != list->end(); ++n) {
 			(*n)->setEdgenode(characteristicLength);
 		}
@@ -167,10 +173,12 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 	 list->shiftList(coordinate(-5,-5,-5));
 	 */
 
-	cout << (periodic ? "Periodisches " : "")
-			<< "Muster eingelesen und Liste erstellt. Statistik:" << endl
+	cout << "Pattern read and saved. Statistics:" << endl
 			<< list->listStats() << endl;
 
+	cout << "Needs " << list->capacity()*sizeof(node) + sizeof(list) << " bytes of memory." << endl;
+
+	list =NULL;
 	return list;
 }
 
@@ -288,13 +296,13 @@ void compareLists(vector<nodelist*>& lists) {
 	vector<string> title;
 
 	title.push_back("Differenz");
-/*
-	plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
-	// Punktewolke
-	plot3D(plotData, "x", "y", "z", "w p ls 7");
-	// Angepasste Muster
-	gnuplotPattern(lists);
-	*/
+	/*
+	 plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
+	 // Punktewolke
+	 plot3D(plotData, "x", "y", "z", "w p ls 7");
+	 // Angepasste Muster
+	 gnuplotPattern(lists);
+	 */
 }
 
 /**
@@ -413,7 +421,7 @@ void compareLists(vector<nodelist*>& lists) {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char* argv[]) {
-	cout << "Es gilt Punktmuster zu charakterisieren. Also los!" << endl;
+	cout << "Pointpatterns are to be characterized. Here we go!" << endl;
 
 	// Muster einlesen
 	vector<nodelist*> lists;
@@ -513,10 +521,11 @@ int main(int argc, char* argv[]) {
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				cout << char(9) << (*list)->getName() << endl;
-				vector<vector<double> > variance = (*list)->hyperuniformity();
+				vector<vector<double> > variance;
+				(*list)->hyperuniformity(variance);
 				variances.push_back(variance);
 				names.push_back((*list)->getName());
-				xMax = std::max(xMax, variance[variance.size()-1][0]);
+				xMax = std::max(xMax, variance[variance.size() - 1][0]);
 			}
 			plotHyperuniformity(variances, xMax, names, "Radius R",
 					"Variance  {/Symbol s}^2(R)");

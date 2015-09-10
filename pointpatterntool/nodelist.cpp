@@ -7,6 +7,9 @@
 
 #include "nodelist.hpp"
 
+// temporarly, can savely be deleted
+#include <typeinfo>
+
 using namespace std;
 
 /* Nodelist */
@@ -98,6 +101,11 @@ nodelist::~nodelist() {
 	// Extremalwerte
 	min.~coordinate();
 	max.~coordinate();
+
+	//TODO nodes selbst mit delete löschen nötig?
+	//for (vector<node*>::iterator n = this->begin(); n!=this->end(); ++n) {
+	//	(*n)->~node();
+	//}
 
 	// Vektor
 	vector<node*>().swap(*this);
@@ -203,7 +211,7 @@ double nodelist::getVolume() {
 	return volume;
 }
 
-node * nodelist::getAt(coordinate point) {
+node* nodelist::getAt(coordinate point) {
 	// Iteration über alle Knoten
 	for (nodelist::iterator it = begin(); it != end(); ++it) {
 		if (periodic) {
@@ -221,8 +229,7 @@ node * nodelist::getAt(coordinate point) {
 				return (*it);
 			}
 		}
-
-		// Vergleich der Koordinaten
+		cout << "it: " << typeid(it).name() << ", *it: " << typeid(*it).name() << ", &it: " << typeid(&it).name() << endl;		// Vergleich der Koordinaten
 		if (!periodic && (*(*it)->getPosition() == point)) {
 			return (*it);
 		}
@@ -381,18 +388,18 @@ int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 
 string nodelist::listStats(const char commentDelimeter[]) {
 	stringstream stream;
-	stream << commentDelimeter << (periodic ? "Periodisch" : "Nicht periodisch")
+	stream << commentDelimeter << (periodic ? "Periodic" : "Non-periodic")
 			<< endl;
 	if (!periodic) {
-		stream << commentDelimeter << "Randknoten: " << countEdgenodes()
+		stream << commentDelimeter << "Number of edgenodes: " << countEdgenodes()
 				<< endl;
 	}
-	stream << commentDelimeter << "Anzahl Knoten: " << size() << endl;
-	stream << commentDelimeter << "Extremalwerte: " << min << ", " << max
+	stream << commentDelimeter << "Number of nodes: " << size() << endl;
+	stream << commentDelimeter << "Bounding box: " << min << ", " << max
 			<< endl;
-	stream << commentDelimeter << "Mitte: " << getMid() << endl;
-	stream << commentDelimeter << "Volumen: " << getVolume() << endl;
-	stream << commentDelimeter << "Punktdichte: " << getDensity() << endl;
+	stream << commentDelimeter << "Mid of box: " << getMid() << endl;
+	stream << commentDelimeter << "Volume: " << getVolume() << endl;
+	stream << commentDelimeter << "Density of points: " << getDensity() << endl;
 
 	return stream.str();
 }
@@ -543,7 +550,7 @@ vector<double> nodelist::angleDistribution() {
 /**
  * Calculates the hyperuniformity of the pattern saved in the list.
  */
-vector<vector<double> > nodelist::hyperuniformity() {
+void nodelist::hyperuniformity(vector<vector<double> >& variance) {
 	// number of radii
 	unsigned int nr = 50;
 	// radiusincrement + maximal radius
@@ -551,7 +558,7 @@ vector<vector<double> > nodelist::hyperuniformity() {
 			rMax / nr;
 
 	// number of spheres/iterations
-	unsigned int n = 500;
+	unsigned int n = 100;
 
 	// datastructure to save the number of points in each sphere
 	vector<vector<double> > data;
@@ -621,7 +628,6 @@ vector<vector<double> > nodelist::hyperuniformity() {
 	}
 
 	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
-	vector<vector<double> > variance;
 	variance.resize(nr);
 	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
@@ -635,7 +641,7 @@ vector<vector<double> > nodelist::hyperuniformity() {
 		variance[j][1] = variance[j][1] / n;
 	}
 
-	return variance;
+	//return variance;
 }
 
 /**
