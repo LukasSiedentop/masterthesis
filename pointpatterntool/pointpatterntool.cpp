@@ -6,6 +6,9 @@
  */
 
 /*
+ * Comments should say "why", not "what".
+ *
+ *
  int main()
  {
  int* k; // Pointer to int
@@ -114,21 +117,23 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 	// actual readig of the files
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
+		coordinate nPosition(x, y, z);
+		coordinate neighPosition(nx, ny, nz);
 
 		//**// FIXME in this loop, needed memory increases exorbitantly
 		// If there is no node at the read position...
-		node* n = list->getAt(coordinate(x, y, z));
+		node* n = list->getAt(nPosition);
 		if (!n) {
 			// ... add one at the position
-			n = new node(list, x, y, z);
+			n = new node(list, nPosition);
 			list->push_back(n);
 		}
 
-		node* neighbour = list->getAt(coordinate(nx, ny, nz));
+		node* neighbour = list->getAt(neighPosition);
 		// If there is no neighbour at the read position of the second file...
 		if (!neighbour) {
 			// ... add one at the position
-			neighbour = new node(list, nx, ny, nz);
+			neighbour = new node(list, neighPosition);
 			list->push_back(neighbour);
 		}
 		//**//
@@ -173,12 +178,11 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 	 list->shiftList(coordinate(-5,-5,-5));
 	 */
 
-	cout << "Pattern read and saved. Statistics:" << endl
-			<< list->listStats() << endl;
+	cout << "Pattern read and saved. Statistics:" << endl << list->listStats()
+			<< endl;
 
-	cout << "Needs " << list->capacity()*sizeof(node) + sizeof(list) << " bytes of memory." << endl;
+	//cout << "Needs " << list->capacity() * sizeof(node) + sizeof(list) << " bytes of memory." << endl;
 
-	list =NULL;
 	return list;
 }
 
@@ -384,38 +388,33 @@ void compareLists(vector<nodelist*>& lists) {
  }
  */
 /*
- void benchmark() {
- double pos1[] = { M_PI, 3.0, 5.0 };
- double pos2[] = { 2, 2, 2 };
- double pos3[] = { 1.0, 1.0, 1.0 };
+void benchmark() {
+	coordinate coord1(M_PI, 3.0, 5.0);
+	coordinate coord2(M_PI, 3.0, 5.0);
+	coordinate coord3(2, 2, 2);
+	coordinate coord4(1.0, 1.0, 1.0);
 
- coordinate coord1(pos1, 3);
- coordinate coord2(pos1, 3);
- coordinate coord3(pos2, 3);
- coordinate coord4(pos3, 3);
+	cout << "1 " << coord1 << endl;
+	cout << "2 " << coord2 << endl;
+	cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
+	cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
+	cout << "3+4 " << coord4 + coord3 << " lsqr: "
+			<< (coord4 + coord3).lengthSqr() << endl;
+	cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
+	cout << "3==4 " << (coord3 == coord4) << endl;
+	cout << "4==3 " << (coord4 == coord3) << endl;
+	cout << "3==3 " << (coord3 == coord3) << endl;
 
- cout << "1 " << coord1 << endl;
- cout << "2 " << coord2 << endl;
- cout << "3 " << coord3 << " lsqr: " << coord3.lengthSqr() << endl;
- cout << "4 " << coord4 << " lsqr: " << coord4.lengthSqr() << endl;
- cout << "3+4 " << coord4 + coord3 << " lsqr: "
- << (coord4 + coord3).lengthSqr() << endl;
- cout << "dist 3, 4 " << coord4.euklidian(coord3) << endl;
- cout << "3==4 " << (coord3 == coord4) << endl;
- cout << "4==3 " << (coord4 == coord3) << endl;
- cout << "3==3 " << (coord3 == coord3) << endl;
+	clock_t t;
+	t = clock();
+	for (unsigned i = 0; i < 1000; i++) {
+		(coord3 == coord4);
+	}
 
- clock_t t;
- t = clock();
- for (unsigned i = 0; i < 1000; i++) {
- (coord3 == coord4);
- }
-
- t = clock() - t;
- cout << "Hat " << t << " Clicks gedauert ("
- << (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
- }
- */
+	t = clock() - t;
+	cout << "Hat " << t << " Clicks gedauert ("
+			<< (((float) t) / CLOCKS_PER_SEC) << "s)" << endl;
+}*/
 
 /**
  * Hier wird ausgeführt was gewählt wurde.

@@ -7,9 +7,6 @@
 
 #include "nodelist.hpp"
 
-// temporarly, can savely be deleted
-#include <typeinfo>
-
 using namespace std;
 
 /* Nodelist */
@@ -204,9 +201,8 @@ double nodelist::getVolume() {
 
 	coordinate lengths = getLengths();
 
-	for (coordinate::iterator it = lengths.begin(); it != lengths.end(); ++it) {
-
-		volume *= (*it);
+	for (unsigned int i = 0; i < lengths.dimensions(); i++) {
+		volume *= lengths[i];
 	}
 	return volume;
 }
@@ -229,7 +225,6 @@ node* nodelist::getAt(coordinate point) {
 				return (*it);
 			}
 		}
-		cout << "it: " << typeid(it).name() << ", *it: " << typeid(*it).name() << ", &it: " << typeid(&it).name() << endl;		// Vergleich der Koordinaten
 		if (!periodic && (*(*it)->getPosition() == point)) {
 			return (*it);
 		}
@@ -272,19 +267,19 @@ int nodelist::countEdgenodes() {
 }
 
 void nodelist::display() {
-	std::cout << "Anzahl Elemente: " << size() << std::endl;
+	std::cout << "Number of elements: " << size() << std::endl;
 
 	int i = 1;
 
 	// Knoteniteration
 	for (vector<class node *>::iterator it = begin(); it != end(); ++it) {
-		cout << char(9) << i << "-tes Element: " << (*(*it)->getPosition())
-				<< " mit " << (*it)->countNeighbours() << " Nachbarn bei: ";
+		cout << char(9) << i << "-th element: " << (*(*it)->getPosition())
+				<< " with " << (*it)->countNeighbours() << " neighbours at: ";
 		// Nachbarniteration
 		for (vector<class node *>::iterator neighIt =
 				(*it)->getNeighbours()->begin();
 				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
-			cout << (*(*neighIt)->getPosition());
+			cout << (*(*neighIt)->getPosition()) << " ";
 		}
 		cout << endl;
 		// weiterzählen
@@ -391,8 +386,8 @@ string nodelist::listStats(const char commentDelimeter[]) {
 	stream << commentDelimeter << (periodic ? "Periodic" : "Non-periodic")
 			<< endl;
 	if (!periodic) {
-		stream << commentDelimeter << "Number of edgenodes: " << countEdgenodes()
-				<< endl;
+		stream << commentDelimeter << "Number of edgenodes: "
+				<< countEdgenodes() << endl;
 	}
 	stream << commentDelimeter << "Number of nodes: " << size() << endl;
 	stream << commentDelimeter << "Bounding box: " << min << ", " << max
@@ -578,9 +573,9 @@ void nodelist::hyperuniformity(vector<vector<double> >& variance) {
 		for (unsigned int i = 0; i < n; i++) {
 			// Choose the center of the sphere such that it is somewhere within the whole pattern.
 			mid = (coordinate(3) - 0.5) * getLengths(); // faster, TODO not tested
-			/*mid = coordinate(3); old
-			mid *= getLengths();
-			mid -= getLengths() / 2;*/
+					/*mid = coordinate(3); old
+					 mid *= getLengths();
+					 mid -= getLengths() / 2;*/
 			// Without this, the Pattern is expected to be centered around (0,0,0).
 			//mid += getMid();
 

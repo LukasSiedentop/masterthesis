@@ -12,45 +12,40 @@ coordinate::coordinate() {
 }
 
 coordinate::coordinate(unsigned int n) {
-	// faster that pushing back every single one
-	resize(n);
+	position.resize(n);
 	for (unsigned int i = 0; i < n; i++) {
-		(*this)[i] = (double) rand() / RAND_MAX;
+		position[i] = (double) rand() / RAND_MAX;
 	}
-}
-
-coordinate::coordinate(const coordinate& coord) {
-	*this = coord;
 }
 
 coordinate::coordinate(double x, double y) {
-	resize(2);
-	(*this)[0] = x;
-	(*this)[1] = y;
+	position.resize(2);
+	position[0] = x;
+	position[1] = y;
 }
 
 coordinate::coordinate(double x, double y, double z) {
-	resize(3);
-	(*this)[0] = x;
-	(*this)[1] = y;
-	(*this)[2] = z;
+	position.resize(3);
+	position[0] = x;
+	position[1] = y;
+	position[2] = z;
 }
 
-coordinate::coordinate(double point[], unsigned n) {
-	resize(n);
-	for (unsigned i = 0; i < n; i++) {
-		(*this)[i] = point[i];
-	}
+unsigned int coordinate::dimensions() const {
+	return position.size();
 }
 
-coordinate::~coordinate() {
-	// TODO: was müssen wir hier tun? Nötig?
-	vector<double>().swap(*this);
+double& coordinate::operator [](const int i){
+	return position[i];
+}
+
+const double& coordinate::operator [](const int i) const{
+	return position[i];
 }
 
 bool coordinate::operator ==(const coordinate &rhs) {
-	for (unsigned i = 0; i < size(); i++) {
-		if (abs(rhs[i] - (*this)[i]) > tolerance) {
+	for (unsigned int i = 0; i < dimensions(); i++) {
+		if (std::abs(rhs[i] - position[i]) > tolerance) {
 			return false;
 		}
 	}
@@ -62,7 +57,7 @@ bool coordinate::operator !=(const coordinate &rhs) {
 }
 
 coordinate & coordinate::operator +=(const coordinate &rhs) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] += rhs[i];
 	}
 
@@ -70,35 +65,35 @@ coordinate & coordinate::operator +=(const coordinate &rhs) {
 }
 
 coordinate & coordinate::operator +=(const double &summand) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] -= summand;
 	}
 	return *this;
 }
 
 coordinate & coordinate::operator -=(const coordinate &rhs) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] -= rhs[i];
 	}
 	return *this;
 }
 
 coordinate & coordinate::operator -=(const double &subtrahend) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] -= subtrahend;
 	}
 	return *this;
 }
 
 coordinate & coordinate::operator *=(const coordinate &rhs) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] *= rhs[i];
 	}
 	return *this;
 }
 
 coordinate & coordinate::operator *=(const double &factor) {
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		(*this)[i] *= factor;
 	}
 	return *this;
@@ -110,56 +105,50 @@ coordinate & coordinate::operator /=(const double &factor) {
 }
 
 ostream& operator <<(ostream &os, const coordinate &obj) {
-	os << "(";
-	for (unsigned i = 0; i < obj.size() - 1; i++) {
-		os << obj[i] << ", ";
-	}
-	os << obj.back() << ")";
-
-	return os;
+	return os << obj.toString();
 }
 
 string coordinate::toString(const char begin[], const char delimiter[],
-		const char end[]) {
+		const char end[]) const {
 	stringstream stream;
 	stream << begin;
 
-	for (unsigned i = 0; i < size() - 1; i++) {
+	for (unsigned i = 0; i < dimensions() - 1; i++) {
 		stream << (*this)[i] << delimiter;
 	}
 
-	stream << back() << end;
+	stream << position[dimensions()-1] << end;
 
 	return stream.str();
 }
 
-double coordinate::min() {
+double coordinate::min() const{
 	double minimum = numeric_limits<double>::infinity();
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		minimum = std::min(minimum, (*this)[i]);
 	}
 	return minimum;
 }
 
-double coordinate::euklidian(coordinate point) {
+double coordinate::euklidian(coordinate point) const{
 	return coordinate(*this - point).length();
 }
 
 double coordinate::lengthSqr() const {
 	double sumSqr = 0;
-	for (unsigned i = 0; i < size(); i++) {
+	for (unsigned i = 0; i < dimensions(); i++) {
 		sumSqr += (*this)[i] * (*this)[i];
 	}
 	return sumSqr;
 }
 
-double coordinate::length() {
+double coordinate::length() const {
 	return sqrt(lengthSqr());
 }
 
 double coordinate::scp(const coordinate &a, const coordinate &b) {
 	double scp = 0;
-	for (unsigned i = 0; i < a.size(); i++) {
+	for (unsigned i = 0; i < a.dimensions(); i++) {
 		scp += a[i] * b[i];
 	}
 	return scp;

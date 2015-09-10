@@ -12,97 +12,91 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
-
 #include <limits>
-
 #include <cstdlib>
+#include <iterator>
 
 static const double tolerance = 0.0000001;
 
 /**
- * Point in n-Dimensional space with various operators
+ * Represents a point in n-Dimensional space with various operators
  */
-class coordinate: public std::vector<double> {
+class coordinate{//: public std::vector<double> {
 private:
-
+	std::vector<double> position;
 public:
-	/* Standardkonstruktor */
+	// Reference: https://en.wikipedia.org/wiki/Rule_of_three_(C%2B%2B_programming)
 	coordinate();
-	/* Züfällige Koordinate in der Box (0,1)^n*/
-	coordinate(unsigned int n);
-	/* Copy Constructor*/
-	coordinate(const coordinate& coord);
-	/* 2D Punkt aus Koordinaten */
 	coordinate(double x, double y);
-	/* 3D Punkt aus Koordinaten */
 	coordinate(double x, double y, double z);
-	/* nD Punkt aus Koordinaten */
-	coordinate(double point[], unsigned n);
-	/* Destruktor */
-	~coordinate();
+	// Generates a random point with coordinate in (0,1)^n
+	coordinate(unsigned int n);
 
-	/* Vergleichsoperatoren: alle Komponenten müssen gleich sein */
+	unsigned int dimensions() const;
+
+	// subscript operator
+	const double& operator[](const int i) const;
+	double& operator[](const int i);
+
+	// Comparision: all components need to be equal
 	bool operator ==(const coordinate& rhs);
-	/* negierter Vergleichsoperatoren: mindestens eine Komponente ist ungleich */
 	bool operator !=(const coordinate& rhs);
+
 	// Gößer/Kleiner über Länge?
 	//bool operator <(const coordinate &rhs);
 	//bool operator >(const coordinate &rhs);
 	//bool operator <=(const coordinate &rhs);
 	//bool operator >=(const coordinate &rhs);
 
-	/* verschiebt diese Koordinate um rhs */
+	// Shift this point with rhs.
 	coordinate & operator +=(const coordinate& rhs);
-	/* shifts this coordinate with summand in every component */
+	// Shift this point with summand in every component.
 	coordinate & operator +=(const double& summand);
-	/* verschiebt diese Koordinate um -rhs */
+	// Shift this point with -rhs.
 	coordinate & operator -=(const coordinate& rhs);
-	/* shifts this coordinate with -subtrahend in every component */
+	// Shift this point with -subtrahend in every component.
 	coordinate & operator -=(const double& subtrahend);
-	/* multipliziert diese Koordinate Komponentenweise mit dem gegebenen */
+	// Multiply this point componentwise with rhs TODO: necessary? implement dot-product instead
 	coordinate & operator *=(const coordinate& rhs);
-	/* skaliert diesen Vektor um einen factor */
+	// Scale this point with factor
 	coordinate & operator *=(const double& factor);
-	/* skaliert diesen Vektor um einen 1/factor */
+	// Scale this point with 1/factor
 	coordinate & operator /=(const double& factor);
 
-	/* Gibt eine String-Repräsentation der Koordinate mit anpassbaren Trennzeichen */
+	// Gives an adjustable string-representation of the point
 	std::string toString(const char begin[] = "(", const char delimiter[] = ",",
-			const char end[] = ")");
-	/* Repräsentation der Koordinate im Stringstream */
+			const char end[] = ")") const;
+	// Representation of the point in a stringstream
 	friend std::ostream& operator <<(std::ostream& os, const coordinate& obj);
 
-	/* Addiert die Vektoren Komponentenweise. Teuer! */
+	// Adds lhs's to rhs's components.
 	friend coordinate operator+(const coordinate& lhs, const coordinate& rhs);
-	/* Adds a summand to every component */
+	// Adds a summand to every component.
 	friend coordinate operator-(const coordinate& lhs, const double& summand);
-	/* Subtrahiert die Vektoren Komponentenweise. Teuer! */
+	// Subtracts lhs's components from rhs's.
 	friend coordinate operator-(const coordinate& lhs, const coordinate& rhs);
-	/* Subtracts a subtrahend from every component */
+	// Subtracts a subtrahend from every component.
 	friend coordinate operator-(const coordinate& lhs, const double& subtrahend);
-	/* multipliziert jede Komponente mit factor */
+	// Multiplies the components of both points.
 	friend coordinate operator*(const coordinate& lhs, const coordinate& rhs);
-	/* multipliziert jede Komponente mit factor */
+	// Multiplies each component with a factor.
 	friend coordinate operator*(const coordinate& lhs, const double& factor);
-	/* dividiert jede Komponente mit factor */
-	friend coordinate operator/(const coordinate& lhs, const double& factor);
+	// Divides each component by a divisor.
+	friend coordinate operator/(const coordinate& lhs, const double& divisor);
 
-	/* Returns the minimal component of the coordinate */
-	double min();
+	// Returns the minimal component of the coordinate.
+	double min() const;
 
-	/* Gibt den euklidschen Abstand zwischen dieser Koordinate und point zurück */
-	double euklidian(coordinate point);
-	/* Gibt die quadrierte euklidsche Länge des Vektors vom Ursprung zu dieser Koordinate zurück. Etwa doppelt so schnell wie length() */
+	double euklidian(coordinate point) const;
 	double lengthSqr() const;
-	/* Gibt die euklidsche Länge des Vektors vom Ursprung zu dieser Koordinate zurück */
-	double length();
+	double length() const;
 
-	/* Gibt das Skalarprodukt der gegebenen Koordinaten zurück */
+	// dot-product
 	static double scp(const coordinate& a, const coordinate& b);
 
-	/* Gibt den minimal langen Vektor von A nach B zurück, unter Berücksichtigung periodischer Randbedingungen */
+	// Gives the shortest vector from a to b, considering the given shifting vectors for periodic boundary conditions.
 	static coordinate getVec(const coordinate& a, const coordinate& b,
-			vector<coordinate> shifters);
+			std::vector<coordinate> shifters);
 };
 
 #endif /* COORDINATE_HPP_ */
