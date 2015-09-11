@@ -14,67 +14,38 @@
 #include "nodelist.hpp"
 
 /**
- * Element der Liste. Neben der Daten des Punktes im Punktmuster hat er drei Zeiger: das Element davor, dannach und den Kopf der Liste.
+ * Nodes of a pattern.
  */
 class node {
 private:
-	// Liste, zu der der Knoten gehört (gebraucht für periodizität)
+	// list containing this node. Only needed if pattern is periodic
 	class nodelist* list;
-
-	// Position
 	coordinate position;
-
-	// Verbundene Nachbarn
 	std::vector<class node* > neighbours;
-
-	// gibt an ob dieser Knoten am Rand des Musters liegt und somit von einigen Berechnungen ausgeschlossen wird.
 	bool edgenode;
 public:
 	node();
 	node(class nodelist* list, coordinate pos);
 
-	// Setzt die Liste zu der dieser Knoten gehört neu
-	void setList(class nodelist* list);
-
-	// bestimmt ob dieser Knoten am Rand liegt: tut er, wenn die box mit seitenlänge 2distance über den Musterrand hinausragt
-	void setEdgenode(double distance);
-
-	// gibt an ob dieser Knoten am Rand liegt
 	bool isEdgenode();
-
-	// Gibt die Position des Knotens zurück
-	coordinate* getPosition() const;
-
-	// gibt den Vektor der Nachbarn zurück
+	coordinate getPosition() const;
 	std::vector<class node* >* getNeighbours();
-
-	// prüft ob der gegebene Knoten schon ein Nachbar ist
 	bool isNeighbour(node* node);
-
-
-	// Gibt die Euklidsche Distanz zu node zurück.
+	void addNeighbour(node* n);
 	double euklidian(node* node);
-	// Gibt die Euklidsche Distanz zu einem gegebenen Punkt zurück.
 	double euklidian(coordinate point);
-	// Gibt die Euklidsche Distanz zu node zurück, mit periodische Randbedingungen angenommen
 	double euklidianPeriodic(node* node);
-	// berechnet den Winkel zwischen diesem und den zwei gegebenen Knoten
 	double angle(node* nodeA, node* nodeB);
-	// berechnet den Winkel unter beachtung periodischer Randbedingungen
 	double anglePeriodic(node* nodeA, node* nodeB);
-	// fügt der Nachbarnliste einen weiteren Nachbarn hinzu
-	void addNeighbour(node* node);
-	// vergleicht diesen Knoten mit dem gegebenen, wenn beide an der gleichen Position sind, sind sie gleich (TODO: Nachbarn und so auch vergleichen?)
-	bool equals(node* node);
-	// zählt die Nachbarn
 	int countNeighbours();
-	// verschiebt den Knoten um den angegebenen Vektor
 	void shift(coordinate shifter);
-	// multipliziert die Knotenposition um den gegebenen Faktor
 	void scale(double a);
 
-	/* Kleiner gleich: Test ob rhs weiter vom Mittelpunkt entfernt ist */
-	bool operator <=(const node& rhs);
+	// if this node is farther away than distance from the bounding box, it is not an edgenode
+	void setEdgenode(double distance);
+
+	// compares two nodes by comparing their position
+	bool equals(node* node);
 };
 
 #endif /* NODE_HPP_ */

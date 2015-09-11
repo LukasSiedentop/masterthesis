@@ -148,7 +148,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 		list->setMaxs(coordinate(maxX, maxY, maxZ));
 
 		// adaptable parameter
-		double characteristicLength = stats(list->lengthDistribution(false))[1]
+		double characteristicLength = stats(list->lengthDistribution())[1]
 				* 1.5;
 		cout << "Nodes farther away of the edge than " << characteristicLength
 				<< " are declared to be edgenodes." << endl;
@@ -209,17 +209,17 @@ void compareLists(vector<nodelist*>& lists) {
 
 		if (!(*lists[0])[i].isEdgenode()) {
 
-			coordinate* vec1 = (*lists[0])[i].getPosition();
+			coordinate vec1 = (*lists[0])[i].getPosition();
 
 			// get closest node
-			coordinate* vec2 = (*lists[1])[i].getPosition();
-			coordinate diff = *vec1 - *vec2;
-			for (vector<node*>::iterator n = lists[1]->begin();
+			coordinate vec2 = (*lists[1])[i].getPosition();
+			coordinate diff = vec1 - vec2;
+			for (vector<node>::iterator n = lists[1]->begin();
 					n != lists[1]->end(); ++n) {
-				if ((*vec1 - *((*n)->getPosition())).lengthSqr()
+				if ((vec1 - ((*n).getPosition())).lengthSqr()
 						< diff.lengthSqr()) {
-					vec2 = (*n)->getPosition();
-					diff = *vec1 - *vec2;
+					vec2 = (*n).getPosition();
+					diff = vec1 - vec2;
 				}
 			}
 
@@ -544,7 +544,7 @@ int main(int argc, char* argv[]) {
 
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
-		(*list)->deleteEntries();
+		//(*list)->deleteEntries();
 		delete (*list);
 	}
 

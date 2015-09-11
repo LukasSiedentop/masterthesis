@@ -16,6 +16,7 @@
 #include <boost/progress.hpp>
 #include <ctime>
 #include <iterator>
+#include <memory>
 
 #include "coordinate.hpp"
 #include "node.hpp"
@@ -31,7 +32,8 @@ private:
 	bool periodic;
 	string name;
 	// Thou shalt not inherit from STL
-	std::vector<class node*> list;
+	std::vector<class node > list;
+	//std::vector<std::unique_ptr<int> > list2;
 	// Bounding box
 	coordinate min, max;
 
@@ -57,8 +59,8 @@ public:
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
-	std::vector<node*>::iterator begin();
-	std::vector<node*>::iterator end();
+	std::vector<node>::iterator begin();
+	std::vector<node>::iterator end();
 	void setEdgenodes(double distance);
 	coordinate getLengths();
 	coordinate getMid();
@@ -66,13 +68,13 @@ public:
 	void setMins(coordinate mins);
 	void setMaxs(coordinate maxs);
 	vector<double> neighbourDistribution();
-	vector<double> lengthDistribution(bool plot = true);
+	vector<double> lengthDistribution();
 	vector<double> angleDistribution();
 	void hyperuniformity(vector<vector<double> >& variance);
 	string getName();
 	void shiftList(coordinate shifter);
 	void scaleList(double a);
-	void deleteEntries();
+	//void deleteEntries();
 
 	// subscript operator
 	//const node& operator[](const int i) const;

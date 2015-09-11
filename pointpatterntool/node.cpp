@@ -12,8 +12,9 @@ using namespace std;
 node::node() :
 		position(coordinate()), edgenode(false) { //, inBox(NULL) {
 	// TODO: geht das besser?
-	nodelist* l = new nodelist();
-	list = l;
+	//nodelist* l = new nodelist();
+	//list = l;
+	list = NULL;
 
 	std::vector<class node*> neighs;
 	neighbours = neighs;
@@ -23,10 +24,6 @@ node::node(class nodelist* list, coordinate pos) :
 		list(list), position(pos), edgenode(false) {	//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
-}
-
-void node::setList(nodelist* l) {
-	list = l;
 }
 
 void node::setEdgenode(double distance) {
@@ -39,8 +36,8 @@ bool node::isEdgenode() {
 	return edgenode;
 }
 
-coordinate* node::getPosition() const {
-	return new coordinate(position);
+coordinate node::getPosition() const {
+	return position;
 }
 
 std::vector<class node*>* node::getNeighbours() {
@@ -48,7 +45,7 @@ std::vector<class node*>* node::getNeighbours() {
 }
 
 double node::euklidian(node* node) {
-	return euklidian(*node->getPosition());
+	return euklidian(node->getPosition());
 }
 
 double node::euklidian(coordinate point) {
@@ -56,12 +53,12 @@ double node::euklidian(coordinate point) {
 }
 
 double node::euklidianPeriodic(node* node) {
-	coordinate differenceVec = position - *node->getPosition();
+	coordinate differenceVec = position - node->getPosition();
 
 // Wenn die Länge größer als die Featuresize ist...
 	double length = differenceVec.length();
 	if (list->getMaxFeatureSize() < length) {
-		differenceVec = coordinate::getVec(position, *node->getPosition(),
+		differenceVec = coordinate::getVec(position, node->getPosition(),
 				list->getShifters());
 		length = differenceVec.length();
 	}
@@ -72,9 +69,9 @@ double node::euklidianPeriodic(node* node) {
 double node::angle(node * nodeA, node * nodeB) {
 // cos alpha = skp(a,b) / |a|*|b|
 
-	coordinate vec1 = *nodeA->getPosition() - position;
+	coordinate vec1 = nodeA->getPosition() - position;
 
-	coordinate vec2 = *nodeB->getPosition() - position;
+	coordinate vec2 = nodeB->getPosition() - position;
 
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
@@ -85,8 +82,8 @@ double node::angle(node * nodeA, node * nodeB) {
 }
 
 double node::anglePeriodic(node* nodeA, node* nodeB) {
-	coordinate vec1 = position - *nodeA->getPosition();
-	coordinate vec2 = position - *nodeB->getPosition();
+	coordinate vec1 = position - nodeA->getPosition();
+	coordinate vec2 = position - nodeB->getPosition();
 
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
@@ -94,9 +91,9 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 	double maxFeatureSize = list->getLengths().lengthSqr() / 4;
 
 	if ((len1sqr > maxFeatureSize) || (len2sqr > maxFeatureSize)) {
-		vec1 = coordinate::getVec(position, *nodeA->getPosition(),
+		vec1 = coordinate::getVec(position, nodeA->getPosition(),
 				list->getShifters());
-		vec2 = coordinate::getVec(position, *nodeB->getPosition(),
+		vec2 = coordinate::getVec(position, nodeB->getPosition(),
 				list->getShifters());
 		len1sqr = vec1.lengthSqr();
 		len2sqr = vec2.lengthSqr();
@@ -121,50 +118,25 @@ void node::scale(double a) {
 	position *= a;
 }
 
-void node::addNeighbour(node* node) {
-// aufhören wenn node schon ein Nachbar ist bzw node dieser Knoten ist
-	if (this->isNeighbour(node) || (this->equals(node))) {
+void node::addNeighbour(node* n) {
+	if (this->isNeighbour(n) || (this->equals(n))) {
 		return;
 	}
 
-	neighbours.push_back(node);
+	neighbours.push_back(n);
 }
 
 bool node::isNeighbour(node* node) {
-
-	bool exists = 0;
 	for (vector<class node*>::iterator it = neighbours.begin();
 			it != neighbours.end(); ++it) {
-
-		// TODO: geht das wirklich?
-		// TODO: abbrechen wenn er existiert
-		exists += ((*it) == node);
+		if ((*it) == node) {
+			return true;
+		}
 	}
-	return exists;
+	return false;
 }
 
 bool node::equals(node* node) {
-	/*
-	 // Nachbarn vergleichen
-	 bool equals = 0;
-	 for (vector<node *>::iterator neighbour = neighbours.begin();
-	 neighbour != neighbours.end(); ++neighbour) {
-	 for (vector<node *>::iterator nodeNeighbour = neighbours.begin();
-	 nodeNeighbour != neighbours.end(); ++nodeNeighbour) {
-
-	 // TODO: prüfen
-	 equals += (neighbour == nodeNeighbour);
-
-	 }
-	 }
-
-	 //return ((position == node->getPosition()) && equals);
-	 */
-
-// Positionen vergleichen
-	return (position == *node->getPosition());
-}
-
-bool node::operator <=(const node &rhs) {
-	return position.lengthSqr() <= rhs.getPosition()->lengthSqr();
+	// compare positions
+	return (position == node->getPosition());
 }
