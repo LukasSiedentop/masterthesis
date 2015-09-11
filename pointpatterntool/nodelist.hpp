@@ -1,13 +1,6 @@
 /*
  * nodelist.hpp
  *
- * Datenstruktur des Punktmusters: eine doppelt verkettete Liste mit Kopf.
- *
- * TODO: Liste erbt von std::vector -> NodeHead = vector<Node>
- *
- * www.codeproject.com/Articles/668818/Implementing-a-Doubly-Linked-List-to-be-used-on-an
- * de.wikibooks.org/wiki/C%2B%2B-Programmierung
- *
  *  Created on: 24.07.2015
  *      Author: Lukas Siedentop
  */
@@ -20,10 +13,9 @@
 #include <math.h>
 #include <sstream>
 #include <vector>
-
 #include <boost/progress.hpp>
-
 #include <ctime>
+#include <iterator>
 
 #include "coordinate.hpp"
 #include "node.hpp"
@@ -32,85 +24,79 @@
 using namespace std;
 
 /**
- * Kopf der Liste. Hier stecken Daten wie Listenlänge, erstes Element, letztes Element drin, die sonst jedesmal in jedem Knoten der Liste geändert werden müssten.
+ * Datastructure to hold points of a pattern. Methods for analysis (like distance to neighbours distribution, hyperuniformity,...) of the pattern are provided here.
  */
-class nodelist: public std::vector<class node*> {
+class nodelist {
 private:
-	// Extremalwerte aka Boundaries
+	bool periodic;
+	string name;
+	// Thou shalt not inherit from STL
+	std::vector<class node*> list;
+	// Bounding box
 	coordinate min, max;
 
-	// Periodizität des Musters
-	bool periodic;
-
-	// Name of the pattern
-	string name;
-public:
-	// Standardkonstruktor
-	nodelist();
-	// Konstruktor für eine leere Liste mit gegebener Periodizität
-	nodelist(bool periodicity, string name);
-	// Konstruiert ein Muster (Dichte 1, 10^3 Kubus) mit: pattern=1 - zufälliger Verteilung, pattern=2 - Diamantverteilung.
-	nodelist(int pattern, bool periodicity);
-	// Destruktor
-	~nodelist();
-
-	// zeigt die Liste an.
-	void display();
-	// Gitb die Liste als einfachen Vektor zurück mit den Daten der Knoten (keine Pointer)
-	//std::vector<class node> getVector() const;
-	// Setzt die Nachbarn eines Knotens auf die vier nächsten Knoten
-	void setNeighbours();
-	// Minimalwerte setzen
-	void setMins(coordinate mins);
-	// Maximalwerte setzen
-	void setMaxs(coordinate maxs);
-	// Bewegt die Liste um den gegebenen Vektor
-	void shiftList(coordinate shifter);
-	// Skaliert die Liste um die gegebenen Faktoren a,b, c
-	void scaleList(double a);
-	// Periodizität zurückgeben
-	bool isPeriodic() const;
-	// skaliert die Liste, sodass die Dichte der gewünschten entspricht
-	void setDensity(double density);
-	// returns the name of the list
-	string getName();
-	// berechnet die Punktdichte der Liste
-	double getDensity();
-	// berechnet das Volumen
-	double getVolume();
-	// gibt den Knoten an einem Punkt zurück sofern er exisitiert
-	node* getAt(coordinate point);
-	// gibt die Minimalwerte der Box zurück
 	coordinate getMins();
-	// gibt die Maximalwerte der Box zurück
 	coordinate getMaxs();
-	// gibt die Größe der Box zurück
-	coordinate getLengths();
-	// gibt die Mitte der Box zurück
-	coordinate getMid();
-	// gibt die größte Featuresize zurück, die Sinn macht (für periodische Randbedingungen)
-	double getMaxFeatureSize();
-	// gitb die Anzahl der Randknoten zurück. Wert wird nicht gespeichert, ist teuer!
+	bool isPeriodic() const;
+	void setDensity(double density);
+	double getDensity();
+	double getVolume();
 	int countEdgenodes();
-	// Gibt die 26 Vektoren zurück um das Muster periodisch fortzusetzen. TODO: n-Dimensional
-	vector<coordinate> getShifters();
-	// Gibt die Vektoren zurück um das Muster periodisch fortzusetzen. Geht davon aus, das das Muster um den Ursprung liegt. Es werden nur diejenigen Verschiebungen zurückgegeben, in denen die Box um den Mittelpunkt mid mit der Seitenlänge 2*halfExtend liegt. TODO: n-Dimensional
-	vector<coordinate> getShifted(coordinate mid, double halfExtend);
-	// Zählt die Punkte in einer gegebenen Kugel
-	int pointsInside(coordinate mid, double r, double rSqr);
-	// Zählt die Punkte in einer gegebenen Kugel
-	int pointsInsidePeriodic(coordinate mid, double r);
-	// gibt Statistiken der Liste als String zurück
-	string listStats(const char commentDelimeter[] = "\t");
-	// macht das Muster vergleichbar mit anderen: Punktdichte=1, Mittelpunkt=dem Mittelpunkt am nächsten liegende Knoten
-	double normalize();
 
-	/* Berechnungen */
+	// sets the neighbours of each point to the closest four (or less) points
+	void setNeighbours();
+	// counts the point within a given sphere
+	int pointsInside(coordinate mid, double r, double rSqr);
+	// counts the point within a given sphere, considering periodic boundary conditions
+	int pointsInsidePeriodic(coordinate mid, double r);
+
+public:
+	nodelist();
+	// constructs empty list
+	nodelist(bool periodicity, string name);
+	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
+	nodelist(int pattern, bool periodicity);
+
+	std::vector<node*>::iterator begin();
+	std::vector<node*>::iterator end();
+	void setEdgenodes(double distance);
+	coordinate getLengths();
+	coordinate getMid();
+	double getMaxFeatureSize();
+	void setMins(coordinate mins);
+	void setMaxs(coordinate maxs);
 	vector<double> neighbourDistribution();
 	vector<double> lengthDistribution(bool plot = true);
 	vector<double> angleDistribution();
 	void hyperuniformity(vector<vector<double> >& variance);
+	string getName();
+	void shiftList(coordinate shifter);
+	void scaleList(double a);
+	void deleteEntries();
+
+	// subscript operator
+	//const node& operator[](const int i) const;
+	node& operator[](int i);
+
+	// returns the number of nodes
+	int size();
+	// Adds a node at the given coordinate if none exists there and returns it in order to be able to set the neighbourhood.
+	node* add(double x, double y, double z);
+	// Returns the pattern in a matrix gnuplot can interpret.
+	vector<vector<double> > getGnuplotMatrix();
+	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
+	vector<coordinate> getShifters();
+	// Returns the 26 shifting vectors to continue the pattern periodically. Assumes the pattern is around (0,0,0). Only necessary vectors are returned so that the given box lies within the continued pattern. TODO: n-Dimensional
+	vector<coordinate> getShifted(coordinate mid, double halfExtend);
+	// Writes the pattern in a representation of a povray scene. The radius r of the cylinders if determined while rendering.
 	void writePOV();
+	// normalizes the pattern to density of points=1, midpoint of bounding box = (0,0,0)
+	double normalize();
+	// returns statistics of the list
+	string listStats(const char commentDelimeter[] = "\t");
+	// outputs list to console
+	void display();
+
 };
 
 #endif /* NODELIST_HPP_ */

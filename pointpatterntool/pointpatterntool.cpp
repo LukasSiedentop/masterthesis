@@ -117,26 +117,10 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 	// actual readig of the files
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
-		//**// FIXME in this loop, needed memory increases exorbitantly
-		coordinate nPosition(x, y, z);
-		coordinate neighPosition(nx, ny, nz);
-
-		// If there is no node at the read position...
-		node* n = list->getAt(nPosition);
-		if (!n) {
-			// ... add one at the position
-			n = new node(list, nPosition);
-			list->push_back(n);
-		}
-
-		node* neighbour = list->getAt(neighPosition);
-		// If there is no neighbour at the read position of the second file...
-		if (!neighbour) {
-			// ... add one at the position
-			neighbour = new node(list, neighPosition);
-			list->push_back(neighbour);
-		}
-		//**//
+		// FIXME in this loop, needed memory increases exorbitantly
+		node* n = list->add(x, y, z);
+		node* neighbour = list->add(nx, ny, nz);
+		// untill here
 
 		// set neighbourhood
 		n->addNeighbour(neighbour);
@@ -168,9 +152,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 				* 1.5;
 		cout << "Nodes farther away of the edge than " << characteristicLength
 				<< " are declared to be edgenodes." << endl;
-		for (vector<node*>::iterator n = list->begin(); n != list->end(); ++n) {
-			(*n)->setEdgenode(characteristicLength);
-		}
+		list->setEdgenodes(characteristicLength);
 	}
 
 	/*
@@ -187,91 +169,53 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 }
 
 /**
- * Bereitet die Daten auf, das Gnuplot die Stäbe plotten kann.
+ * Prepare data such that gnuplot can display the pattern.
  */
 void gnuplotPattern(vector<nodelist*>& lists) {
 	vector<vector<vector<double> > > datas;
 
-	vector<double> emptyLine;
-	for (unsigned int i = 0; i<3; i++) {
-		emptyLine.push_back(nan(""));
-	}
-
-	// Listeniteration
+	// listiteration
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
-		vector<vector<double> > data;
-		// Knoteniteration
-		for (vector<node*>::iterator nodeIter = (*list)->begin();
-				nodeIter != (*list)->end(); ++nodeIter) {
-			// Nachbarniteration
-			for (vector<node*>::iterator neighIter =
-					(*nodeIter)->getNeighbours()->begin();
-					neighIter != (*nodeIter)->getNeighbours()->end();
-					++neighIter) {
-
-				//  nur wenn nachbar und knoten nicht über die grenze verbunden sind...
-				if ((*list)->isPeriodic()
-						&& (*nodeIter)->euklidian(*neighIter)
-								< (*list)->getMaxFeatureSize()) {
-					data.push_back(*(*nodeIter)->getPosition()->getVector());
-					data.push_back(*(*neighIter)->getPosition()->getVector());
-
-					data.push_back(emptyLine);
-
-				} else if (!(*list)->isPeriodic()) {
-					//if (!(*neighIter)->isEdgenode()) {
-					//if (!(*nodeIter)->isEdgenode()) {
-					data.push_back(*(*nodeIter)->getPosition()->getVector());
-					data.push_back(*(*neighIter)->getPosition()->getVector());
-
-					data.push_back(emptyLine);
-
-					//}
-					//}
-				}
-			}
-		}
-		datas.push_back(data);
+		datas.push_back((*list)->getGnuplotMatrix());
 	}
+
+	// get names of lists
 	vector<string> names;
-	for (vector<nodelist*>::iterator list = lists.begin();
-			list != lists.end(); ++list) {
+	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
+			++list) {
 		names.push_back((*list)->getName());
 	}
-	// Plotten
+
 	plot3D(datas, names);
 }
 
 /**
- * Vergleich zwei Listen.
+ * Compares two lists.
  */
 void compareLists(vector<nodelist*>& lists) {
-	// Skalierung anpassen
 	// TODO: evtl guiabfrage
 	///////////////////////////////////////////////////////////////////////
+	// adjust scaling and roughly the midpoint
 	lists[1]->scaleList(1. / 50.);
-
-	// Schwerpunkt grob anpassen
 	lists[1]->shiftList(lists[1]->getMid() * -1);
 
-	// Differenzvektoren bilden
 	vector<coordinate> diffs;
-	//coordinate diff;
-	// Schwerpunkt der Differenzen
+	// center of dass of difference vectors
 	coordinate centreOfMass(0, 0, 0);
 
 	unsigned comparisons = min(lists[0]->size(), lists[1]->size());
 	for (unsigned i = 0; i < comparisons; i++) {
-		if (!(*lists[0])[i]->isEdgenode()) {
 
-			coordinate* vec1 = (*lists[0])[i]->getPosition();
+		if (!(*lists[0])[i].isEdgenode()) {
 
-			// Vektor mit kleinstem Abstand in zweiter liste finden
-			coordinate* vec2 = (*lists[1])[i]->getPosition();
+			coordinate* vec1 = (*lists[0])[i].getPosition();
+
+			// get closest node
+			coordinate* vec2 = (*lists[1])[i].getPosition();
 			coordinate diff = *vec1 - *vec2;
-			for (nodelist::iterator n = lists[1]->begin(); n != lists[1]->end();
-					++n) {
+			for (vector<node*>::iterator n = lists[1]->begin();
+					n != lists[1]->end(); ++n) {
 				if ((*vec1 - *((*n)->getPosition())).lengthSqr()
 						< diff.lengthSqr()) {
 					vec2 = (*n)->getPosition();
@@ -279,43 +223,50 @@ void compareLists(vector<nodelist*>& lists) {
 				}
 			}
 
-			// Differenzvektor merken
 			diffs.push_back(diff);
-			// zum Schwerpunkt berechnen
 			centreOfMass += diff;
 		}
 	}
 
-	// Schwerpunkt in die Mitte setzen
+	// shift the SECOND list about the POSITIVE center of mass
 	centreOfMass /= diffs.size();
-	// ZWEITE Liste um POSITIVEN Schwerpunktsvektor verschieben
 	lists[1]->shiftList(centreOfMass);
 
-	// diffs anpassen, Längen berechnen
+	vector<vector<double> > plotDiffs;
+
+	// shift diffs, calculate lengths
 	vector<double> diffLengths;
 	for (vector<coordinate>::iterator diffIter = diffs.begin();
 			diffIter != diffs.end(); ++diffIter) {
 		(*diffIter) -= centreOfMass;
+		plotDiffs.push_back(*(*diffIter).getVector());
 		diffLengths.push_back((*diffIter).length());
 	}
 
-	// Diffdaten plotbar machen
-	vector<vector<coordinate> > plotData;
-	plotData.push_back(diffs);
+	// make it plottable
+	vector<vector<vector<double> > > plotData;
+	plotData.push_back(plotDiffs);
 
 	vector<vector<double> > histData;
 	histData.push_back(diffLengths);
 
+	// get names of lists
+	vector<string> names;
+	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
+			++list) {
+		names.push_back((*list)->getName());
+	}
+
 	vector<string> title;
 
-	title.push_back("Differenz");
-	/*
-	 plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
-	 // Punktewolke
-	 plot3D(plotData, "x", "y", "z", "w p ls 7");
-	 // Angepasste Muster
-	 gnuplotPattern(lists);
-	 */
+	title.push_back("difference");
+
+	plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
+	// Punktewolke
+	plot3D(plotData, names, "x", "y", "z", "w p ls 7");
+	// Angepasste Muster
+	gnuplotPattern(lists);
+
 }
 
 /**
@@ -431,20 +382,19 @@ void compareLists(vector<nodelist*>& lists) {
 int main(int argc, char* argv[]) {
 	cout << "Pointpatterns are to be characterized. Here we go!" << endl;
 
-	// Muster einlesen
 	vector<nodelist*> lists;
 
-	// keine Argumente übergeben -> generiere Zufallsmuster und Diamantmuster
+	// No arguments given -> generate diamon and random point pattern
 	if (argc == 1) {
 		lists.push_back(new nodelist(1, false));
 		lists.push_back(new nodelist(2, false));
 	}
 	for (int i = 1; i < argc; i += 3) {
-		string name = "Pattern";
+		string name = "point pattern";
 		if (i == 1) {
 			name = "HPU Chi 4C Chi 0.13 NP=1000 UC";
 		} else if (i == 4) {
-			name = "Validation recovered pattern";
+			name = "recovered pattern";
 		}
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
@@ -461,10 +411,10 @@ int main(int argc, char* argv[]) {
 
 		switch (option) {
 		case 0:
-			cout << "Beende." << endl;
+			cout << "Exit." << endl;
 			break;
 		case 1: {
-			cout << "Zähle die Nachbarn jedes Knotens..." << endl;
+			cout << "Count the neighbours of every node..." << endl;
 			vector<vector<double> > data;
 			vector<string> names;
 			for (vector<nodelist*>::iterator list = lists.begin();
@@ -474,12 +424,12 @@ int main(int argc, char* argv[]) {
 
 				names.push_back((*list)->getName());
 
-				cout << "Nachbarnstatistik Muster " << (*list)->getName() << ":"
-						<< endl;
+				cout << "Neighbourstatistics of pattern '" << (*list)->getName()
+						<< "':" << endl;
 				cout << statsAsString(stats(neighbours));
 			}
 
-			plotHist(data, 0, 10, 10, names, "Nachbarn");
+			plotHist(data, 0, 10, 10, names, "Number of neighbours");
 
 			break;
 		}
@@ -592,10 +542,10 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// TODO: alles löschen
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
-		(*list)->~nodelist();
+		(*list)->deleteEntries();
+		delete (*list);
 	}
 
 	return 0;
