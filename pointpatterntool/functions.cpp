@@ -8,30 +8,30 @@
 #include "functions.hpp"
 
 vector<double> stats(vector<double> data) {
-	// Erwartungswert: E = 1/N \sum_i=0^N x_i
-	// Varianz: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
-	// Schiefe: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
-	// Exzess = Wölbung - 3: w =  (1/N \sum_i=0^N ((x_i - E)/\sigma)^4) - 3
+	// expectancy: E = 1/N \sum_i=0^N x_i
+	// variance: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
+	// skewness: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
+	// kurtosis excess = kurtosis - 3: w =  (1/N \sum_i=0^N ((x_i - E)/\sigma)^4) - 3
 
 	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
-	// Moment	Bedeutung
+	// moment	meaning
 	// 0		=0
-	// 1		Erwartungswert
-	// 2		Varianz
-	// 3		Schiefe
-	// 4		Wölbung
+	// 1		expectancy
+	// 2		variance
+	// 3		skewness
+	// 4		kurtosis
 
-	// Summe
+	// sum
 	double sum = 0;
 	for (unsigned int i = 0; i < data.size(); i++) {
 		sum += data[i];
 	}
 
-	// Erwartungswert (1. Moment) & Median
+	// expectancy (1st moment) & median
 	double expectedValue = sum / data.size();
 	double median = data[data.size() / 2];
 
-	// Varianzen (2. Moment)
+	// variances (2nd moment)
 	double variance = 0;
 	double varMedian = 0;
 
@@ -51,17 +51,19 @@ vector<double> stats(vector<double> data) {
 	skewness = skewness / data.size();
 	kurtosis = kurtosis / data.size();
 
-	// Vektorposition Bedeutung
-	// 0		Modus (TODO) https://de.wikipedia.org/wiki/Modus_(Statistik)
-	// 1		Erwartungswert
-	// 2		Varianz
-	// 3		Schiefe
-	// 4		Wölbung
-	// 10		Anzahl
-	// 11		Minimum
-	// 12		Maximum
-	// 13		Median
-	// 14		variance Median
+	/*
+	 * position meaning
+	 * 0		mode (TODO) https://de.wikipedia.org/wiki/Modus_(Statistik)
+	 * 1		expectancy
+	 * 2		variance
+	 * 3		skewness
+	 * 4		kurtosis
+	 * 10		count
+	 * 11		minimum
+	 * 12		maximum
+	 * 13		median
+	 * 14		variance median
+	 */
 
 	vector<double> statistics;
 	statistics.resize(15);
@@ -104,21 +106,21 @@ string statsAsString(const vector<double>& data,
 	stringstream stream;
 
 	// Daten schreiben
-	stream << commentDelimeter << "Anzahl: " << data[10] << endl;
+	stream << commentDelimeter << "Count: " << data[10] << endl;
 	stream << commentDelimeter << "Minimum: " << data[11] << ", Maximum: "
 			<< data[12] << endl;
-	stream << commentDelimeter << "Modus: TODO" << endl;
-	stream << commentDelimeter << "Erwartungswert +- Standardabweichung: "
+	stream << commentDelimeter << "Mode: TODO" << endl;
+	stream << commentDelimeter << "Expectancy +- Standard Deviation: "
 			<< data[1] << "+-" << sqrt(data[2]) << ", FWHM: "
 			<< 2 * sqrt(2 * log(2) * data[2]) << endl;
-	stream << commentDelimeter << "Varianz: " << data[2] << endl;
-	stream << commentDelimeter << "Schiefe: " << data[3] << " ("
+	stream << commentDelimeter << "Variance: " << data[2] << endl;
+	stream << commentDelimeter << "Skewness: " << data[3] << " ("
 			<< (((data[3] > 0) - (data[3] < 0)) < 0 ?
-					"linksschief" : "rechtschief") << ")" << endl;
-	stream << commentDelimeter << "Exzess: " << data[4] - 3 << " ("
+					"left-skewed" : "right-skewed") << ")" << endl;
+	stream << commentDelimeter << "Excess Kurtosis: " << data[4] - 3 << " ("
 			<< (((data[4] - 3 > 0) - (data[4] - 3 < 0)) < 0 ?
-					"flachgipflig" : "steilgipflig") << ")" << endl;
-	stream << commentDelimeter << "Median +- Standardabweichung: " << data[13]
+					"platykurtic" : "leptokurtosis ") << ")" << endl;
+	stream << commentDelimeter << "Median +- Standard Deviation: " << data[13]
 			<< "+-" << sqrt(data[14]) << ", FWHM: "
 			<< 2 * sqrt(2 * log(2) * data[14]) << endl;
 
@@ -176,6 +178,10 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	stringstream plotstring;
 	plotstring << "plot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
+		// statistics as comments in file
+		plotstring << statsAsString(stats(datas[i]), "# ")
+				<< endl;
+
 		// '-' means read from stdin
 		plotstring << "'-' u (hist($1, width)):(1.0/" << datas[i].size()
 				<< ") w boxes smooth freq lc rgb '" << colors[i] << "' t '"
@@ -200,7 +206,8 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 }
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<string> names, const char xlabel[], const char ylabel[], const char file[]) {
+		vector<string> names, const char xlabel[], const char ylabel[],
+		const char file[]) {
 
 	double xMin = 0;
 
@@ -266,9 +273,9 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	std::cin.get();
 }
 
-void plot3D(vector<vector<vector<double> > > datas,
-		vector<string> names, const char xlabel[],
-		const char ylabel[], const char zlabel[], const char style[]) {
+void plot3D(vector<vector<vector<double> > > datas, vector<string> names,
+		const char xlabel[], const char ylabel[], const char zlabel[],
+		const char style[]) {
 	Gnuplot gp;
 	gp << "reset\n";
 
@@ -291,8 +298,8 @@ void plot3D(vector<vector<vector<double> > > datas,
 	stringstream plotstring;
 	plotstring << "splot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
-		plotstring << "'-' " << style << " lt rgb '" << colors[i]
-				<< "' t '"<< names[i] << "'";
+		plotstring << "'-' " << style << " lt rgb '" << colors[i] << "' t '"
+				<< names[i] << "'";
 		if (i != datas.size() - 1) {
 			plotstring << ",";
 		}

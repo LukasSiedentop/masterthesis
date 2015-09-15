@@ -330,47 +330,19 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 	return shifters;
 }
 
-int nodelist::pointsInside(coordinate mid, double r, double rSqr) {
+int nodelist::pointsInside(vector<coordinate>& points, coordinate& mid,
+		double r, double rSqr) {
 	int ctr = 0;
 
 	// nodesiterations
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (vector<coordinate>::iterator point = points.begin();
+			point != points.end(); ++point) {
 		// bounding box of the sphere
-		if ((fabs(((*it)->getPosition())[0] - mid[0]) < r)
-				&& (fabs(((*it)->getPosition())[1] - mid[1]) < r)
-				&& (fabs(((*it)->getPosition())[2] - mid[2]) < r)) {
+		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
+				&& (fabs((*point)[2] - mid[2]) < r)) {
 			// sphere itself
-			if ((((*it)->getPosition()) - mid).lengthSqr() < rSqr) {
+			if (((*point) - mid).lengthSqr() < rSqr) {
 				ctr++;
-			}
-		}
-	}
-	return ctr;
-}
-
-int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
-	int ctr = 0;
-
-	vector<coordinate> shifted = getShifted(mid, r);
-
-	// distance comparison of sphere shifted in every dimension
-	for (unsigned int s = 0; s < shifted.size(); s++) {
-		// nodesiteration
-		for (vector<node*>::iterator it = list.begin(); it != list.end();
-				++it) {
-			// bounding box of sphere
-			if ((fabs(((*it)->getPosition())[0] + shifted[s][0]) < r)
-					&& (fabs(((*it)->getPosition())[1] + shifted[s][1]) < r)
-					&& (fabs(((*it)->getPosition())[2] + shifted[s][2]) < r)) {
-
-				// Cubicles are not stricly convex, unfortunately... (Local density fluctuations, hyperuniformity, and order metrics. Salvatore Torquato et. al.)
-				//ctr++;
-
-				// is the point within the sphere?
-				if (((((*it)->getPosition()) + shifted[s]).lengthSqr())
-						< (r * r)) {
-					ctr++;
-				}
 			}
 		}
 	}
@@ -511,15 +483,11 @@ vector<double> nodelist::angleDistribution() {
 	return halfData;
 }
 
-vector<vector<double> > nodelist::hyperuniformity(unsigned int nr, unsigned int n) {
-	// number of radii
-	//unsigned int nr = 50;
+vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
+		unsigned int n) {
 	// radiusincrement + maximal radius
 	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
 			rMax / nr;
-
-	// number of spheres/iterations
-	//unsigned int n = 10000;
 
 	// datastructure to save the number of points in each sphere
 	vector<vector<double> > data;
@@ -529,34 +497,49 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr, unsigned int 
 	}
 	clock_t t;
 	t = clock();
+
 	// seed for generation of random numbers
 	srand(time(NULL));
+
+	// midpoint of sphere
 	coordinate mid;
+
 	if (periodic) {
-		boost::progress_display show_progress(n);
+		// precalculate extended pattern
+		vector<coordinate> shifters = getShifters();
+		vector<coordinate> extendedPattern;
+		for (vector<coordinate>::iterator shifter = shifters.begin();
+				shifter != shifters.end(); ++shifter) {
+			for (vector<node*>::iterator n = list.begin(); n != list.end();
+					++n) {
+				extendedPattern.push_back((*n)->getPosition() + *shifter);
+			}
+		}
 
 		// iteration over n spheres
+		boost::progress_display show_progress(n);
 		for (unsigned int i = 0; i < n; i++) {
-			// Choose the center of the sphere such that it is somewhere within the whole pattern.
-			mid = (coordinate(3) - 0.5) * getLengths(); // faster, TODO not tested
-					/*mid = coordinate(3); old
-					 mid *= getLengths();
-					 mid -= getLengths() / 2;*/
-			// Without this, the Pattern is expected to be centered around (0,0,0).
-			//mid += getMid();
+			// Choose the centre of the sphere such that it is somewhere within the whole pattern.
+			mid = (coordinate(3) - 0.5) * getLengths();
 
 			// iteration over radius: count points within sphere
 			for (unsigned int j = 0; j < nr; j++) {
-				data[j][i] = pointsInsidePeriodic(mid, j * dr);
+				data[j][i] = pointsInside(extendedPattern, mid, j * dr,
+						j * dr * j * dr);
 			}
 
 			++show_progress;
 		}
 	} else {
-		boost::progress_display show_progress(nr);
+		// get patterns coordinates
+		vector<coordinate> pattern;
+		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+			pattern.push_back((*n)->getPosition());
+		}
 
 		double r, rSqr;
 		// iteration over radius
+		boost::progress_display show_progress(nr);
 		for (unsigned int j = 0; j < nr; j++) {
 			r = j * dr;
 			rSqr = r * r;
@@ -565,7 +548,7 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr, unsigned int 
 				// Choose the center of the sphere such that it is somewhere within the whole pattern.
 				mid = (coordinate(3) - 0.5) * (getLengths() - 2 * r);
 
-				data[j][i] = pointsInside(mid, r, rSqr);
+				data[j][i] = pointsInside(pattern, mid, r, rSqr);
 			}
 			++show_progress;
 		}

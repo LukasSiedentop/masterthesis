@@ -28,18 +28,19 @@ using namespace std;
 /* Statistiken */
 
 /**
- * Berechnet die Statistiken eine Zahlenliste unter der Annahme, die Liste ist von klein nach groß Sortiert. TODO: Rückgabe evtl als map
- * Vektorposition Bedeutung
- * 0		Modus (TODO) https://de.wikipedia.org/wiki/Modus_(Statistik)
- * 1		Erwartungswert
- * 2		Varianz
- * 3		Schiefe
- * 4		Wölbung
- * 10		Anzahl
- * 11		Minimum
- * 12		Maximum
- * 13		Median
- * 14		variance Median
+ * Calculates the statistics of a list of numbers with the asumption the list is sorted from small to big.
+ * TODO: return map
+ * position meaning
+ * 0		mode (TODO) https://de.wikipedia.org/wiki/Modus_(Statistik)
+ * 1		expectancy
+ * 2		variance
+ * 3		skewness
+ * 4		kurtosis
+ * 10		count
+ * 11		minimum
+ * 12		maximum
+ * 13		median
+ * 14		variance median
  */
 vector<double> stats(vector<double> data);
 
@@ -98,7 +99,7 @@ T convert(string input, T type) {
 
 /**
  * Schreibt das Histogramm in eine Datei mit gegebenem Namen, optional mit Statistiken und/oder Header
- */
+ *//*
 template<typename T>
 void writeHist(vector<T> data, bool includeStats, const char header[],
 		const char outfileName[]) {
@@ -120,7 +121,7 @@ void writeHist(vector<T> data, bool includeStats, const char header[],
 	}
 
 	cout << "Histogramm in " << outfileName << " geschrieben." << endl;
-}
+}*/
 
 // TODO: write 2D, 3D,
 

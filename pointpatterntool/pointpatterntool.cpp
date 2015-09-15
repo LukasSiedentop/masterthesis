@@ -385,10 +385,10 @@ int main(int argc, char* argv[]) {
 	vector<nodelist*> lists;
 
 	// No arguments given -> generate diamond and random point pattern
-	//if (argc == 1) {
-		//lists.push_back(new nodelist(1, true));
+	if (argc == 1) {
+		lists.push_back(new nodelist(1, true));
 		lists.push_back(new nodelist(2, true));
-	//}
+	}
 	for (int i = 1; i < argc; i += 3) {
 		string name = "point pattern";
 		if (i == 1) {
@@ -479,8 +479,8 @@ int main(int argc, char* argv[]) {
 			vector<vector<vector<double> > > variances;
 			vector<string> names;
 
-			// number of radii and number of spheres
-			unsigned int nr = 10, n = 100;
+			// number of radii and number of spheres TODO: gui?
+			unsigned int nr = 50, n = 100;
 
 			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();

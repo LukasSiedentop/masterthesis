@@ -48,9 +48,7 @@ private:
 	// sets the neighbours of each point to the closest four (or less) points
 	void setNeighbours();
 	// counts the point within a given sphere
-	int pointsInside(coordinate mid, double r, double rSqr);
-	// counts the point within a given sphere, considering periodic boundary conditions
-	int pointsInsidePeriodic(coordinate mid, double r);
+	int pointsInside(vector<coordinate>& points, coordinate& mid, double r, double rSqr);
 
 public:
 	nodelist();
