@@ -126,9 +126,9 @@ string statsAsString(const vector<double>& data,
 }
 
 vector<string> getColors() {
-	// Farben
+	// colors in HEX #argb
 	vector<string> colors;
-	//argb
+
 	colors.push_back("#55E41A1C");
 	colors.push_back("#55377EB8");
 	colors.push_back("#554DAF4A");
@@ -143,8 +143,12 @@ vector<string> getColors() {
 }
 
 void plotHist(vector<vector<double> > datas, double min, double max, int n,
-		vector<string> names, const char xlabel[]) {
-	Gnuplot gp;
+		vector<string> names, const char xlabel[], const char file[]) {
+
+	stringstream filestream;
+	filestream << "tee " << file << " | gnuplot -persist";
+	Gnuplot gp(filestream.str());
+
 	// Don't forget to put "\n" at the end of each line!
 
 	gp << "reset\n";
@@ -165,10 +169,10 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	gp << "set style fill solid 0.5\n";
 	gp << "set tics out nomirror\n";
 	gp << "set xlabel '" << xlabel << "'\n";
-	gp << "set ylabel 'Häufigkeit'\n";
+	gp << "set ylabel 'frequency'\n";
 
 	vector<string> colors = getColors();
-	// Plotstring bauen und an Gnuplot schicken
+	// build plotstring and send to gnuplot
 	stringstream plotstring;
 	plotstring << "plot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
@@ -196,12 +200,17 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 }
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<string> names, const char xlabel[], const char ylabel[]) {
+		vector<string> names, const char xlabel[], const char ylabel[], const char file[]) {
 
 	double xMin = 0;
 
-	Gnuplot gp;
+	stringstream filestream;
+	filestream << "tee " << file << " | gnuplot -persist";
+
+	Gnuplot gp(filestream.str());
 	gp << "reset\n";
+
+	gp << "set fit logfile '/dev/null'\n";
 
 	gp << "set key top left\n";
 	gp << "set xrange [" << xMin << ":" << xMax << "]\n";
@@ -230,9 +239,9 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 		}
 
 		// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-		plotstring << "'-' u 1:2 ls 7 lc rgb'" << colors[i] << "' t 'Varianz "
+		plotstring << "'-' u 1:2 ls 7 lc rgb'" << colors[i] << "' t 'variance "
 				<< names[i] << "', f" << i << "(x) lc rgb'" << colors[i]
-				<< "' t sprintf('Fit: f_" << i << "(R) = %.3fR^{%.1f}',A" << i // {\264}
+				<< "' t sprintf('fit: f_" << i << "(R) = %.3fR^{%.1f}',A" << i // {\264}
 				<< ", B" << i << ")";
 
 		if (i != datas.size() - 1) {
@@ -248,6 +257,8 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 
 		gp.send1d(*data);
 	}
+
+	//gp(fopen("script.gp", "w"));
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
 	// the gnuplot window doesn't get closed.

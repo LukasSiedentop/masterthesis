@@ -52,24 +52,24 @@ using namespace std;
  */
 int gui() {
 	cout << "---------------------------------------------------" << endl;
-	cout << "1 - Vert. der Anzahl der Nachbarn" << endl;
-	cout << "2 - Vert. der Abstände zu den Nachbarn" << endl;
-	cout << "3 - Vert. der Winkel der Nachbarn" << endl;
-	cout << "4 - Grad der Hyperuniformity" << endl;
+	cout << "1 - number of neighbours histogram" << endl;
+	cout << "2 - distance to neighbours histogram" << endl;
+	cout << "3 - angle between neighbours histogram" << endl;
+	cout << "4 - degree of hyperuniformity" << endl;
 
-	cout << "5 - Liste darstellen" << endl;
-	cout << "6 - Listenstatistik" << endl;
-	cout << "7 - Muster gnuplotten" << endl;
-	cout << "8 - POV-Ray Datei schreiben" << endl;
+	cout << "5 - output pattern to console" << endl;
+	cout << "6 - pattern statistics" << endl;
+	cout << "7 - gnuplot pattern" << endl;
+	cout << "8 - write POV-Ray file" << endl;
 
-	cout << "9 - Muster vergleichen" << endl;
+	cout << "9 - compare two patterns" << endl;
 	cout
-			<< "10 - Muster normalisieren (Dichte = 1, Schwerpunkt in den Ursprung verschieben)"
+			<< "10 - normalize pattern (density of points= 1, chift center of mass to origin)"
 			<< endl;
 
-	cout << "0 - Nichts." << endl;
+	cout << "0 - Nothing." << endl;
 	cout << "---------------------------------------------------" << endl;
-	cout << "Was möchtest du über die Punkte wissen? (0-10; default: 0) << ";
+	cout << "What do you want to know about the points? (0-10; default: 0) << ";
 
 	int option = 0;
 
@@ -160,8 +160,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 	 list->shiftList(coordinate(-5,-5,-5));
 	 */
 
-	cout << "Pattern read and saved. Statistics:" << endl << list->listStats()
-			<< endl;
+	cout << "Pattern read. Statistics:" << endl << list->listStats();
 
 	//cout << "Needs " << list->capacity() * sizeof(node) + sizeof(list) << " bytes of memory." << endl;
 
@@ -169,7 +168,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 }
 
 /**
- * Prepare data such that gnuplot can display the pattern.
+ * Prepare data so that gnuplot can display the pattern.
  */
 void gnuplotPattern(vector<nodelist*>& lists) {
 	vector<vector<vector<double> > > datas;
@@ -197,8 +196,8 @@ void compareLists(vector<nodelist*>& lists) {
 	// TODO: evtl guiabfrage
 	///////////////////////////////////////////////////////////////////////
 	// adjust scaling and roughly the midpoint
-	lists[1]->scaleList(1. / 50.);
-	lists[1]->shiftList(lists[1]->getMid() * -1);
+	//lists[1]->scaleList(1. / 50.);
+	//lists[1]->shiftList(lists[1]->getMid() * -1);
 
 	vector<coordinate> diffs;
 	// center of dass of difference vectors
@@ -214,11 +213,11 @@ void compareLists(vector<nodelist*>& lists) {
 			// get closest node
 			coordinate vec2 = (*lists[1])[i].getPosition();
 			coordinate diff = vec1 - vec2;
-			for (vector<node>::iterator n = lists[1]->begin();
+			for (vector<node*>::iterator n = lists[1]->begin();
 					n != lists[1]->end(); ++n) {
-				if ((vec1 - ((*n).getPosition())).lengthSqr()
+				if ((vec1 - ((*n)->getPosition())).lengthSqr()
 						< diff.lengthSqr()) {
-					vec2 = (*n).getPosition();
+					vec2 = (*n)->getPosition();
 					diff = vec1 - vec2;
 				}
 			}
@@ -252,6 +251,7 @@ void compareLists(vector<nodelist*>& lists) {
 
 	// get names of lists
 	vector<string> names;
+	names.push_back("difference vectors");
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
 		names.push_back((*list)->getName());
@@ -261,7 +261,7 @@ void compareLists(vector<nodelist*>& lists) {
 
 	title.push_back("difference");
 
-	plotHist(histData, 0, 0.1, 50, title, "Differenzlängen");
+	plotHist(histData, 0, 0.1, 50, title, "difference vector lengths");
 	// Punktewolke
 	plot3D(plotData, names, "x", "y", "z", "w p ls 7");
 	// Angepasste Muster
@@ -384,11 +384,11 @@ int main(int argc, char* argv[]) {
 
 	vector<nodelist*> lists;
 
-	// No arguments given -> generate diamon and random point pattern
-	if (argc == 1) {
-		lists.push_back(new nodelist(1, false));
-		lists.push_back(new nodelist(2, false));
-	}
+	// No arguments given -> generate diamond and random point pattern
+	//if (argc == 1) {
+		//lists.push_back(new nodelist(1, true));
+		lists.push_back(new nodelist(2, true));
+	//}
 	for (int i = 1; i < argc; i += 3) {
 		string name = "point pattern";
 		if (i == 1) {
@@ -429,12 +429,13 @@ int main(int argc, char* argv[]) {
 				cout << statsAsString(stats(neighbours));
 			}
 
-			plotHist(data, 0, 10, 10, names, "Number of neighbours");
+			plotHist(data, 0, 10, 10, names, "number of neighbours",
+					"data/statistics/neighbours_Histogram.gp");
 
 			break;
 		}
 		case 2: {
-			cout << "Bestimme die Längen zwischen benachbarten Punkten..."
+			cout << "Evaluate the distance between neighbouring nodes..."
 					<< endl;
 			vector<vector<double> > data;
 			vector<string> names;
@@ -445,16 +446,16 @@ int main(int argc, char* argv[]) {
 
 				names.push_back((*list)->getName());
 
-				cout << "Längenstatistik Muster " << (*list)->getName() << ":"
-						<< endl;
+				cout << "Lengthstatistics of pattern " << (*list)->getName()
+						<< ":" << endl;
 				cout << statsAsString(stats(lengths));
 			}
-			plotHist(data, 0, 1, 50, names, "Längen");
+			plotHist(data, 0, 1, 50, names, "distance of neighbouring nodes",
+					"data/statistics/lengths_histogram.gp");
 			break;
 		}
 		case 3: {
-			cout << "Bestimme die Winkel zwischen benachbarten Punkten..."
-					<< endl;
+			cout << "Evaluate the angle between neighbouring nodes..." << endl;
 			vector<vector<double> > data;
 			vector<string> names;
 			for (vector<nodelist*>::iterator list = lists.begin();
@@ -464,29 +465,40 @@ int main(int argc, char* argv[]) {
 
 				names.push_back((*list)->getName());
 
-				cout << "Winkelstatistik Muster " << (*list)->getName() << ":"
-						<< endl;
+				cout << "Anglestatistics of pattern " << (*list)->getName()
+						<< ":" << endl;
 				cout << statsAsString(stats(angles));
 			}
-			plotHist(data, 0, 180, 180, names, "Winkel");
+			plotHist(data, 0, 180, 180, names,
+					"angle between neighbouring nodes",
+					"data/statistics/angles_histogram.gp");
 			break;
 		}
 		case 4: {
-			cout << "Bestimme den Grad der Hyperuniformity für " << endl;
+			cout << "Determine the degree of hyperuniformity for " << endl;
 			vector<vector<vector<double> > > variances;
 			vector<string> names;
+
+			// number of radii and number of spheres
+			unsigned int nr = 10, n = 100;
+
 			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				cout << char(9) << (*list)->getName() << endl;
 				vector<vector<double> > variance;
-				(*list)->hyperuniformity(variance);
+				variance = (*list)->hyperuniformity(nr, n);
 				variances.push_back(variance);
 				names.push_back((*list)->getName());
 				xMax = std::max(xMax, variance[variance.size() - 1][0]);
 			}
-			plotHyperuniformity(variances, xMax, names, "Radius R",
-					"Variance  {/Symbol s}^2(R)");
+
+			plotHyperuniformity(variances, xMax, names, "radius R",
+					"variance  {/Symbol s}^2(R)",
+					"data/statistics/hyperuniformity.gp");
+
+			//writeHyperuniformity(variances, names, nr, n);
+
 			break;
 		}
 		case 5: {
@@ -500,8 +512,8 @@ int main(int argc, char* argv[]) {
 			ctr = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				cout << "Liste " << ctr << ": " << (*list)->getName() << endl
-						<< char(9) << (*list)->listStats();
+				cout << "List " << ctr << ": " << (*list)->getName() << endl
+						<< (*list)->listStats();
 				ctr++;
 			}
 			break;
@@ -527,24 +539,24 @@ int main(int argc, char* argv[]) {
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				double factor = (*list)->normalize();
-				cout << "Muster " << ctr << "normalisiert (skaliert mit Faktor "
+				cout << "Pattern " << ctr << "normalized (scaled with factor "
 						<< factor << ").";
 				ctr++;
 			}
 			break;
 		}
 		default:
-			cout << "Das gibts leider (noch) nicht." << endl;
+			cout << "This option does not (yet) exist, unfortunately." << endl;
 		}
 
 		if (option != 0) {
-			cout << "Und nun?" << endl;
+			cout << "What's next?" << endl;
 		}
 	}
 
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
-		//(*list)->deleteEntries();
+		(*list)->deleteEntries();
 		delete (*list);
 	}
 

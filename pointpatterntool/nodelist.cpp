@@ -21,8 +21,6 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		periodic(periodicity), min(coordinate(-5, -5, -5)), max(
 				coordinate(5, 5, 5)) {
 
-	// TODO: periodische RBD
-
 	switch (pattern) {
 	case 1: { // random point pattern
 		cout
@@ -34,9 +32,9 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		// seed for random numbers generator
 		srand(time(NULL));
 		for (unsigned n = 0; n < 1000; n++) {
-			node tmp(this,
+			node* tmp = new node(this,
 					(coordinate(3) * 10) - coordinate(5, 5, 5));
-			tmp.setEdgenode(1);
+			tmp->setEdgenode(1);
 			list.push_back(tmp);
 		}
 		cout << "Random point pattern";
@@ -60,12 +58,12 @@ nodelist::nodelist(int pattern, bool periodicity) :
 					if (not ((x + y + z) % 2)) {
 						// first point: (0.25,0.25,0.25)
 						list.push_back(
-								node(this,
+								new node(this,
 										(coordinate(0.25, 0.25, 0.25)
 												+ coordinate(x, y, z))));
 						// second point: (0.75,0.75,0.75)
 						list.push_back(
-								node(this,
+								new node(this,
 										(coordinate(0.75, 0.75, 0.75)
 												+ coordinate(x, y, z))));
 					}
@@ -77,8 +75,8 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		}
 
 		// set edgenodes
-		for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
-			(*n).setEdgenode(1);
+		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+			(*n)->setEdgenode(1);
 		}
 
 		cout << "Diamond point pattern";
@@ -91,30 +89,55 @@ nodelist::nodelist(int pattern, bool periodicity) :
 }
 
 void nodelist::setNeighbours() {
-	// TODO: periodic
 	// get four next points
-	for (unsigned neighs = 0; neighs < 4; neighs++) {
+	for (unsigned int neighs = 0; neighs < 4; neighs++) {
 		// nodesiteration
-		for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 			node* neigh = NULL;
-			double distSqr = std::numeric_limits<double>::infinity();
-			// 2nd nodeiteration
-			for (vector<node>::iterator nextn = list.begin();
-					nextn != list.end(); ++nextn) {
+			if ((*n)->countNeighbours() < 4) {
 
-				if ((*n).isNeighbour(&(*nextn)) || n == nextn) {
-					continue;
-				}
+				// find closest neighbour with less than four neighbours
+				double distSqr = std::numeric_limits<double>::infinity();
+				// 2nd nodeiteration
+				for (vector<node*>::iterator nextn = list.begin();
+						nextn != list.end(); ++nextn) {
 
-				coordinate diff = ((*nextn).getPosition())
-						- ((*n).getPosition());
-				if (diff.lengthSqr() < distSqr) {
-					distSqr = diff.lengthSqr();
-					neigh = &(*nextn);
+					if ((*n)->isNeighbour((*nextn)) || n == nextn
+							|| (*nextn)->countNeighbours() >= 4) {
+						continue;
+					}
+
+					coordinate diff;
+
+					// compare the difference vectors with an added shifter for the periodic case
+					if (periodic) {
+						vector<coordinate> shifters = getShifters();
+						for (vector<coordinate>::iterator shifter =
+								shifters.begin(); shifter != shifters.end();
+								++shifter) {
+							diff = ((*nextn)->getPosition())
+									- ((*n)->getPosition()) + (*shifter);
+							if (diff.lengthSqr() < distSqr) {
+								distSqr = diff.lengthSqr();
+								neigh = (*nextn);
+							}
+						}
+
+					} else {
+						diff = ((*nextn)->getPosition())
+								- ((*n)->getPosition());
+						if (diff.lengthSqr() < distSqr) {
+							distSqr = diff.lengthSqr();
+							neigh = (*nextn);
+						}
+					}
+
 				}
 			}
+
 			if (neigh) {
-				(*n).addNeighbour(neigh);
+				(*n)->addNeighbour(neigh);
+				neigh->addNeighbour(*n);
 			}
 		}
 	}
@@ -134,8 +157,8 @@ void nodelist::shiftList(coordinate shifter) {
 	max += shifter;
 
 	// shift entries
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
-		(*it).shift(shifter);
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		(*it)->shift(shifter);
 	}
 }
 
@@ -145,8 +168,8 @@ void nodelist::scaleList(double a) {
 	max *= a;
 
 	// scale entries
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
-		(*it).scale(a);
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		(*it)->scale(a);
 	}
 }
 
@@ -181,9 +204,9 @@ double nodelist::getVolume() {
 node* nodelist::add(double x, double y, double z) {
 
 	// check if point at given position exist
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		if (periodic) {
-			coordinate pos = ((*it).getPosition());
+			coordinate pos = ((*it)->getPosition());
 			if ((std::min(fabs(x - pos[0]),
 					(fabs(fabs(x - pos[0]) - getLengths()[0]))) < 0.000001)
 					&& (std::min(fabs(y - pos[1]),
@@ -192,17 +215,17 @@ node* nodelist::add(double x, double y, double z) {
 					&& (std::min(fabs(z - pos[2]),
 							(fabs(fabs(z - pos[2]) - getLengths()[2])))
 							< 0.000001)) {
-				return &(*it);
+				return *it;
 			}
 		}
-		if (!periodic && ((*it).getPosition() == coordinate(x, y, z))) {
-			return &(*it);
+		if (!periodic && ((*it)->getPosition() == coordinate(x, y, z))) {
+			return *it;
 		}
 	}
 
 	// if not build and add new node
 	node* n = new node(this, coordinate(x, y, z));
-	list.push_back(*n);
+	list.push_back(n);
 	return n;
 }
 
@@ -231,8 +254,8 @@ int nodelist::countEdgenodes() {
 		return 0;
 	}
 	int ctr = 0;
-	for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
-		if ((*n).isEdgenode()) {
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		if ((*n)->isEdgenode()) {
 			ctr++;
 		}
 	}
@@ -246,13 +269,13 @@ void nodelist::display() {
 	int i = 1;
 
 	// nodesiteration
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
-		cout << char(9) << i << "-th element: " << ((*it).getPosition())
-				<< " with " << (*it).countNeighbours() << " neighbours at: ";
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		cout << char(9) << i << "-th element: " << ((*it)->getPosition())
+				<< " with " << (*it)->countNeighbours() << " neighbours at: ";
 		// neighbouriteration
 		for (vector<class node *>::iterator neighIt =
-				(*it).getNeighbours()->begin();
-				neighIt != (*it).getNeighbours()->end(); ++neighIt) {
+				(*it)->getNeighbours()->begin();
+				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
 			cout << ((*neighIt)->getPosition()) << " ";
 		}
 		cout << endl;
@@ -311,13 +334,13 @@ int nodelist::pointsInside(coordinate mid, double r, double rSqr) {
 	int ctr = 0;
 
 	// nodesiterations
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		// bounding box of the sphere
-		if ((fabs(((*it).getPosition())[0] - mid[0]) < r)
-				&& (fabs(((*it).getPosition())[1] - mid[1]) < r)
-				&& (fabs(((*it).getPosition())[2] - mid[2]) < r)) {
+		if ((fabs(((*it)->getPosition())[0] - mid[0]) < r)
+				&& (fabs(((*it)->getPosition())[1] - mid[1]) < r)
+				&& (fabs(((*it)->getPosition())[2] - mid[2]) < r)) {
 			// sphere itself
-			if ((((*it).getPosition()) - mid).lengthSqr() < rSqr) {
+			if ((((*it)->getPosition()) - mid).lengthSqr() < rSqr) {
 				ctr++;
 			}
 		}
@@ -333,18 +356,18 @@ int nodelist::pointsInsidePeriodic(coordinate mid, double r) {
 	// distance comparison of sphere shifted in every dimension
 	for (unsigned int s = 0; s < shifted.size(); s++) {
 		// nodesiteration
-		for (vector<node>::iterator it = list.begin(); it != list.end();
+		for (vector<node*>::iterator it = list.begin(); it != list.end();
 				++it) {
 			// bounding box of sphere
-			if ((fabs(((*it).getPosition())[0] + shifted[s][0]) < r)
-					&& (fabs(((*it).getPosition())[1] + shifted[s][1]) < r)
-					&& (fabs(((*it).getPosition())[2] + shifted[s][2]) < r)) {
+			if ((fabs(((*it)->getPosition())[0] + shifted[s][0]) < r)
+					&& (fabs(((*it)->getPosition())[1] + shifted[s][1]) < r)
+					&& (fabs(((*it)->getPosition())[2] + shifted[s][2]) < r)) {
 
 				// Cubicles are not stricly convex, unfortunately... (Local density fluctuations, hyperuniformity, and order metrics. Salvatore Torquato et. al.)
 				//ctr++;
 
 				// is the point within the sphere?
-				if (((((*it).getPosition()) + shifted[s]).lengthSqr())
+				if (((((*it)->getPosition()) + shifted[s]).lengthSqr())
 						< (r * r)) {
 					ctr++;
 				}
@@ -389,13 +412,13 @@ vector<double> nodelist::neighbourDistribution() {
 	int counter;
 
 	// nodesiteration
-	for (vector<node>::iterator it = list.begin(); it != list.end(); ++it) {
-		if (!(*it).isEdgenode()) {
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		if (!(*it)->isEdgenode()) {
 			counter = 0;
 			// neighboursiteration
-			for (vector<class node *>::iterator neighIt =
-					(*it).getNeighbours()->begin();
-					neighIt != (*it).getNeighbours()->end(); ++neighIt) {
+			for (vector<node*>::iterator neighIt =
+					(*it)->getNeighbours()->begin();
+					neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
 				counter++;
 			}
 
@@ -410,19 +433,19 @@ vector<double> nodelist::lengthDistribution() {
 	vector<double> data;
 
 	// nodesiteration
-	for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		// exclude distances between edgendoes
-		if (!(*n).isEdgenode()) {
+		if (!(*n)->isEdgenode()) {
 			// neighboursiteration
-			for (vector<node*>::iterator nn = (*n).getNeighbours()->begin();
-					nn != (*n).getNeighbours()->end(); ++nn) {
+			for (vector<node*>::iterator nn = (*n)->getNeighbours()->begin();
+					nn != (*n)->getNeighbours()->end(); ++nn) {
 				if (periodic) {
-					data.push_back((*n).euklidianPeriodic((*nn)));
+					data.push_back((*n)->euklidianPeriodic((*nn)));
 				} else {
-					data.push_back((*n).euklidian((*nn)));
+					data.push_back((*n)->euklidian((*nn)));
 					// if the neighbour is an edgenode, put the distance twice, as later every second distance is taken
 					if ((*nn)->isEdgenode()) {
-						data.push_back((*n).euklidian((*nn)));
+						data.push_back((*n)->euklidian((*nn)));
 					}
 				}
 			}
@@ -443,13 +466,13 @@ vector<double> nodelist::angleDistribution() {
 	vector<double> data;
 
 	// nodesiteration
-	for (vector<node>::iterator nodeIter = list.begin();
+	for (vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		if (!(*nodeIter).isEdgenode()) {
+		if (!(*nodeIter)->isEdgenode()) {
 			// neighboursiteration
 			for (vector<node*>::iterator neighIter1 =
-					(*nodeIter).getNeighbours()->begin();
-					neighIter1 != (*nodeIter).getNeighbours()->end();
+					(*nodeIter)->getNeighbours()->begin();
+					neighIter1 != (*nodeIter)->getNeighbours()->end();
 					++neighIter1) {
 
 				// neighbours of neighboursiteration
@@ -458,18 +481,18 @@ vector<double> nodelist::angleDistribution() {
 						neighIter2 != (*neighIter1)->getNeighbours()->end();
 						++neighIter2) {
 					// dont calculate angles with itself
-					if (!(*nodeIter).equals(*neighIter2)) {
+					if (!(*nodeIter)->equals(*neighIter2)) {
 						if (periodic) {
 							data.push_back(
 									((180.0) / M_PI)
 											* (*neighIter1)->anglePeriodic(
-													&(*nodeIter),
+													(*nodeIter),
 													(*neighIter2)));
 						} else {
 
 							data.push_back(
 									((180.0) / M_PI)
-											* (*neighIter1)->angle(&(*nodeIter),
+											* (*neighIter1)->angle((*nodeIter),
 													(*neighIter2)));
 						}
 					}
@@ -488,15 +511,15 @@ vector<double> nodelist::angleDistribution() {
 	return halfData;
 }
 
-void nodelist::hyperuniformity(vector<vector<double> >& variance) {
+vector<vector<double> > nodelist::hyperuniformity(unsigned int nr, unsigned int n) {
 	// number of radii
-	unsigned int nr = 50;
+	//unsigned int nr = 50;
 	// radiusincrement + maximal radius
 	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
 			rMax / nr;
 
 	// number of spheres/iterations
-	unsigned int n = 500;
+	//unsigned int n = 10000;
 
 	// datastructure to save the number of points in each sphere
 	vector<vector<double> > data;
@@ -566,6 +589,7 @@ void nodelist::hyperuniformity(vector<vector<double> >& variance) {
 	}
 
 	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
+	vector<vector<double> > variance;
 	variance.resize(nr);
 	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
@@ -579,7 +603,7 @@ void nodelist::hyperuniformity(vector<vector<double> >& variance) {
 		variance[j][1] = variance[j][1] / n;
 	}
 
-	//return variance;
+	return variance;
 }
 
 void nodelist::writePOV() {
@@ -588,26 +612,26 @@ void nodelist::writePOV() {
 
 	vector<string> data;
 
-	for (vector<node>::iterator nodeIter = list.begin();
+	for (vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		stringstream stream;
 
 		// sphere at joint
 		stream << "sphere{"
-				<< (*nodeIter).getPosition().toString("<", ",", ">") << ",r}"
+				<< (*nodeIter)->getPosition().toString("<", ",", ">") << ",r}"
 				<< endl;
 
 		for (vector<node*>::iterator neighIter =
-				(*nodeIter).getNeighbours()->begin();
-				neighIter != (*nodeIter).getNeighbours()->end(); ++neighIter) {
+				(*nodeIter)->getNeighbours()->begin();
+				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 			// cylinder only if not connected over boundary
 			if (isPeriodic()
-					&& (*nodeIter).euklidian((*neighIter))
+					&& (*nodeIter)->euklidian((*neighIter))
 							< getMaxFeatureSize()) {
 				// cylinder from a to b TODO: den zurück nicht...
 				stream << "cylinder{"
-						<< (*nodeIter).getPosition().toString("<", ",", ">")
+						<< (*nodeIter)->getPosition().toString("<", ",", ">")
 						<< ","
 						<< (*neighIter)->getPosition().toString("<", ",", ">")
 						<< ",r}" << endl;
@@ -615,7 +639,7 @@ void nodelist::writePOV() {
 			} else if (!isPeriodic()) {
 				// cylinder from a to b TODO: den zurück nicht...
 				stream << "cylinder{"
-						<< (*nodeIter).getPosition().toString("<", ",", ">")
+						<< (*nodeIter)->getPosition().toString("<", ",", ">")
 						<< ","
 						<< (*neighIter)->getPosition().toString("<", ",", ">")
 						<< ",r}" << endl;
@@ -637,22 +661,22 @@ void nodelist::writePOV() {
 
 }
 
-std::vector<node>::iterator nodelist::begin() {
+std::vector<node*>::iterator nodelist::begin() {
 	return list.begin();
 }
 
-std::vector<node>::iterator nodelist::end() {
+std::vector<node*>::iterator nodelist::end() {
 	return list.end();
 }
 
 void nodelist::setEdgenodes(double distance) {
-	for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
-		(*n).setEdgenode(distance);
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		(*n)->setEdgenode(distance);
 	}
 }
 
 node& nodelist::operator [](int i) {
-	return list[i];
+	return *list[i];
 }
 /*
  const node& nodelist::operator [](const int i) const {
@@ -671,19 +695,19 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 
 	vector<vector<double> > data;
 	// nodesiteration
-	for (vector<node>::iterator nodeIter = list.begin();
+	for (vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		// neighboursiteration
 		for (vector<node*>::iterator neighIter =
-				(*nodeIter).getNeighbours()->begin();
-				neighIter != (*nodeIter).getNeighbours()->end(); ++neighIter) {
+				(*nodeIter)->getNeighbours()->begin();
+				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 			//  print link only if both are not connected over boundary
 			if (periodic
-					&& (*nodeIter).euklidian(*neighIter)
+					&& (*nodeIter)->euklidian(*neighIter)
 							< getMaxFeatureSize()) {
 
-				data.push_back(*(*nodeIter).getPosition().getVector());
+				data.push_back(*(*nodeIter)->getPosition().getVector());
 				data.push_back(*(*neighIter)->getPosition().getVector());
 
 				data.push_back(emptyLine);
@@ -691,7 +715,7 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 			} else if (!periodic) {
 				//if (!(*neighIter)->isEdgenode()) {
 				//if (!(*nodeIter)->isEdgenode()) {
-				data.push_back(*(*nodeIter).getPosition().getVector());
+				data.push_back(*(*nodeIter)->getPosition().getVector());
 				data.push_back(*(*neighIter)->getPosition().getVector());
 
 				data.push_back(emptyLine);
@@ -703,10 +727,10 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 	}
 	return data;
 }
-/*
+
 void nodelist::deleteEntries() {
-	for (vector<node>::iterator n = list.begin(); n != list.end(); ++n) {
-		delete &(*n);
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		delete (*n);
 	}
-}*/
+}
 

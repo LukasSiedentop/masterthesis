@@ -32,7 +32,7 @@ private:
 	bool periodic;
 	string name;
 	// Thou shalt not inherit from STL
-	std::vector<class node > list;
+	std::vector<class node*> list;
 	//std::vector<std::unique_ptr<int> > list2;
 	// Bounding box
 	coordinate min, max;
@@ -59,8 +59,8 @@ public:
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
-	std::vector<node>::iterator begin();
-	std::vector<node>::iterator end();
+	std::vector<node*>::iterator begin();
+	std::vector<node*>::iterator end();
 	void setEdgenodes(double distance);
 	coordinate getLengths();
 	coordinate getMid();
@@ -70,11 +70,11 @@ public:
 	vector<double> neighbourDistribution();
 	vector<double> lengthDistribution();
 	vector<double> angleDistribution();
-	void hyperuniformity(vector<vector<double> >& variance);
+	vector<vector<double> > hyperuniformity(unsigned int nr=50, unsigned int n=100);
 	string getName();
 	void shiftList(coordinate shifter);
 	void scaleList(double a);
-	//void deleteEntries();
+	void deleteEntries();
 
 	// subscript operator
 	//const node& operator[](const int i) const;

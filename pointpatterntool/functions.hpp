@@ -185,30 +185,28 @@ vector<T> mergeSort(vector<T> m) {
 
 /* Plotmethoden Gnuplot */
 // TODO: anzeigen UND svg speichern
-/**
- * Gibt 8 Farben zum Ploten zurück
- */
-vector<string> getColors();
+// returns eight colors
+std::vector<string> getColors();
 
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
-void plotHist(vector<vector<double> > data, double min, double max, int n,
-		vector<string> names, const char xlabel[] = "x");
+void plotHist(std::vector<std::vector<double> > data, double min, double max,
+		int n, vector<string> names, const char xlabel[] = "x",
+		const char file[] = "/dev/null");
 
 /**
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
-void plotHyperuniformity(vector<vector<vector<double> > > data, double xMax,
-		vector<string> names, const char xlabel[] = "x", const char ylabel[] =
-				"y");
+void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
+		double xMax, std::vector<string> names, const char xlabel[] = "x",
+		const char ylabel[] = "y", const char file[] = "/dev/null");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<vector<vector<double> > > data,
-		vector<string> names, const char xlabel[] = "x",
-		const char ylabel[] = "y", const char zlabel[] = "z",
-		const char style[] = "w l");
+void plot3D(vector<vector<vector<double> > > data, vector<string> names,
+		const char xlabel[] = "x", const char ylabel[] = "y",
+		const char zlabel[] = "z", const char style[] = "w l");
 
 #endif /* NODELIST_HPP_ */
