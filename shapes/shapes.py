@@ -374,7 +374,6 @@ def header():
 	#print('ATTENTION! Velocity/PS not set in header.')
 	header.append('PerfectShapeQuality')
 	
-	
 	return header
 
 # Setzt die Schreibgeschwindigkeit auf v [µm/s] bei der updateRate [punkte/s]. Die pointDistance wird dann berechnet.
@@ -619,6 +618,57 @@ def connectedStakes(w, l, h, d, powerStakes, powerPile):
 ###########################
 
 # Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall.
+# der Höhe h [µm] mit Innenradius innerRadius [µm] und Außenradius outerRadius [µm] zurück, die .
+def expWall(nC, h, innerRadius, outerRadius, deltarad):
+	### optionale Parameter ###
+	# Der z-Versatz sollte dem axialen Fokus entsprechen um eine solide Wand zu bekommen.
+	dz = 0.55 #µm. 
+	# Die Radiuserhöhung sollte dem lateralen Fokus entsprechen um eine solide Wand zu bekommen.
+	dr = 0.15 #µm.
+	# deltarad entspricht dem radius, den der wall
+	###########################
+	
+	# skalierung anpassen für gedrehtes viereck
+	sq2 = np.sqrt(2.)
+  
+	innerRadius*=sq2
+	outerRadius*=sq2
+	deltarad*=sq2
+	maxR = outerRadius+deltarad
+	minR = outerRadius
+  
+	# initialisiere Punkteliste
+	wall = list()
+    
+	# Starthöhe
+	z = 0
+  
+	while (z < h+dz):
+		# Radius anpassen, um Anzahl der Umläufe anzupassen
+		radius = maxR - np.sqrt((minR-maxR)**2*z/h)
+		# Anzahl der Umläufe
+		n = math.floor((radius-innerRadius)/dr)
+		#spiral(numberPoints, dz, radius, dr, n, leftie)
+		disk = spiral(nC, 0, innerRadius, dr, n, 0)
+		wall.extend(shifting(disk, np.array([0,0,z])))
+		z+=(dz*2)
+
+	# Füge 'write' Befehl alle nWrite Schritte hinzu
+	nWrite = 50
+	i = nWrite
+	
+	while( i < len(wall) ):
+		wall.insert(i, 'write')
+		# damit nicht eine Linie übersprungen wird den letzten Punkt nach das write kopieren
+		wall.insert(i+1, wall[i-1])
+		i += nWrite
+		
+	# Abschließendes 'write'
+	wall.insert(i, 'write')
+	
+	return wall
+
+# Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall.
 # der Höhe h [µm] mit Innenradius innerRadius [µm] und Außenradius outerRadius [µm] zurück.
 def roundWall(nC, h, innerRadius, outerRadius):
 	### optionale Parameter ###
@@ -743,8 +793,8 @@ def woodpile(w, l, h, dh, g):
 	# Punkteliste und Laufparameter initialisieren
 	woodpile = list()
 	woodpile.append('%woodpile g = ' + str(g) + 'um per line, w = ' + str(w) + 'um wide, l = ' + str(l) + 'um long, h = ' + str(h) + 'um high.')
-	z=0
 	
+	z=0
 	while(z<h):
 		woodpile.extend( shifting(grat, np.array([0, 0, z])) )
 		z += dh
@@ -1198,8 +1248,34 @@ def animate(filename='writeprocess'):
 #writePoints(spongeLasher(16, 100, 15, 'Hyperuniformstrukturen/hpu_r50_h16_scal0.6'), '/home/lukas/Proben/probe09_2015_06_15/hpu_wall-lashed_100um_scale=0.6.gwl', 'w')
 #writePoints(shrinkerOnStakes(19.5,0.25,20), '/home/lukas/Proben/probe08_2015_06_/shrinkerOnStakes_v=15.gwl', 'w')
 #writePoints(shrinkerOnStakes(18.75,0.25,19.25), '/home/lukas/Proben/probe09_2015_06_15/shrinkerOnStakes_scal0.6.gwl', 'w')
-animate()
+#animate()
 #writePoints(scaleStructure(readPoints('./hexagon'), 0.5), './hexagon_scal0.5')
+
+
+
+
+extendedWallWP = list()
+extendedWallWP.append('PerfectShapeFast')
+extendedWallWP.append('LaserPower 40')
+extendedWallWP.extend(rotateZ(expWall(4, 30, 100, 110, 35), (math.pi/4)))
+extendedWallWP.append('PerfectShapeQuality')
+extendedWallWP.append('LaserPower 20')
+extendedWallWP.extend(shifting(woodpile(210,210,20,1./math.sqrt(8),1), np.array([-105,-105,10])))
+
+extendedWall = list()
+extendedWall.extend(header())
+
+w = 325
+i=0
+while (i < 3):
+	extendedWall.extend(extendedWallWP)
+	# Die Stage in y-Richtung verschieben.
+	extendedWall.append('MoveStageY ' + str(w))
+	i+=1
+
+extendedWall.extend(footer())
+
+writePoints(positivate(extendedWall), '/home/lukas/Proben/probe12_2015_09_15/extWallWoodpile.gwl', 'w')
 
 #writePoints(readPoints('./Hyperuniformstrukturen/3x3_hpu_unscaled'))
 #p = readPoints('./shapesOut')
