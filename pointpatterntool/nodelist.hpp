@@ -33,7 +33,6 @@ private:
 	string name;
 	// Thou shalt not inherit from STL
 	std::vector<class node*> list;
-	//std::vector<std::unique_ptr<int> > list2;
 	// Bounding box
 	coordinate min, max;
 
@@ -48,7 +47,7 @@ private:
 	// sets the neighbours of each point to the closest four (or less) points
 	void setNeighbours();
 	// counts the point within a given sphere
-	int pointsInside(vector<coordinate>& points, coordinate& mid, double r, double rSqr);
+	int pointsInside(const vector<coordinate>& points, const coordinate& mid, const double r) const;
 
 public:
 	nodelist();

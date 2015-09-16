@@ -330,18 +330,18 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 	return shifters;
 }
 
-int nodelist::pointsInside(vector<coordinate>& points, coordinate& mid,
-		double r, double rSqr) {
+int nodelist::pointsInside(const vector<coordinate>& points, const coordinate& mid,
+		const double r) const {
 	int ctr = 0;
 
 	// nodesiterations
-	for (vector<coordinate>::iterator point = points.begin();
+	for (vector<coordinate>::const_iterator point = points.begin();
 			point != points.end(); ++point) {
 		// bounding box of the sphere
 		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
 				&& (fabs((*point)[2] - mid[2]) < r)) {
 			// sphere itself
-			if (((*point) - mid).lengthSqr() < rSqr) {
+			if (((*point) - mid).lengthSqr() < r*r) {
 				ctr++;
 			}
 		}
@@ -524,8 +524,7 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 
 			// iteration over radius: count points within sphere
 			for (unsigned int j = 0; j < nr; j++) {
-				data[j][i] = pointsInside(extendedPattern, mid, j * dr,
-						j * dr * j * dr);
+				data[j][i] = pointsInside(extendedPattern, mid, j * dr);
 			}
 
 			++show_progress;
@@ -537,18 +536,18 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 			pattern.push_back((*n)->getPosition());
 		}
 
-		double r, rSqr;
+		double r;//, rSqr;
 		// iteration over radius
 		boost::progress_display show_progress(nr);
 		for (unsigned int j = 0; j < nr; j++) {
 			r = j * dr;
-			rSqr = r * r;
+			//rSqr = r * r;
 			// iteration over n spheres
 			for (unsigned int i = 0; i < n; i++) {
 				// Choose the center of the sphere such that it is somewhere within the whole pattern.
 				mid = (coordinate(3) - 0.5) * (getLengths() - 2 * r);
 
-				data[j][i] = pointsInside(pattern, mid, r, rSqr);
+				data[j][i] = pointsInside(pattern, mid, r);
 			}
 			++show_progress;
 		}

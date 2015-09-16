@@ -389,6 +389,7 @@ int main(int argc, char* argv[]) {
 		lists.push_back(new nodelist(1, true));
 		lists.push_back(new nodelist(2, true));
 	}
+
 	for (int i = 1; i < argc; i += 3) {
 		string name = "point pattern";
 		if (i == 1) {
@@ -400,6 +401,9 @@ int main(int argc, char* argv[]) {
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
 						name));
 	}
+
+	lists.back()->scaleList(1./50.);
+	lists.back()->shiftList(coordinate(-5,-5,-5));
 
 	int option = -1;
 	while (option != 0) {
@@ -430,7 +434,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			plotHist(data, 0, 10, 10, names, "number of neighbours",
-					"data/statistics/neighbours_Histogram.gp");
+					"data/statistics/neighbours_histogram");
 
 			break;
 		}
@@ -451,7 +455,7 @@ int main(int argc, char* argv[]) {
 				cout << statsAsString(stats(lengths));
 			}
 			plotHist(data, 0, 1, 50, names, "distance of neighbouring nodes",
-					"data/statistics/lengths_histogram.gp");
+					"data/statistics/lengths_histogram");
 			break;
 		}
 		case 3: {
@@ -471,17 +475,19 @@ int main(int argc, char* argv[]) {
 			}
 			plotHist(data, 0, 180, 180, names,
 					"angle between neighbouring nodes",
-					"data/statistics/angles_histogram.gp");
+					"data/statistics/angles_histogram");
 			break;
 		}
 		case 4: {
+			unsigned int nr = 50, n = 100;
+			cout << "Number of spheres (default: 100) << ";
+			input(n);
+			cout << "Number of radii (default: 50) << ";
+			input(nr);
+
 			cout << "Determine the degree of hyperuniformity for " << endl;
 			vector<vector<vector<double> > > variances;
 			vector<string> names;
-
-			// number of radii and number of spheres TODO: gui?
-			unsigned int nr = 50, n = 100;
-
 			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
@@ -493,9 +499,12 @@ int main(int argc, char* argv[]) {
 				xMax = std::max(xMax, variance[variance.size() - 1][0]);
 			}
 
+			stringstream filename;
+			filename << "data/statistics/hyperuniformity_n=" << n << "_nr="<< nr;
+
 			plotHyperuniformity(variances, xMax, names, "radius R",
 					"variance  {/Symbol s}^2(R)",
-					"data/statistics/hyperuniformity.gp");
+					filename.str());
 
 			//writeHyperuniformity(variances, names, nr, n);
 

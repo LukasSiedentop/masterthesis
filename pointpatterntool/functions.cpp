@@ -147,9 +147,26 @@ vector<string> getColors() {
 void plotHist(vector<vector<double> > datas, double min, double max, int n,
 		vector<string> names, const char xlabel[], const char file[]) {
 
+	// get filename
 	stringstream filestream;
-	filestream << "tee " << file << " | gnuplot -persist";
+	filestream << "tee " << file;
+	for (vector<string>::iterator name = names.begin(); name != names.end();
+			++name) {
+		string filename = (*name);
+		filename.erase(std::remove(filename.begin(), filename.end(), ' '),
+				filename.end());
+		filestream << "_" << filename;
+	}
+	filestream << ".gp | gnuplot -persist";
+
 	Gnuplot gp(filestream.str());
+
+	// statistics as comments in file
+	for (unsigned i = 0; i < datas.size(); i++) {
+		gp << "# " << xlabel << " of pattern '" << names[i] << "'. Statistics: "
+				<< endl;
+		gp << statsAsString(stats(datas[i]), "# ") << endl;
+	}
 
 	// Don't forget to put "\n" at the end of each line!
 
@@ -176,11 +193,9 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	vector<string> colors = getColors();
 	// build plotstring and send to gnuplot
 	stringstream plotstring;
+
 	plotstring << "plot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
-		// statistics as comments in file
-		plotstring << statsAsString(stats(datas[i]), "# ")
-				<< endl;
 
 		// '-' means read from stdin
 		plotstring << "'-' u (hist($1, width)):(1.0/" << datas[i].size()
@@ -207,12 +222,22 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 		vector<string> names, const char xlabel[], const char ylabel[],
-		const char file[]) {
+		string file) {
 
 	double xMin = 0;
 
+	// get filename
 	stringstream filestream;
-	filestream << "tee " << file << " | gnuplot -persist";
+	filestream << "tee " << file;
+	for (vector<string>::iterator name = names.begin(); name != names.end();
+			++name) {
+		std::cout << (*name) << "\n";
+		(*name).erase(std::remove((*name).begin(), (*name).end(), ' '),
+				(*name).end());
+		std::cout << (*name) << "\n";
+		filestream << "_" << *name;
+	}
+	filestream << ".gp | gnuplot -persist";
 
 	Gnuplot gp(filestream.str());
 	gp << "reset\n";

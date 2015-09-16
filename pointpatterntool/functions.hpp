@@ -11,12 +11,11 @@
 #define FUNCTIONS_HPP_
 
 #include <vector>
-
 #include <string>
 #include <sstream>
-
+#include <algorithm>
 #include <typeinfo>
-
+#include <iostream>
 #include <map>
 
 #include "gnuplot-iostream.h"
@@ -57,7 +56,7 @@ string statsAsString(const vector<double>& data, const char commentDelimeter[] =
  * in muss mit dem defaultwert initialisiert sein, bei keiner Angabe wird dieser zurückgegeben.
  */
 template<typename T>
-T input(T in) {
+T input(T& in) {
 	string input = "";
 
 	while (true) {
@@ -201,7 +200,8 @@ void plotHist(std::vector<std::vector<double> > data, double min, double max,
  */
 void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
 		double xMax, std::vector<string> names, const char xlabel[] = "x",
-		const char ylabel[] = "y", const char file[] = "/dev/null");
+		const char ylabel[] = "y",
+		string file = "/dev/null");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
