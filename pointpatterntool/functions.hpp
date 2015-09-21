@@ -192,22 +192,22 @@ std::vector<string> getColors();
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
 void plotHist(std::vector<std::vector<double> > data, double min, double max,
-		int n, vector<string> names, const char xlabel[] = "x",
-		const char file[] = "/dev/null");
+		int n, vector<string> names, const string xlabel = "x",
+		const string file = "/dev/null");
 
 /**
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
 void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
-		double xMax, std::vector<string> names, const char xlabel[] = "x",
-		const char ylabel[] = "y",
-		string file = "/dev/null");
+		double xMax, std::vector<string> names, const string xlabel = "x",
+		const string ylabel = "y",
+		const string file = "/dev/null");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
 void plot3D(vector<vector<vector<double> > > data, vector<string> names,
-		const char xlabel[] = "x", const char ylabel[] = "y",
-		const char zlabel[] = "z", const char style[] = "w l");
+		const string xlabel = "x", const string ylabel = "y",
+		const string zlabel = "z", const string style = "w l");
 
 #endif /* NODELIST_HPP_ */

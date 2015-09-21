@@ -145,7 +145,7 @@ vector<string> getColors() {
 }
 
 void plotHist(vector<vector<double> > datas, double min, double max, int n,
-		vector<string> names, const char xlabel[], const char file[]) {
+		vector<string> names, const string xlabel, const string file) {
 
 	// get filename
 	stringstream filestream;
@@ -221,8 +221,8 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 }
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<string> names, const char xlabel[], const char ylabel[],
-		string file) {
+		vector<string> names, const string xlabel, const string ylabel,
+		const string file) {
 
 	double xMin = 0;
 
@@ -299,8 +299,8 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 }
 
 void plot3D(vector<vector<vector<double> > > datas, vector<string> names,
-		const char xlabel[], const char ylabel[], const char zlabel[],
-		const char style[]) {
+		const string xlabel, const string ylabel, const string zlabel,
+		const string style) {
 	Gnuplot gp;
 	gp << "reset\n";
 

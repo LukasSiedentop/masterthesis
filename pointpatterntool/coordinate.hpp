@@ -66,8 +66,8 @@ public:
 	coordinate & operator /=(const double& factor);
 
 	// Gives an adjustable string-representation of the point
-	std::string toString(const char begin[] = "(", const char delimiter[] = ",",
-			const char end[] = ")") const;
+	std::string toString(const std::string begin = "(", const std::string delimiter = ",",
+			const std::string end = ")") const;
 	// Representation of the point in a stringstream
 	friend std::ostream& operator <<(std::ostream& os, const coordinate& obj);
 

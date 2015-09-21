@@ -11,9 +11,6 @@ using namespace std;
 
 node::node() :
 		position(coordinate()), edgenode(false) { //, inBox(NULL) {
-	// TODO: geht das besser?
-	//nodelist* l = new nodelist();
-	//list = l;
 	list = NULL;
 
 	std::vector<class node*> neighs;

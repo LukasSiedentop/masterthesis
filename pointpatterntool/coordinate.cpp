@@ -112,8 +112,8 @@ ostream& operator <<(ostream &os, const coordinate &obj) {
 	return os << obj.toString();
 }
 
-string coordinate::toString(const char begin[], const char delimiter[],
-		const char end[]) const {
+string coordinate::toString(const string begin, const string delimiter,
+		const string end) const {
 	stringstream stream;
 	stream << begin;
 

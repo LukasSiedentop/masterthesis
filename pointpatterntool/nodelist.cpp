@@ -349,7 +349,7 @@ int nodelist::pointsInside(const vector<coordinate>& points, const coordinate& m
 	return ctr;
 }
 
-string nodelist::listStats(const char commentDelimeter[]) {
+string nodelist::listStats(const string commentDelimeter) {
 	stringstream stream;
 	stream << commentDelimeter << (periodic ? "Periodic" : "Non-periodic")
 			<< endl;

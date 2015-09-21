@@ -92,7 +92,7 @@ public:
 	// normalizes the pattern to density of points=1, midpoint of bounding box = (0,0,0)
 	double normalize();
 	// returns statistics of the list
-	string listStats(const char commentDelimeter[] = "\t");
+	string listStats(const string commentDelimeter = "\t");
 	// outputs list to console
 	void display();
 
