@@ -11,6 +11,9 @@ Counts the direct neighbours of each white Pixel in a BitType Image (assuming 8-
 ### Connected Neighbours
 Given a (skeleton) BitType Image and a Labeling labeling the intersections, this node evaluates the connected neighbours of each intersection. An intersection is neighbouring another if it's "connected" via a white pixel trail. It prints the positions of the Nodes and Neighbours on the Console. BufferedTable support to the ImageJ wrapper will (maybe) be implemented end 2015.
 
+### Shift/Align/Translate/Shear
+Shears an image. Each pixel is shifted in a given direction with a distance depending on the position in a chosen dimension and a given factor.
+
 ## Shapes
 Little python script that generates `.gwl` files containing coordinates representing a structure (e.g. a woodpile, trampoline, ...) which can be fed to the NanoScribe unit.
 
