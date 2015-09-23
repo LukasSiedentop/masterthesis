@@ -74,30 +74,29 @@ except ValueError:
     sample = "sample"
     print "no string input; sample is named sample"
     
-print('Select scanningrange (0nm - 2800nm) and Resolution (min 0.1nm (?)).')
+print('Select scanningrange (0nm - 2800nm, min 0.1nm (?)) and resolution (default: 800nm).')
 try:
     start__wl = float(raw_input('Start Wavelength [nm]: '))
 except ValueError:
-    start__wl = 0
-    print "Empty input; Start Wavelength set to 0nm"
+    start__wl = 800
+    print "800 nm"
     
 try:
-    end__wl = float(raw_input('End Wavelength [nm]: '))
+    end__wl = float(raw_input('End Wavelength [nm] (default: 1700nm): '))
 except ValueError:
-    end__wl = 1
-    print "Empty input; End Wavelength set to 1nm"
+    end__wl = 1700
+    print "1700 nm"
     
 try:
-    stepsize = float(raw_input('Stepsize [nm]: '))
+    stepsize = float(raw_input('Stepsize [nm] (default: 10 nm): '))
 except ValueError:
-    stepsize = 1
-    print "Empty input; Stepsize set to 1nm"
+    stepsize = 10
+    print "10 nm"
 
 # Wellenlängen berechnen
 wavelengths = list()
 # den ersten Messpunkt später wegschmeißen
 #wavelengths.append(start__wl-stepsize)
-
 while (start__wl <= end__wl):
 	wavelengths.append(start__wl)
 	start__wl += stepsize
@@ -118,7 +117,7 @@ motionSer = serial.Serial(
 	parity=serial.PARITY_NONE,
 	stopbits=serial.STOPBITS_ONE,
 	bytesize=serial.EIGHTBITS,
-	timeout=1
+     timeout=1
 )
 
 str(raw_input('Please put in the transmission-sample and press Enter to start measuring.'))
@@ -141,7 +140,8 @@ if (motor != '1'):
     motionSer.close()    
     monoSer.close()
     exit()
-motionSer.write('1PR-5\r')
+# position relativ um +5 ändern
+motionSer.write('1PR+5\r')
 motionSer.close()
 
 # kurz warten
@@ -159,12 +159,13 @@ if (motor != '1'):
     motionSer.close()    
     monoSer.close()
     exit()
-motionSer.write('1PR+5\r')
+# position relativ um -5 ändern
+motionSer.write('1PR-5\r')
 motionSer.close()
 
-# Datei speichern
+# Datei speichern C:\Users\Hyperion\Desktop\Lukas\Data
 s = 'Wavelength\tTransmission\tReference\tSpectrum\n'
-filename = 'C:\Users\pknappe\Desktop\Lukas\Data\\' + sample + '_' + str(wavelengths[0]) + 'nm-' + str(stepsize) + 'nm-' + str(wavelengths[len(wavelengths)-1]) + 'nm_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.sp'
+filename = 'C:\Users\Hyperion\Desktop\Lukas\Data\\' + sample + '_' + str(wavelengths[0]) + 'nm-' + str(stepsize) + 'nm-' + str(wavelengths[len(wavelengths)-1]) + 'nm_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.sp'
 f = open(filename, 'w')
 f.write(s)
 i = 0
