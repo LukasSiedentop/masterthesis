@@ -617,8 +617,8 @@ def connectedStakes(w, l, h, d, powerStakes, powerPile):
 ##### Komplexe Formen #####
 ###########################
 
-# Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall.
-# der Höhe h [µm] mit Innenradius innerRadius [µm] und Außenradius outerRadius [µm] zurück, die .
+# Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall der Höhe h [µm] mit Innenradius innerRadius [µm]
+# und Außenradius outerRadius [µm] zurück. Der Außenradius ist unten um deltarad [µm] breiter als oben.
 def expWall(nC, h, innerRadius, outerRadius, deltarad):
 	### optionale Parameter ###
 	# Der z-Versatz sollte dem axialen Fokus entsprechen um eine solide Wand zu bekommen.
@@ -668,7 +668,7 @@ def expWall(nC, h, innerRadius, outerRadius, deltarad):
 	
 	return wall
 
-# Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall.
+# Gibt eine Liste von nC [] Eckpunkten pro Umlauf in einem runden Wall
 # der Höhe h [µm] mit Innenradius innerRadius [µm] und Außenradius outerRadius [µm] zurück.
 def roundWall(nC, h, innerRadius, outerRadius):
 	### optionale Parameter ###
@@ -1114,6 +1114,32 @@ def spiralLogger():
 	spiralLogger.extend(footer())
 	
 	return shifting(positivate(spiralLogger), np.array([1,1,1]))
+
+# Gibt ein Woodpile in einer Wand zurück, die unten dicker ist als oben.
+def woodpileInExpWall():
+	extendedWallWP = list()
+	extendedWallWP.append('FindInterfaceAt 2')
+	extendedWallWP.append('PerfectShapeFast')
+	extendedWallWP.append('LaserPower 40')
+	extendedWallWP.extend(rotateZ(expWall(4, 30, 100, 110, 35), (math.pi/4)))
+	extendedWallWP.append('PerfectShapeQuality')
+	extendedWallWP.append('LaserPower 22')
+	extendedWallWP.extend(shifting(woodpile(210,210,30,1./math.sqrt(8),1), np.array([-105,-105,0])))
+
+	extendedWall = list()
+	extendedWall.extend(header())
+
+	w = 325
+	i=0
+	while (i < 3):
+		extendedWall.extend(extendedWallWP)
+		# Die Stage in y-Richtung verschieben.
+		extendedWall.append('MoveStageY ' + str(w))
+		i+=1
+
+	extendedWall.extend(footer())
+	
+	return positivate(extendedWall)
 	
 ###########################
 ##### Nachbearbeitung #####
@@ -1251,31 +1277,7 @@ def animate(filename='writeprocess'):
 #animate()
 #writePoints(scaleStructure(readPoints('./hexagon'), 0.5), './hexagon_scal0.5')
 
-
-
-
-extendedWallWP = list()
-extendedWallWP.append('PerfectShapeFast')
-extendedWallWP.append('LaserPower 40')
-extendedWallWP.extend(rotateZ(expWall(4, 30, 100, 110, 35), (math.pi/4)))
-extendedWallWP.append('PerfectShapeQuality')
-extendedWallWP.append('LaserPower 20')
-extendedWallWP.extend(shifting(woodpile(210,210,20,1./math.sqrt(8),1), np.array([-105,-105,10])))
-
-extendedWall = list()
-extendedWall.extend(header())
-
-w = 325
-i=0
-while (i < 3):
-	extendedWall.extend(extendedWallWP)
-	# Die Stage in y-Richtung verschieben.
-	extendedWall.append('MoveStageY ' + str(w))
-	i+=1
-
-extendedWall.extend(footer())
-
-writePoints(positivate(extendedWall), '/home/lukas/Proben/probe12_2015_09_15/extWallWoodpile.gwl', 'w')
+writePoints(woodpileInExpWall(), '/home/lukas/Proben/probe14_2015_09_23/extWallWoodpile.gwl', 'w')
 
 #writePoints(readPoints('./Hyperuniformstrukturen/3x3_hpu_unscaled'))
 #p = readPoints('./shapesOut')
