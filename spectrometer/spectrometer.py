@@ -12,6 +12,8 @@ import niusb6211
 import time
 # stdout flush
 import sys
+# gnuplot
+import subprocess
 
 # COM-Ports identifizieren
 import serial.tools.list_ports
@@ -25,6 +27,16 @@ for p in ports:
     if 'Princeton' in p[1]:
         monoPort = p[0]
 
+def listsToString(wavelengths, data):
+    string = ""
+    
+    i = 0
+    while (i<len(data)):
+        string += str(wavelengths[i]) + " " + str(data[i]) + "\n"
+        i+=1
+            
+    return string + "e\n"
+
 # Liest für jeden Wert in der Liste wavelengths [nm] die Diode aus und gibt sie in einer Liste gleicher Länge zurück.
 def getSpectrum(ser, wavelengths):
     # Den Monochromator aktivieren und die Erste Wellenlänger erreichen lassen
@@ -32,8 +44,13 @@ def getSpectrum(ser, wavelengths):
     ser.write(str('{:10.2f}'.format(wavelengths[0])) + ' GOTO\r')
     time.sleep(2)
     
-    # Liste & Fortschrittsbalken initialisieren
+    # Liste und Gnuplot initialisieren
     values = list()
+    gp = subprocess.Popen(['gnuplot'],
+                        stdin=subprocess.PIPE,
+                        )
+                        
+    gp.stdin.write('set xrange ['+str(wavelengths[0])+':' + str(wavelengths[len(wavelengths)-1]) + ']; set yrange [-0.5:1.5]\n')
      
     for wavelength in wavelengths:
 	   # Monochromator die Wellenlänge anfahren lassen (der Monochromator nimmt das Format '1.23 GOTO\r')
@@ -44,9 +61,15 @@ def getSpectrum(ser, wavelengths):
         value = niusb6211.main()
         values.append(value)
         
+        # plotten
+        gp.stdin.write("plot '-' w l t ''\n")
+        gp.stdin.write(listsToString(wavelengths, values))
         # Fortschrittsbalken
         #print('Meassure Wavelength ' + str(wavelength) + 'nm.')
         #print('wl: ' + str(wavelength) + 'nm, val: ' + str(value) + 'V.\r')
+
+    # gnuplot schließen
+    gp.stdin.write('quit\n')
 						
     # Alles Licht durchlassen (wavelength = 0), Monochromator deaktivieren
     ser.write(str('0.00 GOTO\r'))
@@ -176,4 +199,6 @@ while (i < len(wavelengths)):
 f.close()
 
 print("Data saved as " + filename + ". Enjoy!")
+
+
 # TODO : gnuplot ausführen und anzeigen lassen
