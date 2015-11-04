@@ -18,7 +18,7 @@
  */
 class node {
 private:
-	// list containing this node. Only needed if pattern is periodic
+	// list containing this node. Only needed when pattern is periodic
 	class nodelist* list;
 	coordinate position;
 	std::vector<class node* > neighbours;
@@ -46,6 +46,9 @@ public:
 
 	// compares two nodes by comparing their position
 	bool equals(node* node);
+
+	// z-Metric
+	static bool zmetric(const node* a, const node* b);
 };
 
 #endif /* NODE_HPP_ */

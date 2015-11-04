@@ -137,3 +137,7 @@ bool node::equals(node* node) {
 	// compare positions
 	return (position == node->getPosition());
 }
+
+bool node::zmetric(const node* a, const node* b) {
+	return a->getPosition()[2] < b->getPosition()[2];
+}

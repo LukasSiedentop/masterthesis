@@ -36,13 +36,16 @@ private:
 	// Bounding box
 	coordinate min, max;
 
-	coordinate getMins();
-	coordinate getMaxs();
-	bool isPeriodic() const;
+	//coordinate getMins();
+	//coordinate getMaxs();
+	//bool isPeriodic() const;
 	void setDensity(double density);
 	double getDensity();
 	double getVolume();
 	int countEdgenodes();
+
+	// distance from midpoint (0,0) to ellipse defined by its (not half) axes w and h. Theta in radians.
+	double r(double theta, double w, double h);
 
 	// sets the neighbours of each point to the closest four (or less) points
 	void setNeighbours();
@@ -89,13 +92,16 @@ public:
 	vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// Writes the pattern in a representation of a povray scene. The radius r of the cylinders if determined while rendering.
 	void writePOV();
+	// Writes the pattern in scheme code to be interpreted by MEEP as a dielectric written by the Nanoscribe unit (Elliptical rods).
+	void writeMEEP();
 	// normalizes the pattern to density of points=1, midpoint of bounding box = (0,0,0)
 	double normalize();
 	// returns statistics of the list
 	string listStats(const string commentDelimeter = "\t");
 	// outputs list to console
 	void display();
-
+	// writes the list as a file ready to put in the nanoscribe unit
+	void writeGWL();
 };
 
 #endif /* NODELIST_HPP_ */

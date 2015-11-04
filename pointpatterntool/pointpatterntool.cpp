@@ -67,6 +67,9 @@ int gui() {
 			<< "10 - normalize pattern (density of points= 1, chift center of mass to origin)"
 			<< endl;
 
+	cout	<< "11 - write MEEP dielectric" << endl;
+	cout	<< "12 - write GWL file" << endl;
+
 	cout << "0 - Nothing." << endl;
 	cout << "---------------------------------------------------" << endl;
 	cout << "What do you want to know about the points? (0-10; default: 0) << ";
@@ -117,10 +120,8 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 	// actual readig of the files
 	while ((nodeFile >> x >> y >> z) && (neighbourFile >> nx >> ny >> nz)) {
-		// FIXME in this loop, needed memory increases exorbitantly
 		node* n = list->add(x, y, z);
 		node* neighbour = list->add(nx, ny, nz);
-		// untill here
 
 		// set neighbourhood
 		n->addNeighbour(neighbour);
@@ -402,8 +403,8 @@ int main(int argc, char* argv[]) {
 						name));
 	}
 
-	lists.back()->scaleList(1./50.);
-	lists.back()->shiftList(coordinate(-5,-5,-5));
+	//lists.back()->scaleList(1./50.);
+	//lists.back()->shiftList(coordinate(-5,-5,-5));
 
 	int option = -1;
 	while (option != 0) {
@@ -554,6 +555,23 @@ int main(int argc, char* argv[]) {
 			}
 			break;
 		}
+
+		case 11: {
+			for (vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				(*list)->writeMEEP();
+			}
+			break;
+		}
+
+		case 12: {
+			for (vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				(*list)->writeGWL();
+			}
+			break;
+		}
+
 		default:
 			cout << "This option does not (yet) exist, unfortunately." << endl;
 		}

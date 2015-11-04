@@ -8,6 +8,7 @@
 #include "coordinate.hpp"
 
 using namespace std;
+
 coordinate::coordinate() {
 }
 
@@ -39,11 +40,11 @@ unsigned int coordinate::dimensions() const {
 	return position.size();
 }
 
-double& coordinate::operator [](const int i){
+double& coordinate::operator [](const int i) {
 	return position[i];
 }
 
-const double& coordinate::operator [](const int i) const{
+const double& coordinate::operator [](const int i) const {
 	return position[i];
 }
 
@@ -115,18 +116,22 @@ ostream& operator <<(ostream &os, const coordinate &obj) {
 string coordinate::toString(const string begin, const string delimiter,
 		const string end) const {
 	stringstream stream;
+
+	// write 4 non-zero digits for each double
+	stream.precision(4);
+
 	stream << begin;
 
 	for (unsigned i = 0; i < dimensions() - 1; i++) {
 		stream << (*this)[i] << delimiter;
 	}
 
-	stream << position[dimensions()-1] << end;
+	stream << position[dimensions() - 1] << end;
 
 	return stream.str();
 }
 
-double coordinate::min() const{
+double coordinate::min() const {
 	double minimum = numeric_limits<double>::infinity();
 	for (unsigned i = 0; i < dimensions(); i++) {
 		minimum = std::min(minimum, (*this)[i]);
@@ -134,7 +139,7 @@ double coordinate::min() const{
 	return minimum;
 }
 
-double coordinate::euklidian(coordinate point) const{
+double coordinate::euklidian(coordinate point) const {
 	return coordinate(*this - point).length();
 }
 
@@ -156,6 +161,11 @@ double coordinate::scp(const coordinate &a, const coordinate &b) {
 		scp += a[i] * b[i];
 	}
 	return scp;
+}
+
+coordinate coordinate::cpr(const coordinate &a, const coordinate &b) {
+	return coordinate((a[1] * b[2] - a[2] * b[1]), (a[2] * b[0] - a[0] * b[2]),
+			(a[0] * b[1] - a[1] * b[0]));
 }
 
 coordinate coordinate::getVec(const coordinate & a, const coordinate & b,

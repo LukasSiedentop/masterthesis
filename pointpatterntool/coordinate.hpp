@@ -97,6 +97,9 @@ public:
 	// dot-product
 	static double scp(const coordinate& a, const coordinate& b);
 
+	// cross-product
+	static coordinate cpr(const coordinate& a, const coordinate& b);
+
 	// Gives the shortest vector from a to b, considering the given shifting vectors for periodic boundary conditions.
 	static coordinate getVec(const coordinate& a, const coordinate& b,
 			std::vector<coordinate> shifters);
