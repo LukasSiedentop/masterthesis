@@ -12,7 +12,6 @@ import net.imglib2.RandomAccess;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.NativeType;
 
-@SuppressWarnings("deprecation")
 @Plugin(menu = {@Menu(label = "PointExtraction"),
                 @Menu(label = "Shift/Align/Translate/Shear")}, description = "Shifts the Image in a chosen direction as a linear function of the second chose dimension (e.g. shift in Y-direction with step * Z-position). Attention: no interpolation is taking place!", headless = true, type = Command.class)
 public class ShiftYwithZ<T extends NativeType<T>> implements Command {

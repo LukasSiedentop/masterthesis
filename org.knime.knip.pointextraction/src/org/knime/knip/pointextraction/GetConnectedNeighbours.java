@@ -24,9 +24,10 @@ import net.imglib2.type.numeric.RealType;
                 @Menu(label = "Connected Neighbours")}, description = "Gets the Neighbours of Nodes which are connected by a pixel line. Takes a skeleton BitType Image and a Labeling with the Nodes.", headless = true, type = Command.class)
 public class GetConnectedNeighbours<BitType extends RealType<BitType>> implements Command {
 
-        @Parameter(type = ItemIO.INPUT, label = "(skeletonized) Image", description = "Skeltonized Image whose Intersections are to be found.")
+        @Parameter(type = ItemIO.INPUT, label = "(skeletonized) Image", description = "Skeletonized Image whose Intersections are to be found.")
         private ImgPlus<BitType> input;
 
+        // TODO: not working anymore since update https://tech.knime.org/forum/knime-image-processing/knime-image-processing-140-and-new-integrations-released
         @Parameter(type = ItemIO.INPUT, label = "Labeling", description = "Labeling containing Labels at each intersection (aka node).")
         private Labeling<Integer> labeling;
 
@@ -42,6 +43,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
 
         @Override
         public void run() {
+
                 // to eliminate error message
                 output = input.copy();
 
@@ -176,6 +178,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 }
 
                 // TODO: Ausgabe in Tabelle - end 2015 (maybe)
+                // until then: copy data from logfile
                 // the DataTableSpec of the final table
                 // From new node Wizard (https://tech.knime.org/execute-0):
                 /*
@@ -244,7 +247,6 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
 
                 // Abbruchbedingung: kein Pixel um current außer last ist mehr weiß: kein Nachbar
                 return null;
-
         }
 
         // Hack: convert to int[] double[], damit roi.contains und roi.setOrigin funktioniert. Diskussion:
@@ -259,8 +261,10 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
 
         // returns a rectangle roi of extend 3^d 
         private final RectangleRegionOfInterest getROI() {
+
                 double[] extend = new double[labeling.numDimensions()];
                 Arrays.fill(extend, 3);
                 return new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
+
         }
 }
