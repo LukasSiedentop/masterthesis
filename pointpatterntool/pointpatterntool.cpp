@@ -64,11 +64,16 @@ int gui() {
 
 	cout << "9 - compare two patterns" << endl;
 	cout
-			<< "10 - normalize pattern (density of points= 1, chift center of mass to origin)"
+			<< "10 - normalize pattern (density of points= 1, shift center of mass to origin)"
 			<< endl;
 
-	cout	<< "11 - write MEEP dielectric" << endl;
-	cout	<< "12 - write GWL file" << endl;
+	cout << "11 - write MEEP dielectric" << endl;
+	cout << "12 - write GWL file" << endl;
+	cout << "13 - write MPB dielectric" << endl;
+	cout << "14 - write ASCII file of extended pattern" << endl;
+
+	cout << "15 - add random pattern" << endl;
+	cout << "16 - add diamond pattern" << endl;
 
 	cout << "0 - Nothing." << endl;
 	cout << "---------------------------------------------------" << endl;
@@ -90,7 +95,7 @@ int gui() {
  * 3 4 5		2 3 4
  */
 nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
-		string name) {
+		std::string name) {
 	cout << "Read nodesfile " << nodes << " and neighboursfile " << neighbours
 			<< "." << endl;
 
@@ -181,7 +186,7 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 	}
 
 	// get names of lists
-	vector<string> names;
+	std::vector<std::string> names;
 	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
 		names.push_back((*list)->getName());
@@ -403,6 +408,8 @@ int main(int argc, char* argv[]) {
 						name));
 	}
 
+	//lists.push_back(new nodelist(2, true));
+
 	//lists.back()->scaleList(1./50.);
 	//lists.back()->shiftList(coordinate(-5,-5,-5));
 
@@ -488,7 +495,7 @@ int main(int argc, char* argv[]) {
 
 			cout << "Determine the degree of hyperuniformity for " << endl;
 			vector<vector<vector<double> > > variances;
-			vector<string> names;
+			vector<std::string> names;
 			double xMax = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
@@ -501,11 +508,11 @@ int main(int argc, char* argv[]) {
 			}
 
 			stringstream filename;
-			filename << "data/statistics/hyperuniformity_n=" << n << "_nr="<< nr;
+			filename << "data/statistics/hyperuniformity_n=" << n << "_nr="
+					<< nr;
 
 			plotHyperuniformity(variances, xMax, names, "radius R",
-					"variance  {/Symbol s}^2(R)",
-					filename.str());
+					"variance  {/Symbol s}^2(R)", filename.str());
 
 			//writeHyperuniformity(variances, names, nr, n);
 
@@ -569,6 +576,32 @@ int main(int argc, char* argv[]) {
 					list != lists.end(); ++list) {
 				(*list)->writeGWL();
 			}
+			break;
+		}
+
+		case 13: {
+			for (vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				(*list)->writeMPB();
+			}
+			break;
+		}
+
+		case 14: {
+			for (vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				(*list)->writeCoordinates();
+			}
+			break;
+		}
+
+		case 15: {
+			lists.push_back(new nodelist(1, true));
+			break;
+		}
+
+		case 16: {
+			lists.push_back(new nodelist(2, true));
 			break;
 		}
 

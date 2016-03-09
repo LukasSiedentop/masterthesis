@@ -143,6 +143,89 @@ void nodelist::setNeighbours() {
 	}
 }
 
+void nodelist::setDensity(double density) {
+	scaleList(pow((getDensity() / density), 1. / 3.));
+}
+
+double nodelist::getDensity() {
+	return list.size() / getVolume();
+}
+
+double nodelist::getVolume() {
+	double volume = 1;
+
+	coordinate lengths = getLengths();
+
+	for (unsigned int i = 0; i < lengths.dimensions(); i++) {
+		volume *= lengths[i];
+	}
+
+	return volume;
+}
+
+int nodelist::countEdgenodes() {
+	if (periodic) {
+		return 0;
+	}
+	int ctr = 0;
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		if ((*n)->isEdgenode()) {
+			ctr++;
+		}
+	}
+	return ctr;
+}
+
+double nodelist::r(double theta, double w, double h) {
+	return (w * h)
+			/ (2
+					* sqrt(
+							w * w * sin(theta) * sin(theta)
+									+ h * h * cos(theta) * cos(theta)));
+}
+
+int nodelist::pointsInside(const vector<coordinate>& points,
+		const coordinate& mid, const double r) const {
+	int ctr = 0;
+
+	// nodesiterations
+	for (vector<coordinate>::const_iterator point = points.begin();
+			point != points.end(); ++point) {
+		// bounding box of the sphere
+		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
+				&& (fabs((*point)[2] - mid[2]) < r)) {
+			// sphere itself
+			if (((*point) - mid).lengthSqr() < r * r) {
+				ctr++;
+			}
+		}
+	}
+	return ctr;
+}
+/*
+nodelist nodelist::extendList(int nx, int ny, int nz) {
+	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
+
+	nodelist* extList = new nodelist(false, name + " extended x " + nx + ", y " + ny + ", z " + nz);
+
+	// go through all combinations
+	for (int ix = 0; ix < nx; ix++) {
+		for (int iy = 0; iy < ny; iy++) {
+			for (int iz = 0; iz < nz; iz++) {
+				// add the shifting vector to the list and merge it
+				coordinate(ix * lx, iy * ly, iz * lz);
+				extList->merge(this->shiftList());
+			}
+		}
+	}
+
+	nodelist* extList = new nodelist(this->shiftList(shifters[i]));
+
+
+
+	return this;
+}
+*/
 void nodelist::setMins(coordinate mins) {
 	min = mins;
 }
@@ -177,28 +260,9 @@ void nodelist::scaleList(double a) {
  return periodic;
  }
  */
-void nodelist::setDensity(double density) {
-	scaleList(pow((getDensity() / density), 1. / 3.));
-}
 
 string nodelist::getName() {
 	return name;
-}
-
-double nodelist::getDensity() {
-	return list.size() / getVolume();
-}
-
-double nodelist::getVolume() {
-	double volume = 1;
-
-	coordinate lengths = getLengths();
-
-	for (unsigned int i = 0; i < lengths.dimensions(); i++) {
-		volume *= lengths[i];
-	}
-
-	return volume;
 }
 
 node* nodelist::add(double x, double y, double z) {
@@ -228,10 +292,12 @@ node* nodelist::add(double x, double y, double z) {
 	// ensure that point lies in between boundaries if periodic
 	if (periodic) {
 		vector<coordinate> shifters = getShifters();
-		for (vector<coordinate>::iterator shifter = shifters.begin(); shifter != shifters.end(); ++shifter) {
+		for (vector<coordinate>::iterator shifter = shifters.begin();
+				shifter != shifters.end(); ++shifter) {
 			// as bounding box
-			if ((fabs((*shifter)[0] + newPos[0]) < getLengths()[0]/2) && (fabs((*shifter)[1] + newPos[1]) < getLengths()[1]/2)
-					&& (fabs((*shifter)[2] + newPos[2]) < getLengths()[2]/2)) {
+			if ((fabs((*shifter)[0] + newPos[0]) < getLengths()[0] / 2)
+					&& (fabs((*shifter)[1] + newPos[1]) < getLengths()[1] / 2)
+					&& (fabs((*shifter)[2] + newPos[2]) < getLengths()[2] / 2)) {
 				newPos += (*shifter);
 			}
 		}
@@ -263,28 +329,6 @@ double nodelist::getMaxFeatureSize() {
 	return getLengths().length() / 2;
 }
 
-int nodelist::countEdgenodes() {
-	if (periodic) {
-		return 0;
-	}
-	int ctr = 0;
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
-		if ((*n)->isEdgenode()) {
-			ctr++;
-		}
-	}
-	return ctr;
-
-}
-
-double nodelist::r(double theta, double w, double h) {
-	return (w * h)
-			/ (2
-					* sqrt(
-							w * w * sin(theta) * sin(theta)
-									+ h * h * cos(theta) * cos(theta)));
-}
-
 void nodelist::display() {
 	cout << "Number of elements: " << list.size() << endl;
 
@@ -304,15 +348,6 @@ void nodelist::display() {
 
 		i++;
 	}
-}
-
-void nodelist::writeGWL() {
-	// sort by metric
-	sort(list.begin(), list.end(), node::zmetric);
-	// get loops
-	// write to file
-
-
 }
 
 vector<coordinate> nodelist::getShifters() {
@@ -359,25 +394,6 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 		}
 	}
 	return shifters;
-}
-
-int nodelist::pointsInside(const vector<coordinate>& points,
-		const coordinate& mid, const double r) const {
-	int ctr = 0;
-
-	// nodesiterations
-	for (vector<coordinate>::const_iterator point = points.begin();
-			point != points.end(); ++point) {
-		// bounding box of the sphere
-		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
-				&& (fabs((*point)[2] - mid[2]) < r)) {
-			// sphere itself
-			if (((*point) - mid).lengthSqr() < r * r) {
-				ctr++;
-			}
-		}
-	}
-	return ctr;
 }
 
 string nodelist::listStats(const string commentDelimeter) {
@@ -619,9 +635,64 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 	return variance;
 }
 
-void nodelist::writePOV() {
+void nodelist::writeCoordinates() {
+	stringstream fileNameStream;
+	fileNameStream << "./data/points_" << name << ".csv";
+	std::string outfileName = fileNameStream.str();
 
-	const char outfileName[] = "./data/staebe.pov";
+
+	// iterate over extended pattern
+	std::vector<coordinate> shifters = getShifters();
+	std::vector<std::string> data;
+	for (vector<coordinate>::iterator shifter = shifters.begin();
+			shifter != shifters.end(); ++shifter) {
+		for (vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
+			stringstream stream;
+
+			stream << ((*n)->getPosition() + *shifter).toString("", "\t", "") << endl;
+
+			data.push_back(stream.str());
+		}
+	}
+
+	// write to outfile
+	ofstream outfile;
+	outfile.open(outfileName.c_str());
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i];
+	}
+	outfile.close();
+
+	cout << "Pattern written to file '" << outfileName << "'. Enjoy!" << endl;
+}
+
+void nodelist::writeGWL() {
+	// TODO: work on list that is repeated to the wanted size
+	int x = 2;
+	int y = 2;
+	int z = 1;
+	std::vector<class node*> extendedList((x + y + z) * size());
+
+	// sort by metric
+	// TODO: make sortMetric chooseable (cone, ...)
+	sort(extendedList.begin(), extendedList.end(), node::zmetric);
+
+	// get loops
+	vector<coordinate> loop;
+	for (vector<node*>::iterator nodeIter = extendedList.begin();
+			nodeIter != extendedList.end(); ++nodeIter) {
+
+	}
+
+	// write to file
+
+}
+
+void nodelist::writePOV() {
+	stringstream fileNameStream;
+	fileNameStream << "./data/rods_" << name << ".pov";
+	string outfileName = fileNameStream.str();
 
 	vector<string> data;
 
@@ -639,9 +710,9 @@ void nodelist::writePOV() {
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 			// cylinder only if not connected over boundary
-			if (periodic
-					&& (*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize()) {
+			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
+			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) {
 				// cylinder from a to b TODO: den zurück nicht...
 				stream << "cylinder{"
 						<< (*nodeIter)->getPosition().toString("<", ",", ">")
@@ -649,13 +720,6 @@ void nodelist::writePOV() {
 						<< (*neighIter)->getPosition().toString("<", ",", ">")
 						<< ",r}" << endl;
 
-			} else if (!periodic) {
-				// cylinder from a to b TODO: den zurück nicht...
-				stream << "cylinder{"
-						<< (*nodeIter)->getPosition().toString("<", ",", ">")
-						<< ","
-						<< (*neighIter)->getPosition().toString("<", ",", ">")
-						<< ",r}" << endl;
 			}
 		}
 		data.push_back(stream.str());
@@ -663,26 +727,21 @@ void nodelist::writePOV() {
 
 	// write to outfile
 	ofstream outfile;
-	outfile.open(outfileName);
+	outfile.open(outfileName.c_str());
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i];
 	}
 	outfile.close();
 
-	cout << "Pattern written in " << outfileName
-			<< ", ready to be rendered by POV-Ray." << endl;
+	cout << "Pattern written to file '" << outfileName
+			<< "', ready to be rendered by POV-Ray." << endl;
 
 }
 
 void nodelist::writeMEEP() {
-	// assuiming a writing spheroid with dimensions w x w x h
-	const double w = 0.2;
-	const double h = 0.6;
-
-	// number of blocks for ellisoid approximation
-	int numBlocks = 25;
-
-	const char outfileName[] = "./data/meep-dielectric.ctl";
+	stringstream fileNameStream;
+	fileNameStream << "./data/meep-dielectric_" << name << ".ctl";
+	string outfileName = fileNameStream.str();
 
 	vector<string> data;
 
@@ -695,88 +754,222 @@ void nodelist::writeMEEP() {
 		stringstream stream;
 		stream.precision(4);
 
-		// ellipsoid at joint
-		stream << "(make ellipsoid (material polymer) (center "
+		// Cylinders for rods
+		//double radius = 0.2685;
+		stream << "(make sphere (material polymer) (center "
 				<< (*nodeIter)->getPosition().toString("", " ", "")
-				<< " ) (size " << w << " " << w << " " << h << "))" << endl;
+				<< ") (radius rad)) ";
 
 		for (vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 			// cylinder only if not connected over boundary
-			if (periodic
-					&& (*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize()) {
+			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
+			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) {
 
 				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
-				coordinate e1 = (*nodeIter)->getPosition()
+				coordinate axis = (*nodeIter)->getPosition()
 						- (*neighIter)->getPosition();
-				coordinate e3(0, 0, 1);
-				coordinate e2 = coordinate::cpr(e1, e3);
 
 				// length = length of connecvting vector
-				double l = e1.length();
+				double height = axis.length();
 
 				// center: middpoint of points
 				string center = (((*nodeIter)->getPosition()
 						+ (*neighIter)->getPosition()) / 2).toString("", " ",
 						"");
 
-				// ellipsoid approximation
-				for (double theta = 0; theta <= M_PI / 2;
-						theta += M_PI / (2 * numBlocks)) {
-					// dimensions of blocks used to approximnate ellipse
-					double wApp = 2 * r(theta, w, h) * cos(theta);
-					double hApp = 2 * r(theta, w, h) * sin(theta);
+				// block from a to b TODO: den zurück nicht...
+				stream << "(make cylinder (material polymer) (center " << center
+						<< ") (radius rad) (height " << height
+						<< ") (axis " << axis.toString("", " ", "") << ")) ";
 
-					// block from a to b TODO: den zurück nicht...
-					stream << "(make block (material polymer) (center "
-							<< center << ") (size " << l << " " << wApp << " "
-							<< hApp << ") (e1 " << e1.toString("", " ", "")
-							<< ") (e2 " << e2.toString("", " ", "") << ") (e3 "
-							<< e3.toString("", " ", "") << "))" << endl;
-				}
-
-			} else if (!periodic) {
-
-				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
-				coordinate e1 = (*nodeIter)->getPosition()
-						- (*neighIter)->getPosition();
-				coordinate e3(0, 0, 1);
-				coordinate e2 = coordinate::cpr(e1, e3);
-
-				// length = length of connecvting vector
-				double l = e1.length();
-
-				// center: middpoint of points
-				string center = (((*nodeIter)->getPosition()
-						+ (*neighIter)->getPosition()) / 2).toString("", " ",
-						"");
-
-				// ellipsoid approximation
-				for (double theta = 0; theta <= M_PI / 2;
-						theta += M_PI / (2 * numBlocks)) {
-					// dimensions of blocks used to approximnate ellipse
-					double wApp = 2 * r(theta, w, h) * cos(theta);
-					double hApp = 2 * r(theta, w, h) * sin(theta);
-
-					// block from a to b TODO: den zurück nicht...
-					stream << "(make block (material polymer) (center "
-							<< center << ") (size " << l << " " << wApp << " "
-							<< hApp << ") (e1 " << e1.toString("", " ", "")
-							<< ") (e2 " << e2.toString("", " ", "") << ") (e3 "
-							<< e3.toString("", " ", "") << "))" << endl;
-				}
 			}
 		}
+
+		// Ellipsoid Approximation (apparently too big ctl file for meep...)
+		/*
+
+		 // assuiming a writing spheroid with dimensions w x w x h
+		 const double w = 0.2;
+		 const double h = 0.6;
+		 // ellipsoid at joint
+		 stream << "(make ellipsoid (material polymer) (center "
+		 << (*nodeIter)->getPosition().toString("", " ", "")
+		 << ") (size " << w << " " << w << " " << h << "))";// << endl;
+		 // number of blocks for ellisoid approximation
+		 int numBlocks = 5;
+		 for (vector<node*>::iterator neighIter =
+		 (*nodeIter)->getNeighbours()->begin();
+		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+		 // cylinder only if not connected over boundary
+		if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) { {
+
+		 // e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
+		 coordinate e1 = (*nodeIter)->getPosition()
+		 - (*neighIter)->getPosition();
+		 coordinate e3(0, 0, 1);
+		 coordinate e2 = coordinate::cpr(e1, e3);
+
+		 // length = length of connecvting vector
+		 double l = e1.length();
+
+		 // center: middpoint of points
+		 string center = (((*nodeIter)->getPosition()
+		 + (*neighIter)->getPosition()) / 2).toString("", " ",
+		 "");
+
+		 // ellipsoid approximation
+		 for (double theta = 0; theta <= M_PI / 2;
+		 theta += M_PI / (2 * numBlocks)) {
+		 // dimensions of blocks used to approximnate ellipse
+		 double wApp = 2 * r(theta, w, h) * cos(theta);
+		 double hApp = 2 * r(theta, w, h) * sin(theta);
+
+		 // block from a to b TODO: den zurück nicht...
+		 stream << "(make block (material polymer) (center "
+		 << center << ") (size " << l << " " << wApp << " "
+		 << hApp << ") (e1 " << e1.toString("", " ", "")
+		 << ") (e2 " << e2.toString("", " ", "") << ") (e3 "
+		 << e3.toString("", " ", "") << "))";// << endl;
+		 }
+
+		 }
+		 }*/
+		 stream << endl;
+
+
 		data.push_back(stream.str());
 	}
 
-	// close list
+// close list
 	data.push_back(")\n");
 
-	// write to outfile
+// write to outfile
+	ofstream outfile;
+	outfile.open(outfileName.c_str());
+	for (unsigned int i = 0; i < data.size(); i++) {
+		outfile << data[i];
+	}
+	outfile.close();
+
+	cout << "Pattern written as " << outfileName << ", ready to be MEEPed."
+			<< endl;
+}
+
+void nodelist::writeMPB() {
+
+	const char outfileName[] = "./data/mpb-dielectric.ctl";
+
+	vector<string> data;
+
+	// open list
+	data.push_back("(list\n");
+
+	// Iteration over nodes
+	for (vector<node*>::iterator nodeIter = list.begin();
+			nodeIter != list.end(); ++nodeIter) {
+		stringstream stream;
+		stream.precision(4);
+
+		// Cylinders for rods
+		//double radius = 0.2685;
+		stream << (*nodeIter)->getPosition().toString("(make sphere (material polymer) (center (c->l ", " ", ")) (radius rad)) ");
+
+		for (vector<node*>::iterator neighIter =
+				(*nodeIter)->getNeighbours()->begin();
+				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+			// cylinder only if not connected over boundary
+			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
+			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) {
+
+				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
+				coordinate axis = (*nodeIter)->getPosition()
+						- (*neighIter)->getPosition();
+
+				// length = length of connecvting vector
+				double height = axis.length();
+
+				// center: middpoint of points
+				string center = (((*nodeIter)->getPosition()
+						+ (*neighIter)->getPosition()) / 2).toString("", " ",
+						"");
+
+				// cylinder from a to b TODO: den zurück nicht...
+				stream << "(make cylinder (material polymer) (center (c->l " << center
+						<< ")) (radius rad) (height " << height
+						<< ") (axis " << axis.toString("(c->l ", " ", ")") << ")) ";
+
+			}
+		}
+
+		// Ellipsoid Approximation (apparently too big ctl file for meep...)
+		/*
+
+		 // assuiming a writing spheroid with dimensions w x w x h
+		 const double w = 0.2;
+		 const double h = 0.6;
+		 // ellipsoid at joint
+		 stream << "(make ellipsoid (material polymer) (center "
+		 << (*nodeIter)->getPosition().toString("", " ", "")
+		 << ") (size " << w << " " << w << " " << h << "))";// << endl;
+		 // number of blocks for ellisoid approximation
+		 int numBlocks = 5;
+		 for (vector<node*>::iterator neighIter =
+		 (*nodeIter)->getNeighbours()->begin();
+		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+		 // cylinder only if not connected over boundary
+		if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) { {
+
+		 // e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
+		 coordinate e1 = (*nodeIter)->getPosition()
+		 - (*neighIter)->getPosition();
+		 coordinate e3(0, 0, 1);
+		 coordinate e2 = coordinate::cpr(e1, e3);
+
+		 // length = length of connecvting vector
+		 double l = e1.length();
+
+		 // center: middpoint of points
+		 string center = (((*nodeIter)->getPosition()
+		 + (*neighIter)->getPosition()) / 2).toString("", " ",
+		 "");
+
+		 // ellipsoid approximation
+		 for (double theta = 0; theta <= M_PI / 2;
+		 theta += M_PI / (2 * numBlocks)) {
+		 // dimensions of blocks used to approximnate ellipse
+		 double wApp = 2 * r(theta, w, h) * cos(theta);
+		 double hApp = 2 * r(theta, w, h) * sin(theta);
+
+		 // block from a to b TODO: den zurück nicht...
+		 stream << "(make block (material polymer) (center "
+		 << center << ") (size " << l << " " << wApp << " "
+		 << hApp << ") (e1 " << e1.toString("", " ", "")
+		 << ") (e2 " << e2.toString("", " ", "") << ") (e3 "
+		 << e3.toString("", " ", "") << "))";// << endl;
+		 }
+
+		 }
+		 }*/
+		 stream << endl;
+
+
+		data.push_back(stream.str());
+	}
+
+// close list
+	data.push_back(")\n");
+
+// write to outfile
 	ofstream outfile;
 	outfile.open(outfileName);
 	for (unsigned int i = 0; i < data.size(); i++) {
@@ -784,7 +977,7 @@ void nodelist::writeMEEP() {
 	}
 	outfile.close();
 
-	cout << "Pattern written as " << outfileName << ", ready to be MEEPed."
+	cout << "Pattern written as " << outfileName << ", ready to be MPBed."
 			<< endl;
 }
 
@@ -821,7 +1014,7 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 	}
 
 	vector<vector<double> > data;
-	// nodesiteration
+// nodesiteration
 	for (vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		// neighboursiteration
@@ -830,23 +1023,14 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 			//  print link only if both are not connected over boundary
-			if (periodic
-					&& (*nodeIter)->euklidian(*neighIter)
-							< getMaxFeatureSize()) {
-
-				data.push_back(*(*nodeIter)->getPosition().getVector());
-				data.push_back(*(*neighIter)->getPosition().getVector());
-
-				data.push_back(emptyLine);
-
-			} else if (!periodic) {
-				//if (!(*neighIter)->isEdgenode()) {
+			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
+			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+							< getMaxFeatureSize())) {
 				//if (!(*nodeIter)->isEdgenode()) {
 				data.push_back(*(*nodeIter)->getPosition().getVector());
 				data.push_back(*(*neighIter)->getPosition().getVector());
 
 				data.push_back(emptyLine);
-
 				//}
 				//}
 			}

@@ -622,7 +622,7 @@ def connectedStakes(w, l, h, d, powerStakes, powerPile):
 def expWall(nC, h, innerRadius, outerRadius, deltarad):
 	### optionale Parameter ###
 	# Der z-Versatz sollte dem axialen Fokus entsprechen um eine solide Wand zu bekommen.
-	dz = 0.55 #µm. 
+	dz = 0.50 #µm. 
 	# Die Radiuserhöhung sollte dem lateralen Fokus entsprechen um eine solide Wand zu bekommen.
 	dr = 0.15 #µm.
 	# deltarad entspricht dem radius, den der wall
@@ -673,9 +673,9 @@ def expWall(nC, h, innerRadius, outerRadius, deltarad):
 def roundWall(nC, h, innerRadius, outerRadius):
 	### optionale Parameter ###
 	# Der z-Versatz sollte dem axialen Fokus entsprechen um eine solide Wand zu bekommen.
-	dz = 0.6 #µm. 
+	dz = 0.50 #µm. 
 	# Die Radiuserhöhung sollte dem lateralen Fokus entsprechen um eine solide Wand zu bekommen.
-	dr = 0.2 #µm.
+	dr = 0.15 #µm.
 	###########################
 	
 	# Berechne die Anzahl der Umdrehungen der Spirale um den Außenradius zu bekommen.
@@ -792,7 +792,7 @@ def woodpile(w, l, h, dh, g):
 	
 	# Punkteliste und Laufparameter initialisieren
 	woodpile = list()
-	woodpile.append('%woodpile g = ' + str(g) + 'um per line, w = ' + str(w) + 'um wide, l = ' + str(l) + 'um long, h = ' + str(h) + 'um high.')
+	woodpile.append('%woodpile g = ' + str(g) + 'um per line, dh= ' + str(dh) + 'um between each layer, 4dh/g=' + str(4*dh/g) + ', w = ' + str(w) + 'um wide, l = ' + str(l) + 'um long, h = ' + str(h) + 'um high.')
 	
 	z=0
 	while(z<h):
@@ -1118,13 +1118,13 @@ def spiralLogger():
 # Gibt ein Woodpile in einer Wand zurück, die unten dicker ist als oben.
 def woodpileInExpWall():
 	extendedWallWP = list()
-	extendedWallWP.append('FindInterfaceAt 2')
+	extendedWallWP.append('FindInterfaceAt 0.5')
 	extendedWallWP.append('PerfectShapeFast')
 	extendedWallWP.append('LaserPower 40')
-	extendedWallWP.extend(rotateZ(expWall(4, 30, 100, 110, 35), (math.pi/4)))
+	extendedWallWP.extend(rotateZ(expWall(4, 50, 100, 115, 30), (math.pi/4)))
 	extendedWallWP.append('PerfectShapeQuality')
 	extendedWallWP.append('LaserPower 22')
-	extendedWallWP.extend(shifting(woodpile(210,210,30,1./math.sqrt(8),1), np.array([-105,-105,0])))
+	extendedWallWP.extend(shifting(woodpile(210,210,15,1./math.sqrt(8),1), np.array([-105,-105,35])))
 
 	extendedWall = list()
 	extendedWall.extend(header())
@@ -1140,6 +1140,83 @@ def woodpileInExpWall():
 	extendedWall.extend(footer())
 	
 	return positivate(extendedWall)
+	
+# Gibt ein Woodpile in einer Wand zurück, die unten dicker ist als oben.
+def woodpileInExpWall2():
+	w = 160
+	extendedWall = list()
+	extendedWall.extend(header())
+	
+	extendedWall.append('FindInterfaceAt 1')
+	extendedWall.append('PerfectShapeFast')
+	extendedWall.append('LaserPower 40')
+	extendedWall.extend(rotateZ(expWall(4, 15, 50, 65, 20), (math.pi/4)))
+	extendedWall.append('PerfectShapeQuality')
+	extendedWall.append('LaserPower ' + str(23))
+	extendedWall.extend(shifting(woodpile(105,105,15,1.0/math.sqrt(8),0.7), np.array([-52.5,-52.5,0])))
+	extendedWall.append('MoveStageY ' + str(w))
+
+	# initial laserpower
+	lp = 23
+	while (lp < 28):
+		# initial distance
+		g = 0.8
+		while (g < 1.3): 
+			extendedWall.append('FindInterfaceAt 1')
+			extendedWall.append('PerfectShapeFast')
+			extendedWall.append('LaserPower 40')
+			extendedWall.extend(rotateZ(expWall(4, 15, 50, 65, 20), (math.pi/4)))
+			extendedWall.append('PerfectShapeQuality')
+			extendedWall.append('LaserPower ' + str(lp))
+			extendedWall.extend(shifting(woodpile(105,105,15,1.0/math.sqrt(8),g), np.array([-52.5,-52.5,0])))
+			extendedWall.append('MoveStageY ' + str(w))
+			g += 0.1
+		n = (1.3-0.8)/0.1
+		extendedWall.append('MoveStageY ' + str(-n*w))
+		extendedWall.append('MoveStageX ' + str(w))
+		lp+=1
+	
+	extendedWall.extend(footer())
+	
+	return positivate(extendedWall)
+
+# Gibt eine struktur in einer Wand zurück, die unten dicker ist als oben.
+def structInExpWall(w,l,h,structureFile):
+	struct = list()
+	struct.extend(header())
+	
+	structure = (shifting(readPoints(structureFile), np.array([7.5,7.5,0])))
+	
+	struct.append('FindInterfaceAt 1')
+	struct.append('PerfectShapeFast')
+	struct.append('LaserPower 40')
+	struct.extend(positivate(rotateZ(roundWall(4, h, np.sqrt(2.) * w/2, np.sqrt(2.) * w/2 + 15), (math.pi/4))))
+	struct.append('PerfectShapeQuality')
+	struct.append('LaserPower ' + str(21))
+	struct.extend(structure)
+	struct.append('MoveStageY ' + str(w+30))
+	
+	struct.append('FindInterfaceAt 1')
+	struct.append('PerfectShapeFast')
+	struct.append('LaserPower 40')
+	struct.extend(positivate(rotateZ(roundWall(4, h, np.sqrt(2.) * w/2, np.sqrt(2.) * w/2 + 15), (math.pi/4))))
+	struct.append('PerfectShapeQuality')
+	struct.append('LaserPower ' + str(22))
+	struct.extend(structure)
+	struct.append('MoveStageY ' + str(w+30))
+	
+	struct.append('FindInterfaceAt 1')
+	struct.append('PerfectShapeFast')
+	struct.append('LaserPower 40')
+	struct.extend(positivate(rotateZ(roundWall(4, h, np.sqrt(2.) * w/2, np.sqrt(2.) * w/2 + 15), (math.pi/4))))
+	struct.append('PerfectShapeQuality')
+	struct.append('LaserPower ' + str(23))
+	struct.extend(structure)
+	#struct.append('MoveStageY ' + str(w+10))
+
+	struct.extend(footer())
+	
+	return struct
 	
 ###########################
 ##### Nachbearbeitung #####
@@ -1277,8 +1354,16 @@ def animate(filename='writeprocess'):
 #animate()
 #writePoints(scaleStructure(readPoints('./hexagon'), 0.5), './hexagon_scal0.5')
 
-writePoints(woodpileInExpWall(), '/home/lukas/Proben/probe14_2015_09_23/extWallWoodpile.gwl', 'w')
+#writePoints(woodpileInExpWall2(), '/home/lukas/Proben/sample22_2015_10_13/woodpileGandLPvaries.gwl', 'w')
+writePoints(structInExpWall(100,100,12,'Hyperuniformstrukturen/hpu_cubicle_15x105x105_bot-to-top'), '/home/lukas/Proben/sample24_2015_10_29/hpu_wall.gwl', 'w')
 
-#writePoints(readPoints('./Hyperuniformstrukturen/3x3_hpu_unscaled'))
-#p = readPoints('./shapesOut')
-#print(ff(p))
+
+# only wall
+#wall = list()
+#wall.extend(header())
+#wall.append('FindInterfaceAt 1')
+#wall.append('PerfectShapeFast')
+#wall.append('LaserPower 40')
+#wall.extend(rotateZ(roundWall(4, 50, 0, 50), (math.pi/4)))
+#wall.extend(footer())
+#writePoints(positivate(wall), '/home/lukas/Proben/sample18_2015_10_02/onlyWall.gwl', 'w')

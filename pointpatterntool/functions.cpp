@@ -81,7 +81,7 @@ vector<double> stats(vector<double> data) {
 	return statistics;
 }
 
-string statsAsString(const vector<double>& data,
+std::string statsAsString(const vector<double>& data,
 		const char commentDelimeter[]) {
 	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
 	// Moment	Bedeutung
@@ -127,32 +127,34 @@ string statsAsString(const vector<double>& data,
 	return stream.str();
 }
 
-vector<string> getColors() {
+vector<std::string> getColors() {
 	// colors in HEX #argb
-	vector<string> colors;
+	vector<std::string> colors;
 
-	colors.push_back("#55E41A1C");
-	colors.push_back("#55377EB8");
-	colors.push_back("#554DAF4A");
-	colors.push_back("#55984EA3");
-	colors.push_back("#55FF7F00");
-	colors.push_back("#55FFFF33");
-	colors.push_back("#55A65628");
-	colors.push_back("#55F781BF");
+	// #55xxxxxx - little bit transparent
+
+	colors.push_back("#55E41A1C"); // red
+	colors.push_back("#55377EB8"); // blue
+	colors.push_back("#554DAF4A"); // green
+	colors.push_back("#55984EA3"); // purple
+	colors.push_back("#55FF7F00"); // orange
+	colors.push_back("#55FFFF33"); // yellow
+	colors.push_back("#55A65628"); // brown
+	colors.push_back("#55F781BF"); // pink
 
 	return colors;
 
 }
 
 void plotHist(vector<vector<double> > datas, double min, double max, int n,
-		vector<string> names, const string xlabel, const string file) {
+		vector<std::string> names, const std::string xlabel, const std::string file) {
 
 	// get filename
 	stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<string>::iterator name = names.begin(); name != names.end();
+	for (vector<std::string>::iterator name = names.begin(); name != names.end();
 			++name) {
-		string filename = (*name);
+		std::string filename = (*name);
 		filename.erase(std::remove(filename.begin(), filename.end(), ' '),
 				filename.end());
 		filestream << "_" << filename;
@@ -187,10 +189,11 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	gp << "set boxwidth width*0.9\n";
 	gp << "set style fill solid 0.5\n";
 	gp << "set tics out nomirror\n";
+	gp << "set key left\n";
 	gp << "set xlabel '" << xlabel << "'\n";
 	gp << "set ylabel 'frequency'\n";
 
-	vector<string> colors = getColors();
+	vector<std::string> colors = getColors();
 	// build plotstring and send to gnuplot
 	stringstream plotstring;
 
@@ -221,15 +224,15 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 }
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<string> names, const string xlabel, const string ylabel,
-		const string file) {
+		vector<std::string> names, const std::string xlabel, const std::string ylabel,
+		const std::string file) {
 
 	double xMin = 0;
 
 	// get filename
 	stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<string>::iterator name = names.begin(); name != names.end();
+	for (vector<std::string>::iterator name = names.begin(); name != names.end();
 			++name) {
 		std::cout << (*name) << "\n";
 		(*name).erase(std::remove((*name).begin(), (*name).end(), ' '),
@@ -254,7 +257,7 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	gp << "set xlabel '" << xlabel << "'\n";
 	gp << "set ylabel '" << ylabel << "'\n";
 
-	vector<string> colors = getColors();
+	vector<std::string> colors = getColors();
 
 	stringstream plotstring;
 	for (unsigned i = 0; i < datas.size(); i++) {
@@ -298,9 +301,9 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	std::cin.get();
 }
 
-void plot3D(vector<vector<vector<double> > > datas, vector<string> names,
-		const string xlabel, const string ylabel, const string zlabel,
-		const string style) {
+void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
+		const std::string xlabel, const std::string ylabel, const std::string zlabel,
+		const std::string style) {
 	Gnuplot gp;
 	gp << "reset\n";
 
@@ -317,7 +320,7 @@ void plot3D(vector<vector<vector<double> > > datas, vector<string> names,
 	gp << "set view equal xyz\n";
 
 	// Farben
-	vector<string> colors = getColors();
+	vector<std::string> colors = getColors();
 
 	// Plotstring bauen und an Gnuplot schicken
 	stringstream plotstring;

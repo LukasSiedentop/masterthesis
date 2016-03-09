@@ -27,13 +27,25 @@ for p in ports:
     if 'Princeton' in p[1]:
         monoPort = p[0]
 
-def listsToString(wavelengths, data):
+# gnuplot öffnen
+gp = subprocess.Popen(['gnuplot'],
+                    stdin=subprocess.PIPE,
+                    )
+
+# kopnvertiert die gegebenen Listen, sodass Gnuplot sie in seinem stdin interpretieren kann
+def listsToString(wavelengths, data, ref=list()):
     string = ""
-    
+
     i = 0
-    while (i<len(data)):
-        string += str(wavelengths[i]) + " " + str(data[i]) + "\n"
-        i+=1
+
+    if (len(ref) == 0):
+        while (i<len(data)):
+            string += str(wavelengths[i]) + " " + str(data[i]) + "\n"
+            i+=1
+    else :    
+        while (i<len(data)):
+            string += str(wavelengths[i]) + " " + str(data[i]) + " " + str(ref[i]) + " " + str(data[i]/ref[i]) + "\n"
+            i+=1
             
     return string + "e\n"
 
@@ -42,21 +54,21 @@ def getSpectrum(ser, wavelengths):
     # Den Monochromator aktivieren und die Erste Wellenlänger erreichen lassen
     if (not ser.isOpen()): ser.open()
     ser.write(str('{:10.2f}'.format(wavelengths[0])) + ' GOTO\r')
-    time.sleep(2)
+    time.sleep(0.5)
     
-    # Liste und Gnuplot initialisieren
+    # gnuplot range anpassen
+    gp.stdin.write('set xrange ['+str(wavelengths[0])+':' + str(wavelengths[len(wavelengths)-1]) + ']\n')
+    
+    # Liste initialisieren
     values = list()
-    gp = subprocess.Popen(['gnuplot'],
-                        stdin=subprocess.PIPE,
-                        )
-                        
-    gp.stdin.write('set xrange ['+str(wavelengths[0])+':' + str(wavelengths[len(wavelengths)-1]) + ']; set yrange [-0.5:1.5]\n')
      
     for wavelength in wavelengths:
 	   # Monochromator die Wellenlänge anfahren lassen (der Monochromator nimmt das Format '1.23 GOTO\r')
         ser.write(str('{:10.2f}'.format(wavelength)) + ' GOTO\r')
+        
         # Den Monochromator das Ziel erreichen lassen...
-        time.sleep(.5)
+        time.sleep(.2) #0.5
+        
         # Werte speichern
         value = niusb6211.main()
         values.append(value)
@@ -64,17 +76,12 @@ def getSpectrum(ser, wavelengths):
         # plotten
         gp.stdin.write("plot '-' w l t ''\n")
         gp.stdin.write(listsToString(wavelengths, values))
-        # Fortschrittsbalken
-        #print('Meassure Wavelength ' + str(wavelength) + 'nm.')
-        #print('wl: ' + str(wavelength) + 'nm, val: ' + str(value) + 'V.\r')
+ 
 
-    # gnuplot schließen
-    gp.stdin.write('quit\n')
-						
     # Alles Licht durchlassen (wavelength = 0), Monochromator deaktivieren
     ser.write(str('0.00 GOTO\r'))
     ser.close()
-    #print('Aufnahme bei lambda=' + str(wavelengths[len(wavelengths)-1]) + 'nm beendet.')
+    
     return values
 
 # wartet n [s] Sekunden und zählt runter (http://stackoverflow.com/questions/17220128/display-a-countdown-for-the-python-sleep-function)
@@ -89,10 +96,42 @@ def wait(n=5, message='Meassurement starts in '):
         i-=1
     print('')
 
-# Parameter bekommen
+# bewegt die probe relativ
+def move(ser, direction = '+', distance = 4):
+    # Motor aktivieren + Probe bewegen
+    if (not ser.isOpen()): ser.open()
+    # Motor anschalten
+    ser.write('1MO;1MO?\r')
+    # Geschwindigkeit setzen VU: maximale Geschwindigkeit setzen, VA: Geschwindigkeit setzen
+    ser.write('1VU6;1VA6\r')
+    motor = ser.readline().rstrip()
+    if (motor != '1'):
+        print('ERROR: Motor cannot be turned on. Check power cords. Exiting.')
+        ser.close()
+        return
+        #monoSer.close()
+        #exit()
+    # position relativ um +5 ändern
+    ser.write('1PR' + direction + str(distance) + '\r')
+    ser.close()
 
+# gibt das minimum von zwei Listen zurück
+def findMin(listA, listB):
+    minimum = listA[0] 
+
+    for valA in listA:
+        if(valA < minimum):
+            minimum = valA
+    
+    for valB in listB:
+        if(valB < minimum):
+            minimum = valB
+    
+    return minimum
+   
+# Parameter bekommen
 try:
-    sample = str(raw_input('Name of sample: '))
+    sample = str(raw_input('Name of sample (without space): '))
 except ValueError:
     sample = "sample"
     print "no string input; sample is named sample"
@@ -151,21 +190,8 @@ wait()
 # Fahre Wellenlängen für Messung des Transmissionsspektrums durch
 valuesTrans = getSpectrum(monoSer, wavelengths)
 
-# Motor aktivieren + Probe bewegen
-if (not motionSer.isOpen()): motionSer.open()
-# Geschwindigkeit setzen
-motionSer.write('1VU10;1VA10\r')
-# Motor anschalten
-motionSer.write('1MO;1MO?\r')
-motor = motionSer.readline().rstrip()
-if (motor != '1'):
-    print('ERROR: Motor cannot be turned on. Check power cords. Exiting.')
-    motionSer.close()    
-    monoSer.close()
-    exit()
-# position relativ um +5 ändern
-motionSer.write('1PR+5\r')
-motionSer.close()
+# Probe wegbewegen
+move(motionSer, '+', 3)
 
 # kurz warten
 wait(message="Referencemeassurement starts in ")
@@ -173,26 +199,29 @@ wait(message="Referencemeassurement starts in ")
 # Fahre Wellenlängen für Messung des Referenzspektrums durch
 valuesRef = getSpectrum(monoSer, wavelengths)
 
-# Motor aktivieren + Probe zurückbewegen
-if (not motionSer.isOpen()): motionSer.open()
-motionSer.write('1MO;1MO?\r')
-motor = motionSer.readline().rstrip()
-if (motor != '1'):
-    print('ERROR: Motor cannot be turned on. Check power cords. Exiting.')
-    motionSer.close()    
-    monoSer.close()
-    exit()
-# position relativ um -5 ändern
-motionSer.write('1PR-5\r')
-motionSer.close()
+# minimum von min(ref) und min(trans) finden und zu allen werten dazuaddieren
+minimum = findMin(valuesTrans, valuesRef)
+
+if (minimum < 0): 
+    i = 0
+    while(i<len(valuesTrans)):
+        valuesTrans[i] += abs(minimum)
+        valuesRef[i] += abs(minimum)
+        i+=1
+    
+    print('|' + str(minimum) + '| added to all values.')
+
+# Probe wieder hinbewegen
+move(motionSer, '-', 3)
 
 # Datei speichern C:\Users\Hyperion\Desktop\Lukas\Data
 s = 'Wavelength\tTransmission\tReference\tSpectrum\n'
-filename = 'C:\Users\Hyperion\Desktop\Lukas\Data\\' + sample + '_' + str(wavelengths[0]) + 'nm-' + str(stepsize) + 'nm-' + str(wavelengths[len(wavelengths)-1]) + 'nm_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.sp'
-f = open(filename, 'w')
+filename = 'C:\Users\Hyperion\Desktop\Lukas\Data\\' + sample + '_' + str(wavelengths[0]) + 'nm-' + str(stepsize) + 'nm-' + str(wavelengths[len(wavelengths)-1]) + 'nm_' + time.strftime('%Y-%m-%d_%H-%M-%S')
+f = open(filename + '.sp', 'w')
 f.write(s)
 i = 0
 while (i < len(wavelengths)):
+    #valuesRef[i]==0?'nan', .../...
     s = str(wavelengths[i]) + '\t' + str(valuesTrans[i]) + '\t' + str(valuesRef[i]) + '\t' + str(valuesTrans[i]/valuesRef[i]) + '\n'
     f.write(s)
     i+=1
@@ -200,5 +229,30 @@ f.close()
 
 print("Data saved as " + filename + ". Enjoy!")
 
+gp.stdin.write("set terminal push\n")
+gp.stdin.write("set terminal svg size 640,480 fname 'Verdana' fsize 14\n")
+gp.stdin.write("set output '" + filename + ".svg'\n")
 
-# TODO : gnuplot ausführen und anzeigen lassen
+gp.stdin.write('set xrange ['+str(wavelengths[0])+':' + str(wavelengths[len(wavelengths)-1]) + ']; set yrange [0:1]\n')
+gp.stdin.write('set ytics 0,0.1,1\n')
+gp.stdin.write("set key center bottom\n")
+
+gp.stdin.write("set title '" + sample + "' noenhanced\n")
+gp.stdin.write("set label '" + filename + "' at screen 0.0, 0.9 font 'Verdana,10' noenhanced\n")
+
+gp.stdin.write("plot '-' u 1:2 w l t 'sample', '-' u 1:3 w l t 'reference', '-' u 1:4 w l t 'transmission'\n")
+gp.stdin.write(listsToString(wavelengths, valuesTrans, valuesRef))
+gp.stdin.write(listsToString(wavelengths, valuesTrans, valuesRef))
+gp.stdin.write(listsToString(wavelengths, valuesTrans, valuesRef))
+
+gp.stdin.write("set terminal pop\n")
+gp.stdin.write("set output\n")
+gp.stdin.write("replot\n")
+
+str(raw_input('Press enter to exit.'))
+# gnupolot schließen
+gp.stdin.write("q\n")
+
+# falls etwas schief gelaufen ist
+motionSer.close()
+monoSer.close()

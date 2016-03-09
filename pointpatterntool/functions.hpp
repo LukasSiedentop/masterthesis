@@ -46,7 +46,7 @@ vector<double> stats(vector<double> data);
 /**
  * Gibt eine Liste mit Statistiken als menschenlesbaren String zurück.
  */
-string statsAsString(const vector<double>& data, const char commentDelimeter[] =
+std::string statsAsString(const vector<double>& data, const char commentDelimeter[] =
 		"\t");
 
 /* I/O */
@@ -57,7 +57,7 @@ string statsAsString(const vector<double>& data, const char commentDelimeter[] =
  */
 template<typename T>
 T input(T& in) {
-	string input = "";
+	std::string input = "";
 
 	while (true) {
 		// füllt den input-string mit der Eingabe
@@ -83,7 +83,7 @@ T input(T& in) {
  * Konvertiert den gegebenen String in den Typ des gegebenen Arguments. Bei Fehler gibt kommt das Argument zurück.
  */
 template<typename T>
-T convert(string input, T type) {
+T convert(std::string input, T type) {
 	// Konvertieren von string nach T
 	stringstream inputStream(input);
 	if (inputStream >> type) {
@@ -186,28 +186,28 @@ vector<T> mergeSort(vector<T> m) {
 /* Plotmethoden Gnuplot */
 // TODO: anzeigen UND svg speichern
 // returns eight colors
-std::vector<string> getColors();
+std::vector<std::string> getColors();
 
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
 void plotHist(std::vector<std::vector<double> > data, double min, double max,
-		int n, vector<string> names, const string xlabel = "x",
-		const string file = "/dev/null");
+		int n, vector<std::string> names, const std::string xlabel = "x",
+		const std::string file = "/dev/null");
 
 /**
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
  */
 void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
-		double xMax, std::vector<string> names, const string xlabel = "x",
-		const string ylabel = "y",
-		const string file = "/dev/null");
+		double xMax, std::vector<std::string> names, const std::string xlabel = "x",
+		const std::string ylabel = "y",
+		const std::string file = "/dev/null");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<vector<vector<double> > > data, vector<string> names,
-		const string xlabel = "x", const string ylabel = "y",
-		const string zlabel = "z", const string style = "w l");
+void plot3D(vector<vector<vector<double> > > data, vector<std::string> names,
+		const std::string xlabel = "x", const std::string ylabel = "y",
+		const std::string zlabel = "z", const std::string style = "w l");
 
 #endif /* NODELIST_HPP_ */
