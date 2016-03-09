@@ -2,8 +2,8 @@ package org.knime.knip.pointextraction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Locale;
+import java.util.Set;
 
 import org.knime.core.data.def.IntCell;
 import org.scijava.ItemIO;
@@ -15,21 +15,25 @@ import org.scijava.plugin.Plugin;
 import net.imagej.ImgPlus;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
-import net.imglib2.labeling.Labeling;
-import net.imglib2.roi.RectangleRegionOfInterest;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.algorithm.neighborhood.Neighborhood;
+import net.imglib2.algorithm.neighborhood.RectangleShape;
+import net.imglib2.roi.Regions;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.IntegerType;
 
-@SuppressWarnings("deprecation")
 @Plugin(menu = {@Menu(label = "PointExtraction"),
                 @Menu(label = "Connected Neighbours")}, description = "Gets the Neighbours of Nodes which are connected by a pixel line. Takes a skeleton BitType Image and a Labeling with the Nodes.", headless = true, type = Command.class)
-public class GetConnectedNeighbours<BitType extends RealType<BitType>> implements Command {
+public class GetConnectedNeighbours implements Command {
 
         @Parameter(type = ItemIO.INPUT, label = "(skeletonized) Image", description = "Skeletonized Image whose Intersections are to be found.")
         private ImgPlus<BitType> input;
 
         // TODO: not working anymore since update https://tech.knime.org/forum/knime-image-processing/knime-image-processing-140-and-new-integrations-released
         @Parameter(type = ItemIO.INPUT, label = "Labeling", description = "Labeling containing Labels at each intersection (aka node).")
-        private Labeling<Integer> labeling;
+        private ImgLabeling<Integer, ? extends IntegerType<?>> labeling;
 
         // geht nicht
         //@Parameter(type = ItemIO.INPUT)
@@ -41,20 +45,27 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
         @Parameter(type = ItemIO.OUTPUT)
         private ImgPlus<BitType> output;
 
+        private RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
+
         @Override
         public void run() {
-
                 // to eliminate error message
                 output = input.copy();
 
                 RandomAccess<BitType> inRndAccess = input.randomAccess();
+                //RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
 
-                Iterator<Integer> nodes = labeling.getLabels().iterator();
-                Integer node = 0;
+                //Iterator<Integer> nodes = labeling.getLabels().iterator();
+                //Integer node = 0;
+                LabelRegions<Integer> regions = new LabelRegions<>(labeling);
+                Set<Integer> nodes = regions.getExistingLabels();
 
                 // 3^n ROI generieren
-                final RectangleRegionOfInterest roi = getROI();
-                double[] displacement = new double[labeling.numDimensions()];
+                //final RectangleRegionOfInterest roi = getROI();
+                //double[] displacement = new double[labeling.numDimensions()];
+                final RectangleShape roi = new RectangleShape(3, false);
+                RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(input).randomAccess();
+                int[] displacement = new int[labeling.numDimensions()];
                 Arrays.fill(displacement, -1);
 
                 // Positichonsarrays
@@ -62,22 +73,24 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 int[] nextOnLine = new int[labeling.numDimensions()];
 
                 // Centerdaten
-                double[][] centers = new double[labeling.getLabels().size() + 1][labeling.numDimensions()];
+                //double[][] centers = new double[labeling.getLabels().size() + 1][labeling.numDimensions()];
+                double[][] centers = new double[nodes.size() + 1][labeling.numDimensions()];
 
                 // Datenstruktur um Ergebnis aufzunehmen
                 @SuppressWarnings("unchecked")
-                ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[labeling.getLabels().size() + 1]);
+                //ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[labeling.getLabels().size() + 1]);
+                ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[nodes.size() + 1]);
 
                 // Iteration über alle Knoten
-                while (nodes.hasNext()) {
-                        node = nodes.next();
+                //while (nodes.hasNext()) {
+                //node = nodes.next();
+                for (Integer node : nodes) {
 
                         nodeArray[node] = new ArrayList<IntCell>(0);
 
                         // Cursor über Knotenpixel
-                        Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
-
-                        //new Centroid().compute(iterableInterval, center);
+                        //Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
+                        Cursor<Void> nodeCur = Regions.iterable(regions.getLabelRegion(node)).localizingCursor();
 
                         // Für die Berechnung des Schwerpunkts
                         double[] positionSum = new double[labeling.numDimensions()];
@@ -98,20 +111,30 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                                         pixelCount[i]++;
                                 }
 
-                                // ROI um nodepixel legen
-                                roi.setOrigin(nodeCur);
-                                roi.move(displacement);
+                                // ROI um nodepixel legen TODO: displacement nötig?
+                                //roi.setOrigin(nodeCur);
+                                //roi.move(displacement);                                
+                                roiAccess.setPosition(nodeCur);
+                                roiAccess.move(displacement);
 
-                                Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
+                                //Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
+                                Cursor<BitType> roiCursor = roiAccess.get().cursor();
 
                                 // über ROI um Knotenpixel iterieren
                                 while (roiCursor.hasNext()) {
                                         roiCursor.fwd();
 
-                                        if (roiCursor.get().getRealDouble() != 0) {
+                                        // wenn der Pixel weiß ist = eine Linie ist ...
+                                        //if (roiCursor.get().getRealDouble() != 0) {
+                                        if (roiCursor.get().get()) {
                                                 roiCursor.localize(nextOnLine);
 
-                                                if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
+                                                //if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
+                                                // ... die aber nicht zur current node gehört ...
+                                                labelingRndAccess.setPosition(nextOnLine);
+                                                if (!labelingRndAccess.get().equals(regions.getLabelRegion(node))) {
+
+                                                        // ... dann laufe weiter, bis ein weiterer knoten entdeckt wurde.
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition);
                                                         if (nextNode != null) {
                                                                 nodeArray[node].add(new IntCell(nextNode));
@@ -208,32 +231,44 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 int[] next = new int[labeling.numDimensions()];
 
                 // 3^n ROI generieren und um current legen
-                final RectangleRegionOfInterest roi = getROI();
-                double[] displacement = new double[labeling.numDimensions()];
+                //final RectangleRegionOfInterest roi = getROI();
+                //double[] displacement = new double[labeling.numDimensions()];
+                final RectangleShape roi = new RectangleShape(3, false);
+                RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(input).randomAccess();
+                int[] displacement = new int[labeling.numDimensions()];
                 Arrays.fill(displacement, -1);
-                roi.setOrigin(copyFromIntArray(current));
-                roi.move(displacement);
 
-                Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
+                roiAccess.setPosition(current);
+                roiAccess.move(displacement);
+
+                //Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
+                Cursor<BitType> roiCursor = roiAccess.get().cursor();
 
                 // über ROI iterieren
                 while (roiCursor.hasNext()) {
                         roiCursor.fwd();
 
                         // Wenn der Pixel weiß ist...
-                        if (roiCursor.get().getRealDouble() != 0) {
+                        if (roiCursor.get().get()) {
                                 roiCursor.localize(next);
 
                                 // Abbruchbedingungen checken
 
                                 // Abbruchbedingung: wenn der nächste Schritt nicht zurückgeht...
                                 if (!Arrays.equals(next, last) && !Arrays.equals(next, current)) {
-                                        Iterator<Integer> nodesIter = labeling.getLabels().iterator();
-                                        Integer node = 0;
+
+                                        LabelRegions<Integer> regions = new LabelRegions<>(labeling);
+                                        Set<Integer> nodes = regions.getExistingLabels();
+
+                                        //Iterator<Integer> nodesIter = labeling.getLabels().iterator();
+                                        //Integer node = 0;
                                         // ...über alle Knoten iterieren, und wenn next gelabelt ist diesen Knoten zurückgeben
-                                        while (nodesIter.hasNext()) {
-                                                node = nodesIter.next();
-                                                if (labeling.getRegionOfInterest(node).contains(copyFromIntArray(next))) {
+                                        //while (nodesIter.hasNext()) {
+                                        //node = nodesIter.next();
+                                        for (Integer node : nodes) {
+                                                //if (labeling.getRegionOfInterest(node).contains(copyFromIntArray(next))) {
+                                                labelingRndAccess.setPosition(next);
+                                                if (!labelingRndAccess.get().equals(regions.getLabelRegion(node))) {
                                                         return node;
                                                 }
                                         }
@@ -248,7 +283,7 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 // Abbruchbedingung: kein Pixel um current außer last ist mehr weiß: kein Nachbar
                 return null;
         }
-
+        /*
         // Hack: convert to int[] double[], damit roi.contains und roi.setOrigin funktioniert. Diskussion:
         // http://stackoverflow.com/questions/12729139/copy-contents-of-an-int-array-to-a-double-array-in-java
         private static double[] copyFromIntArray(int[] source) {
@@ -258,13 +293,14 @@ public class GetConnectedNeighbours<BitType extends RealType<BitType>> implement
                 }
                 return dest;
         }
-
+        
         // returns a rectangle roi of extend 3^d 
         private final RectangleRegionOfInterest getROI() {
-
+        
                 double[] extend = new double[labeling.numDimensions()];
                 Arrays.fill(extend, 3);
                 return new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
-
+        
         }
+        */
 }
