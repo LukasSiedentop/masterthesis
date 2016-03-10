@@ -44,59 +44,41 @@ public class GetConnectedNeighbours implements Command {
         @Parameter(type = ItemIO.OUTPUT)
         private ImgPlus<BitType> output;
 
-        // private RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
+        //private RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
 
         @Override
         public void run() {
-
                 // to eliminate error message
                 output = input.copy();
 
-                //RandomAccess<BitType> inRndAccess = input.randomAccess();
                 RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
 
-                //Iterator<Integer> nodes = labeling.getLabels().iterator();
-                //Integer node = 0;
                 LabelRegions<Integer> regions = new LabelRegions<>(labeling);
                 Set<Integer> nodes = regions.getExistingLabels();
 
                 // 3^n ROI generieren
-                //final RectangleRegionOfInterest roi = getROI();
-                //double[] displacement = new double[labeling.numDimensions()];
                 final RectangleShape roi = new RectangleShape(1, false);
                 RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(Views.extendValue(input, new BitType(false)))
                                 .randomAccess();
-
-                //int[] displacement = new int[labeling.numDimensions()];
-                //Arrays.fill(displacement, -1);
 
                 // Positichonsarrays
                 int[] nodePixelPosition = new int[labeling.numDimensions()];
                 int[] nextOnLine = new int[labeling.numDimensions()];
 
                 // Centerdaten
-                //double[][] centers = new double[labeling.getLabels().size() + 1][labeling.numDimensions()];
                 double[][] centers = new double[nodes.size() + 1][labeling.numDimensions()];
 
                 // Datenstruktur um Ergebnis aufzunehmen
                 @SuppressWarnings("unchecked")
-                //ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[labeling.getLabels().size() + 1]);
                 ArrayList<IntCell>[] nodeArray = ((ArrayList<IntCell>[]) new ArrayList[nodes.size() + 1]);
 
                 // Iteration über alle Knoten
-                //while (nodes.hasNext()) {
-                //node = nodes.next();
                 for (Integer node : nodes) {
 
                         nodeArray[node] = new ArrayList<IntCell>(0);
 
                         // Cursor über Knotenpixel
-                        //Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
-
-                        //Cursor<Void> nodeCur = Regions.iterable(regions.getLabelRegion(node)).localizingCursor();
                         Cursor<Void> nodeCur = regions.getLabelRegion(node).localizingCursor();
-                        //Cursor<BitType> nodeCur = Regions.iterable(regions.getLabelRegion(node)).localizingCursor();
-                        //Views.extendValue(input, new BitType(false))
 
                         // Für die Berechnung des Schwerpunkts
                         double[] positionSum = new double[labeling.numDimensions()];
@@ -109,7 +91,6 @@ public class GetConnectedNeighbours implements Command {
 
                                 // Inputposition auf labelpixel setzen
                                 nodeCur.localize(nodePixelPosition);
-                                //inRndAccess.setPosition(nodePixelPosition);
 
                                 // Schwerpunktsberechnung: Addition aller Pixelcoordinaten/Anzahl der Pixel
                                 for (int i = 0; i < labeling.numDimensions(); i++) {
@@ -117,13 +98,9 @@ public class GetConnectedNeighbours implements Command {
                                         pixelCount[i]++;
                                 }
 
-                                // ROI um nodepixel legen TODO: displacement nötig?
-                                //roi.setOrigin(nodeCur);
-                                //roi.move(displacement);                                
+                                // ROI um nodepixel legen                        
                                 roiAccess.setPosition(nodeCur);
-                                //roiAccess.move(displacement);
 
-                                //Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
                                 Cursor<BitType> roiCursor = roiAccess.get().cursor();
 
                                 // über ROI um Knotenpixel iterieren
@@ -132,17 +109,15 @@ public class GetConnectedNeighbours implements Command {
 
                                         // wenn der Pixel weiß ist = eine Linie ist ...
                                         if (roiCursor.get().getRealDouble() != 0) {
-                                                //if (roiCursor.get().get()) {
-
                                                 roiCursor.localize(nextOnLine);
 
-                                                //if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
                                                 // ... die aber nicht zur current node gehört ...
                                                 labelingRndAccess.setPosition(nextOnLine);
                                                 if (!labelingRndAccess.get().contains(node)) {
 
                                                         // ... dann laufe weiter, bis ein weiterer knoten entdeckt wurde, der nicht er selbst ist.
-                                                        Integer nextNode = walk(nextOnLine, nodePixelPosition);
+                                                        Integer nextNode = walk(nextOnLine, nodePixelPosition, labelingRndAccess,
+                                                                        regions.getExistingLabels());
                                                         if ((nextNode != null) && nextNode != node) {
                                                                 nodeArray[node].add(new IntCell(nextNode));
                                                                 //System.out.println("Nachbar von " + node + " ist " + nextNode);
@@ -206,7 +181,7 @@ public class GetConnectedNeighbours implements Command {
                         //System.out.println(i + "\t" + nodeArray[i].size() + "\t" + nodeArray[i]);
 
                 }
-                System.out.println("done!");
+
                 // TODO: Ausgabe in Tabelle - end 2015 (maybe)
                 // until then: copy data from logfile
                 // the DataTableSpec of the final table
@@ -231,19 +206,18 @@ public class GetConnectedNeighbours implements Command {
                  */
         }
 
-        // Läuft solange auf einer Linie weiter, bis der nächste Schritt gelabelt ist, gibt diesen Knoten zurück oder -99 wenn es eine Sackgasse ist
-        private Integer walk(int[] current, int[] last) {
+        // Läuft solange auf einer Linie weiter, bis der nächste Schritt gelabelt ist, gibt diesen Knoten zurück oder null wenn es eine Sackgasse ist
+        private Integer walk(int[] current, int[] last, RandomAccess<LabelingType<Integer>> labelingRndAccess, Set<Integer> nodes) {
 
                 // den nächsten Schritt ermitteln
                 int[] next = new int[labeling.numDimensions()];
 
-                // 3^n ROI generieren und um current legen
+                // 3^n ROI generieren und um current legen TODO: roi & roiaccess als private variable
                 final RectangleShape roi = new RectangleShape(1, false);
                 RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(Views.extendValue(input, new BitType(false)))
                                 .randomAccess();
 
                 roiAccess.setPosition(current);
-
                 Cursor<BitType> roiCursor = roiAccess.get().cursor();
 
                 // über ROI iterieren
@@ -258,49 +232,19 @@ public class GetConnectedNeighbours implements Command {
 
                                 // Abbruchbedingung: wenn der nächste Schritt nicht zurückgeht...
                                 if (!Arrays.equals(next, last) && !Arrays.equals(next, current)) {
-
-                                        LabelRegions<Integer> regions = new LabelRegions<>(labeling);
-                                        Set<Integer> nodes = regions.getExistingLabels();
-
-                                        RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
-
                                         // ...über alle Knoten iterieren, und wenn next gelabelt ist diesen Knoten zurückgeben
                                         for (Integer node : nodes) {
-                                                //if (labeling.getRegionOfInterest(node).contains(copyFromIntArray(next))) {
                                                 labelingRndAccess.setPosition(next);
                                                 if (labelingRndAccess.get().contains(node)) {
                                                         return node;
                                                 }
                                         }
-
                                         // wenn ein weißer Pixel gefunden ist, der weiß ist und nicht gelabelt, weitergehen
-                                        return walk(next, current);
+                                        return walk(next, current, labelingRndAccess, nodes);
                                 }
-
                         }
                 }
-
                 // Abbruchbedingung: kein Pixel um current außer last ist mehr weiß: kein Nachbar
                 return null;
         }
-        /*
-        // Hack: convert to int[] double[], damit roi.contains und roi.setOrigin funktioniert. Diskussion:
-        // http://stackoverflow.com/questions/12729139/copy-contents-of-an-int-array-to-a-double-array-in-java
-        private static double[] copyFromIntArray(int[] source) {
-                double[] dest = new double[source.length];
-                for (int i = 0; i < source.length; i++) {
-                        dest[i] = source[i];
-                }
-                return dest;
-        }
-        
-        // returns a rectangle roi of extend 3^d 
-        private final RectangleRegionOfInterest getROI() {
-        
-                double[] extend = new double[labeling.numDimensions()];
-                Arrays.fill(extend, 3);
-                return new RectangleRegionOfInterest(new double[labeling.numDimensions()], extend);
-        
-        }
-        */
 }
