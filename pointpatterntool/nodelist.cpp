@@ -22,12 +22,12 @@ nodelist::nodelist(int pattern, bool periodicity) :
 				coordinate(5, 5, 5)) {
 
 	switch (pattern) {
-	case 1: { // random point pattern
+	case 1: { // poisson pattern
 		cout
-				<< "Generate random point pattern with 1000 points in 10^3 cubicle..."
+				<< "Generate poisson pattern with 1000 points in 10^3 cubicle..."
 				<< endl;
 
-		name = "random point pattern";
+		name = "poissonpattern";
 
 		// seed for random numbers generator
 		srand(time(NULL));
@@ -37,7 +37,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			tmp->setEdgenode(1);
 			list.push_back(tmp);
 		}
-		cout << "Random point pattern";
+		cout << "Poisson pattern";
 		break;
 	}
 	case 2: { // diamond point pattern ((c) Dirk)
@@ -45,7 +45,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 				<< "Generate diamond point pattern with 1000 points in 10^3 cubicle..."
 				<< endl;
 
-		name = "diamond point pattern";
+		name = "diamondpattern";
 
 		int x = -5, y = -5, z = -5;
 		int numx = 5, numy = 5, numz = 5;
@@ -641,19 +641,28 @@ void nodelist::writeCoordinates() {
 	std::string outfileName = fileNameStream.str();
 
 
+	std::vector<std::string> data;
+/*
 	// iterate over extended pattern
 	std::vector<coordinate> shifters = getShifters();
-	std::vector<std::string> data;
+
 	for (vector<coordinate>::iterator shifter = shifters.begin();
 			shifter != shifters.end(); ++shifter) {
 		for (vector<node*>::iterator n = list.begin(); n != list.end();
 				++n) {
 			stringstream stream;
-
 			stream << ((*n)->getPosition() + *shifter).toString("", "\t", "") << endl;
-
 			data.push_back(stream.str());
 		}
+	}
+*/
+
+	// iterate over pattern
+	for (vector<node*>::iterator n = list.begin(); n != list.end();
+					++n) {
+				stringstream stream;
+				stream << ((*n)->getPosition()).toString("", "\t", "") << endl;
+				data.push_back(stream.str());
 	}
 
 	// write to outfile

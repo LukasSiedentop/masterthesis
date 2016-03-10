@@ -31,7 +31,6 @@ public class GetConnectedNeighbours implements Command {
         @Parameter(type = ItemIO.INPUT, label = "(skeletonized) Image", description = "Skeletonized Image whose Intersections are to be found.")
         private ImgPlus<BitType> input;
 
-        // TODO: not working anymore since update https://tech.knime.org/forum/knime-image-processing/knime-image-processing-140-and-new-integrations-released
         @Parameter(type = ItemIO.INPUT, label = "Labeling", description = "Labeling containing Labels at each intersection (aka node).")
         private ImgLabeling<Integer, ? extends IntegerType<?>> labeling;
 
@@ -45,15 +44,16 @@ public class GetConnectedNeighbours implements Command {
         @Parameter(type = ItemIO.OUTPUT)
         private ImgPlus<BitType> output;
 
-        private RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
+        // private RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
 
         @Override
         public void run() {
+
                 // to eliminate error message
                 output = input.copy();
 
                 RandomAccess<BitType> inRndAccess = input.randomAccess();
-                //RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
+                RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
 
                 //Iterator<Integer> nodes = labeling.getLabels().iterator();
                 //Integer node = 0;
@@ -63,10 +63,10 @@ public class GetConnectedNeighbours implements Command {
                 // 3^n ROI generieren
                 //final RectangleRegionOfInterest roi = getROI();
                 //double[] displacement = new double[labeling.numDimensions()];
-                final RectangleShape roi = new RectangleShape(3, false);
+                final RectangleShape roi = new RectangleShape(1, false);
                 RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(input).randomAccess();
-                int[] displacement = new int[labeling.numDimensions()];
-                Arrays.fill(displacement, -1);
+                //int[] displacement = new int[labeling.numDimensions()];
+                //Arrays.fill(displacement, -1);
 
                 // Positichonsarrays
                 int[] nodePixelPosition = new int[labeling.numDimensions()];
@@ -86,7 +86,7 @@ public class GetConnectedNeighbours implements Command {
                 //node = nodes.next();
                 for (Integer node : nodes) {
 
-                        nodeArray[node] = new ArrayList<IntCell>(0);
+                        nodeArray[node - 1] = new ArrayList<IntCell>(0);
 
                         // Cursor über Knotenpixel
                         //Cursor<BitType> nodeCur = labeling.getIterableRegionOfInterest(node).getIterableIntervalOverROI(input).localizingCursor();
@@ -115,7 +115,7 @@ public class GetConnectedNeighbours implements Command {
                                 //roi.setOrigin(nodeCur);
                                 //roi.move(displacement);                                
                                 roiAccess.setPosition(nodeCur);
-                                roiAccess.move(displacement);
+                                //roiAccess.move(displacement);
 
                                 //Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
                                 Cursor<BitType> roiCursor = roiAccess.get().cursor();
@@ -125,8 +125,8 @@ public class GetConnectedNeighbours implements Command {
                                         roiCursor.fwd();
 
                                         // wenn der Pixel weiß ist = eine Linie ist ...
-                                        //if (roiCursor.get().getRealDouble() != 0) {
-                                        if (roiCursor.get().get()) {
+                                        if (roiCursor.get().getRealDouble() != 0) {
+                                                //if (roiCursor.get().get()) {
                                                 roiCursor.localize(nextOnLine);
 
                                                 //if (!labeling.getRegionOfInterest(node).contains(copyFromIntArray(nextOnLine))) {
@@ -137,7 +137,7 @@ public class GetConnectedNeighbours implements Command {
                                                         // ... dann laufe weiter, bis ein weiterer knoten entdeckt wurde.
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition);
                                                         if (nextNode != null) {
-                                                                nodeArray[node].add(new IntCell(nextNode));
+                                                                nodeArray[node - 1].add(new IntCell(nextNode));
                                                                 //System.out.println("Nachbar von " + node + " ist " + nextNode);
                                                         }
 
@@ -233,13 +233,14 @@ public class GetConnectedNeighbours implements Command {
                 // 3^n ROI generieren und um current legen
                 //final RectangleRegionOfInterest roi = getROI();
                 //double[] displacement = new double[labeling.numDimensions()];
-                final RectangleShape roi = new RectangleShape(3, false);
+                //final RectangleShape roi = new RectangleShape(3, false);
+                final RectangleShape roi = new RectangleShape(1, false);
                 RandomAccess<Neighborhood<BitType>> roiAccess = roi.neighborhoodsRandomAccessible(input).randomAccess();
-                int[] displacement = new int[labeling.numDimensions()];
-                Arrays.fill(displacement, -1);
+                //int[] displacement = new int[labeling.numDimensions()];
+                //Arrays.fill(displacement, -1);
 
                 roiAccess.setPosition(current);
-                roiAccess.move(displacement);
+                //roiAccess.move(displacement);
 
                 //Cursor<BitType> roiCursor = roi.getIterableIntervalOverROI(input).cursor();
                 Cursor<BitType> roiCursor = roiAccess.get().cursor();
@@ -249,7 +250,8 @@ public class GetConnectedNeighbours implements Command {
                         roiCursor.fwd();
 
                         // Wenn der Pixel weiß ist...
-                        if (roiCursor.get().get()) {
+                        if (roiCursor.get().getRealDouble() != 0) {
+                                //if (roiCursor.get().get()) {
                                 roiCursor.localize(next);
 
                                 // Abbruchbedingungen checken
@@ -266,6 +268,7 @@ public class GetConnectedNeighbours implements Command {
                                         //while (nodesIter.hasNext()) {
                                         //node = nodesIter.next();
                                         for (Integer node : nodes) {
+                                                RandomAccess<LabelingType<Integer>> labelingRndAccess = labeling.randomAccess();
                                                 //if (labeling.getRegionOfInterest(node).contains(copyFromIntArray(next))) {
                                                 labelingRndAccess.setPosition(next);
                                                 if (!labelingRndAccess.get().equals(regions.getLabelRegion(node))) {

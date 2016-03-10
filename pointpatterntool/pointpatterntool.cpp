@@ -391,17 +391,17 @@ int main(int argc, char* argv[]) {
 	vector<nodelist*> lists;
 
 	// No arguments given -> generate diamond and random point pattern
-	if (argc == 1) {
+	//if (argc == 1) {
 		lists.push_back(new nodelist(1, true));
 		lists.push_back(new nodelist(2, true));
-	}
+	//}
 
 	for (int i = 1; i < argc; i += 3) {
-		string name = "point pattern";
+		string name = "pointpattern";
 		if (i == 1) {
-			name = "HPU Chi 4C Chi 0.13 NP=1000 UC";
+			name = "HPUChi4CChi0.13NP=1000UC";
 		} else if (i == 4) {
-			name = "recovered pattern";
+			name = "recoveredpattern";
 		}
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
