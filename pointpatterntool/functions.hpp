@@ -193,7 +193,7 @@ std::vector<std::string> getColors();
  */
 void plotHist(std::vector<std::vector<double> > data, double min, double max,
 		int n, vector<std::string> names, const std::string xlabel = "x",
-		const std::string file = "/dev/null");
+		const std::string file = "/dev/null/");
 
 /**
  * Plottet die Varianz über den Radius. TODO: klären welches vector verwendet wird. ist das von boost besser? müsste immo std sein.
@@ -201,7 +201,7 @@ void plotHist(std::vector<std::vector<double> > data, double min, double max,
 void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
 		double xMax, std::vector<std::string> names, const std::string xlabel = "x",
 		const std::string ylabel = "y",
-		const std::string file = "/dev/null");
+		const std::string file = "/dev/null/");
 
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.

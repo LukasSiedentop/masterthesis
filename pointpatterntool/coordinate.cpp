@@ -114,11 +114,11 @@ ostream& operator <<(ostream &os, const coordinate &obj) {
 }
 
 string coordinate::toString(const string begin, const string delimiter,
-		const string end) const {
+		const string end, const int precision) const {
 	stringstream stream;
 
 	// write 4 non-zero digits for each double
-	stream.precision(4);
+	stream.precision(precision);
 
 	stream << begin;
 

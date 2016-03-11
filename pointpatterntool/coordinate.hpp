@@ -15,6 +15,7 @@
 #include <limits>
 #include <cstdlib>
 #include <iterator>
+#include <stdio.h>
 
 static const double tolerance = 0.0000001;
 
@@ -67,7 +68,7 @@ public:
 
 	// Gives an adjustable string-representation of the point
 	std::string toString(const std::string begin = "(", const std::string delimiter = ",",
-			const std::string end = ")") const;
+			const std::string end = ")", const int precision = 4) const;
 	// Representation of the point in a stringstream
 	friend std::ostream& operator <<(std::ostream& os, const coordinate& obj);
 

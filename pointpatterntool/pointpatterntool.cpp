@@ -196,9 +196,67 @@ void gnuplotPattern(vector<nodelist*>& lists) {
 }
 
 /**
- * Compares two lists.
+ * Compares two lists. TODO: compare more than two with the first...
  */
 void compareLists(vector<nodelist*>& lists) {
+
+	// get names of lists
+	vector<string> names;
+	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
+			++list) {
+		names.push_back((*list)->getName());
+	}
+
+	// neighbourstats
+	cout << "Count the neighbours of every node..." << endl;
+	vector<vector<double> > neighData;
+	for (vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
+		vector<double> neighbours = (*list)->neighbourDistribution();
+		neighData.push_back(neighbours);
+
+		cout << "Neighbourstatistics of pattern '" << (*list)->getName()
+				<< "':" << endl;
+		cout << statsAsString(stats(neighbours));
+	}
+
+	plotHist(neighData, 0, 10, 10, names, "number of neighbours",
+						"data/resolution-validation/neighbours_histogram");
+
+
+	// length stats
+	cout << "Evaluate the distance between neighbouring nodes..."
+					<< endl;
+	vector<vector<double> > lenData;
+	for (vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
+		vector<double> lengths = (*list)->lengthDistribution();
+		lenData.push_back(lengths);
+
+		cout << "Lengthstatistics of pattern " << (*list)->getName()
+				<< ":" << endl;
+		cout << statsAsString(stats(lengths));
+	}
+	plotHist(lenData, 0, 1, 50, names, "distance of neighbouring nodes",
+					"data/resolution-validation/lengths_histogram");
+
+	// angle stats
+	cout << "Evaluate the angle between neighbouring nodes..." << endl;
+	vector<vector<double> > angData;
+	for (vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
+		vector<double> angles = (*list)->angleDistribution();
+		angData.push_back(angles);
+
+		names.push_back((*list)->getName());
+		cout << "Anglestatistics of pattern " << (*list)->getName()
+				<< ":" << endl;
+		cout << statsAsString(stats(angles));
+	}
+	plotHist(angData, 0, 180, 180, names,
+			"angle between neighbouring nodes",
+			"data/resolution-validation/angles_histogram");
+
 	// TODO: evtl guiabfrage
 	///////////////////////////////////////////////////////////////////////
 	// adjust scaling and roughly the midpoint
@@ -255,23 +313,15 @@ void compareLists(vector<nodelist*>& lists) {
 	vector<vector<double> > histData;
 	histData.push_back(diffLengths);
 
-	// get names of lists
-	vector<string> names;
-	names.push_back("difference vectors");
-	for (vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
-			++list) {
-		names.push_back((*list)->getName());
-	}
-
 	vector<string> title;
 
-	title.push_back("difference");
+	title.push_back(names[1]);
 
-	plotHist(histData, 0, 0.1, 50, title, "difference vector lengths");
+	plotHist(histData, 0, 0.1, 50, title, "difference vector lengths", "data/resolution-validation/difference-length");
 	// Punktewolke
 	plot3D(plotData, names, "x", "y", "z", "w p ls 7");
 	// Angepasste Muster
-	gnuplotPattern(lists);
+	//gnuplotPattern(lists);
 
 }
 
@@ -391,27 +441,59 @@ int main(int argc, char* argv[]) {
 	vector<nodelist*> lists;
 
 	// No arguments given -> generate diamond and random point pattern
-	//if (argc == 1) {
+	if (argc == 1) {
 		lists.push_back(new nodelist(1, true));
 		lists.push_back(new nodelist(2, true));
-	//}
+	}
 
-	for (int i = 1; i < argc; i += 3) {
-		string name = "pointpattern";
+	// argument 1: nodes file, 2: neighbours files, 3: isperiodic, 4: name
+	for (int i = 1; i < argc; i += 4) {
+		/*
+		std::string name = "pointpattern";
 		if (i == 1) {
 			name = "HPUChi4CChi0.13NP=1000UC";
 		} else if (i == 4) {
 			name = "recoveredpattern";
-		}
+		}*/
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
-						name));
+						argv[i+3]));
+
+		/*
+		// for resolution validation
+		if (i==5) {
+			// res600
+			lists.back()->scaleList(1./50.);
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		} else if (i==9) {
+			// res300
+			lists.back()->scaleList(1./25.);
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		} else if (i==13) {
+			// res150
+			lists.back()->scaleList(1./12.5);
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		} else if (i==17) {
+			// res120
+			lists.back()->scaleList(1./10.);
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		} else if (i==21) {
+			// res100
+			lists.back()->scaleList(1./(100./12.));
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		} else if (i==25) {
+			// res75
+			lists.back()->scaleList(1./6.25);
+			lists.back()->shiftList(coordinate(-5,-5,-5));
+		}*/
 	}
 
-	//lists.push_back(new nodelist(2, true));
+	// scale back to 10^3 cube
+	lists.back()->scaleList(1./(100./12.));
+	// shift origin to mid of cube
+	lists.back()->shiftList(coordinate(-5,-5,-5));
 
-	//lists.back()->scaleList(1./50.);
-	//lists.back()->shiftList(coordinate(-5,-5,-5));
+	// functions TODO: https://de.wikipedia.org/wiki/Radiale_Verteilungsfunktion, Structure factor, beautify periodic boundary conditions, generation tool
 
 	int option = -1;
 	while (option != 0) {

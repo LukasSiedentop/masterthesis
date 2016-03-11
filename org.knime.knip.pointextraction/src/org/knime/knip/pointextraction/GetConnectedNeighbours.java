@@ -115,10 +115,12 @@ public class GetConnectedNeighbours implements Command {
                                                 labelingRndAccess.setPosition(nextOnLine);
                                                 if (!labelingRndAccess.get().contains(node)) {
 
-                                                        // ... dann laufe weiter, bis ein weiterer knoten entdeckt wurde, der nicht er selbst ist.
+                                                        // ... dann laufe weiter, bis ein weiterer knoten entdeckt wurde, der nicht er selbst ist, und der noch nicht in der Liste ist.
                                                         Integer nextNode = walk(nextOnLine, nodePixelPosition, labelingRndAccess,
                                                                         regions.getExistingLabels());
-                                                        if ((nextNode != null) && nextNode != node) {
+                                                        // TODO: check if contains optional machen, dauert halt etwas länger, v.a. für viele punkte und stark vergrößerte knoten...
+                                                        if ((nextNode != null) && nextNode != node
+                                                                        && !nodeArray[node].contains(new IntCell(nextNode))) {
                                                                 nodeArray[node].add(new IntCell(nextNode));
                                                                 //System.out.println("Nachbar von " + node + " ist " + nextNode);
                                                         }

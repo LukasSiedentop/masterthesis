@@ -661,7 +661,7 @@ void nodelist::writeCoordinates() {
 	for (vector<node*>::iterator n = list.begin(); n != list.end();
 					++n) {
 				stringstream stream;
-				stream << ((*n)->getPosition()).toString("", "\t", "") << endl;
+				stream << ((*n)->getPosition()).toString("", "\t", "", 10) << endl;
 				data.push_back(stream.str());
 	}
 
