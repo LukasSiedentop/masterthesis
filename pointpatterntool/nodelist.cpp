@@ -23,8 +23,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 
 	switch (pattern) {
 	case 1: { // poisson pattern
-		cout
-				<< "Generate poisson pattern with 1000 points in 10^3 cubicle..."
+		cout << "Generate poisson pattern with 1000 points in 10^3 cubicle..."
 				<< endl;
 
 		name = "poissonpattern";
@@ -115,14 +114,13 @@ void nodelist::setNeighbours() {
 						for (vector<coordinate>::iterator shifter =
 								shifters.begin(); shifter != shifters.end();
 								++shifter) {
-							diff = ((*nextn)->getPosition())
-									- ((*n)->getPosition()) + (*shifter);
+							diff = (((*nextn)->getPosition()) + (*shifter))
+									- ((*n)->getPosition());
 							if (diff.lengthSqr() < distSqr) {
 								distSqr = diff.lengthSqr();
 								neigh = (*nextn);
 							}
 						}
-
 					} else {
 						diff = ((*nextn)->getPosition())
 								- ((*n)->getPosition());
@@ -131,7 +129,6 @@ void nodelist::setNeighbours() {
 							neigh = (*nextn);
 						}
 					}
-
 				}
 			}
 
@@ -203,29 +200,29 @@ int nodelist::pointsInside(const vector<coordinate>& points,
 	return ctr;
 }
 /*
-nodelist nodelist::extendList(int nx, int ny, int nz) {
-	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
+ nodelist nodelist::extendList(int nx, int ny, int nz) {
+ double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
 
-	nodelist* extList = new nodelist(false, name + " extended x " + nx + ", y " + ny + ", z " + nz);
+ nodelist* extList = new nodelist(false, name + " extended x " + nx + ", y " + ny + ", z " + nz);
 
-	// go through all combinations
-	for (int ix = 0; ix < nx; ix++) {
-		for (int iy = 0; iy < ny; iy++) {
-			for (int iz = 0; iz < nz; iz++) {
-				// add the shifting vector to the list and merge it
-				coordinate(ix * lx, iy * ly, iz * lz);
-				extList->merge(this->shiftList());
-			}
-		}
-	}
+ // go through all combinations
+ for (int ix = 0; ix < nx; ix++) {
+ for (int iy = 0; iy < ny; iy++) {
+ for (int iz = 0; iz < nz; iz++) {
+ // add the shifting vector to the list and merge it
+ coordinate(ix * lx, iy * ly, iz * lz);
+ extList->merge(this->shiftList());
+ }
+ }
+ }
 
-	nodelist* extList = new nodelist(this->shiftList(shifters[i]));
+ nodelist* extList = new nodelist(this->shiftList(shifters[i]));
 
 
 
-	return this;
-}
-*/
+ return this;
+ }
+ */
 void nodelist::setMins(coordinate mins) {
 	min = mins;
 }
@@ -255,6 +252,22 @@ void nodelist::scaleList(double a) {
 		(*it)->scale(a);
 	}
 }
+
+void nodelist::scaleListAnisotropic(double ax, double ay, double az) {
+	// correct bounding box
+	min[0] *= ax;
+	min[1] *= ay;
+	min[2] *= az;
+	max[0] *= ax;
+	max[1] *= ay;
+	max[2] *= az;
+
+	// scale entries
+	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		(*it)->scaleAnisotropic(ax, ay, az);
+	}
+}
+
 /* unneccesary
  bool nodelist::isPeriodic() const {
  return periodic;
@@ -404,9 +417,12 @@ string nodelist::listStats(const string commentDelimeter) {
 		stream << commentDelimeter << "Number of edgenodes: "
 				<< countEdgenodes() << endl;
 	}
+
+
 	stream << commentDelimeter << "Number of nodes: " << list.size() << endl;
 	stream << commentDelimeter << "Bounding box: " << min << ", " << max
 			<< endl;
+	stream << commentDelimeter << "Characteristic length: " << stats(lengthDistribution())[1] << endl;
 	stream << commentDelimeter << "Mid of box: " << getMid() << endl;
 	stream << commentDelimeter << "Volume: " << getVolume() << endl;
 	stream << commentDelimeter << "Density of points: " << getDensity() << endl;
@@ -415,6 +431,15 @@ string nodelist::listStats(const string commentDelimeter) {
 }
 
 double nodelist::normalize() {
+	// stats(lengthDistribution())[1]
+
+	// only for agapornis! TODO: function to set scaling for each direction...
+	double resX = 9.067;// nm/px
+	double resY = 9.067;// nm/px
+	double resZ = 25;//nm/px
+
+	scaleListAnisotropic(resX, resY, resZ);
+
 	// set density to 1
 	setDensity(1);
 
@@ -499,7 +524,7 @@ vector<double> nodelist::angleDistribution() {
 						(*neighIter1)->getNeighbours()->begin();
 						neighIter2 != (*neighIter1)->getNeighbours()->end();
 						++neighIter2) {
-					// dont calculate angles with itself
+					// don't calculate angles with itself
 					if (!(*nodeIter)->equals(*neighIter2)) {
 						if (periodic) {
 							data.push_back(
@@ -640,29 +665,27 @@ void nodelist::writeCoordinates() {
 	fileNameStream << "./data/points_" << name << ".csv";
 	std::string outfileName = fileNameStream.str();
 
-
 	std::vector<std::string> data;
-/*
-	// iterate over extended pattern
-	std::vector<coordinate> shifters = getShifters();
+	/*
+	 // iterate over extended pattern
+	 std::vector<coordinate> shifters = getShifters();
 
-	for (vector<coordinate>::iterator shifter = shifters.begin();
-			shifter != shifters.end(); ++shifter) {
-		for (vector<node*>::iterator n = list.begin(); n != list.end();
-				++n) {
-			stringstream stream;
-			stream << ((*n)->getPosition() + *shifter).toString("", "\t", "") << endl;
-			data.push_back(stream.str());
-		}
-	}
-*/
+	 for (vector<coordinate>::iterator shifter = shifters.begin();
+	 shifter != shifters.end(); ++shifter) {
+	 for (vector<node*>::iterator n = list.begin(); n != list.end();
+	 ++n) {
+	 stringstream stream;
+	 stream << ((*n)->getPosition() + *shifter).toString("", "\t", "") << endl;
+	 data.push_back(stream.str());
+	 }
+	 }
+	 */
 
 	// iterate over pattern
-	for (vector<node*>::iterator n = list.begin(); n != list.end();
-					++n) {
-				stringstream stream;
-				stream << ((*n)->getPosition()).toString("", "\t", "", 10) << endl;
-				data.push_back(stream.str());
+	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		stringstream stream;
+		stream << ((*n)->getPosition()).toString("", "\t", "", 10) << endl;
+		data.push_back(stream.str());
 	}
 
 	// write to outfile
@@ -709,6 +732,11 @@ void nodelist::writePOV() {
 			nodeIter != list.end(); ++nodeIter) {
 		stringstream stream;
 
+		// if point is without bounary...
+		if ((*nodeIter)->getPosition().min() < -5 || (*nodeIter)->getPosition().max() > 5) {
+			continue;
+		}
+
 		// sphere at joint
 		stream << "sphere{"
 				<< (*nodeIter)->getPosition().toString("<", ",", ">") << ",r}"
@@ -718,18 +746,40 @@ void nodelist::writePOV() {
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
-			// cylinder only if not connected over boundary
-			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) {
-				// cylinder from a to b TODO: den zurück nicht...
-				stream << "cylinder{"
-						<< (*nodeIter)->getPosition().toString("<", ",", ">")
-						<< ","
-						<< (*neighIter)->getPosition().toString("<", ",", ">")
-						<< ",r}" << endl;
+			// get target link
+			coordinate linkTarget(std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity());
+			if (periodic) {
 
+				double distSqr = std::numeric_limits<double>::infinity();
+				coordinate diff;
+
+				vector<coordinate> shifters = getShifters();
+				for (vector<coordinate>::iterator shifter = shifters.begin();
+						shifter != shifters.end(); ++shifter) {
+					diff = (((*neighIter)->getPosition()) + (*shifter))
+							- ((*nodeIter)->getPosition());
+					if (diff.lengthSqr() < distSqr) {
+						distSqr = diff.lengthSqr();
+						linkTarget =
+								(((*neighIter)->getPosition()) + (*shifter));
+					}
+				}
+			} else {
+				linkTarget = (*neighIter)->getPosition();
 			}
+
+			// sphere at joint over the boundary
+			stream << "sphere{"
+					<< linkTarget.toString("<", ",", ">") << ",r}"
+					<< endl;
+
+			// cylinder from a to b TODO: den zurück nicht...
+			stream << "cylinder{"
+					<< (*nodeIter)->getPosition().toString("<", ",", ">") << ","
+					<< linkTarget.toString("<", ",", ">") << ",r}" << endl;
+
 		}
 		data.push_back(stream.str());
 	}
@@ -773,29 +823,46 @@ void nodelist::writeMEEP() {
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
-			// cylinder only if not connected over boundary
-			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) {
+			// TODO: as extra function, as it is used quite often...
+			// get target link
+			coordinate linkTarget(std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity());
+			if (periodic) {
 
-				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
-				coordinate axis = (*nodeIter)->getPosition()
-						- (*neighIter)->getPosition();
+				double distSqr = std::numeric_limits<double>::infinity();
+				coordinate diff;
 
-				// length = length of connecvting vector
-				double height = axis.length();
+				vector<coordinate> shifters = getShifters();
+				for (vector<coordinate>::iterator shifter = shifters.begin();
+						shifter != shifters.end(); ++shifter) {
+					diff = (((*neighIter)->getPosition()) + (*shifter))
+							- ((*nodeIter)->getPosition());
+					if (diff.lengthSqr() < distSqr) {
+						distSqr = diff.lengthSqr();
+						linkTarget =
+								(((*neighIter)->getPosition()) + (*shifter));
+					}
+				}
 
-				// center: middpoint of points
-				string center = (((*nodeIter)->getPosition()
-						+ (*neighIter)->getPosition()) / 2).toString("", " ",
-						"");
-
-				// block from a to b TODO: den zurück nicht...
-				stream << "(make cylinder (material polymer) (center " << center
-						<< ") (radius rad) (height " << height
-						<< ") (axis " << axis.toString("", " ", "") << ")) ";
-
+			} else {
+				linkTarget = (*neighIter)->getPosition();
 			}
+			// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
+			coordinate axis = (*nodeIter)->getPosition() - linkTarget;
+
+			// length = length of connecvting vector
+			double height = axis.length();
+
+			// center: middpoint of points
+			string center =
+					(((*nodeIter)->getPosition() + linkTarget) / 2).toString("",
+							" ", "");
+
+			// block from a to b TODO: den zurück nicht...
+			stream << "(make cylinder (material polymer) (center " << center
+					<< ") (radius rad) (height " << height << ") (axis "
+					<< axis.toString("", " ", "") << ")) ";
 		}
 
 		// Ellipsoid Approximation (apparently too big ctl file for meep...)
@@ -815,8 +882,8 @@ void nodelist::writeMEEP() {
 		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 		 // cylinder only if not connected over boundary
-		if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) { {
+		 if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+		 < getMaxFeatureSize())) { {
 
 		 // e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
 		 coordinate e1 = (*nodeIter)->getPosition()
@@ -849,8 +916,7 @@ void nodelist::writeMEEP() {
 
 		 }
 		 }*/
-		 stream << endl;
-
+		stream << endl;
 
 		data.push_back(stream.str());
 	}
@@ -887,7 +953,10 @@ void nodelist::writeMPB() {
 
 		// Cylinders for rods
 		//double radius = 0.2685;
-		stream << (*nodeIter)->getPosition().toString("(make sphere (material polymer) (center (c->l ", " ", ")) (radius rad)) ");
+		stream
+				<< (*nodeIter)->getPosition().toString(
+						"(make sphere (material polymer) (center (c->l ", " ",
+						")) (radius rad)) ");
 
 		for (vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
@@ -895,7 +964,8 @@ void nodelist::writeMPB() {
 
 			// cylinder only if not connected over boundary
 			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+			if ((!periodic)
+					|| ((*nodeIter)->euklidian((*neighIter))
 							< getMaxFeatureSize())) {
 
 				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
@@ -911,9 +981,10 @@ void nodelist::writeMPB() {
 						"");
 
 				// cylinder from a to b TODO: den zurück nicht...
-				stream << "(make cylinder (material polymer) (center (c->l " << center
-						<< ")) (radius rad) (height " << height
-						<< ") (axis " << axis.toString("(c->l ", " ", ")") << ")) ";
+				stream << "(make cylinder (material polymer) (center (c->l "
+						<< center << ")) (radius rad) (height " << height
+						<< ") (axis " << axis.toString("(c->l ", " ", ")")
+						<< ")) ";
 
 			}
 		}
@@ -935,8 +1006,8 @@ void nodelist::writeMPB() {
 		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
 		 // cylinder only if not connected over boundary
-		if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) { {
+		 if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
+		 < getMaxFeatureSize())) { {
 
 		 // e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
 		 coordinate e1 = (*nodeIter)->getPosition()
@@ -969,8 +1040,7 @@ void nodelist::writeMPB() {
 
 		 }
 		 }*/
-		 stream << endl;
-
+		stream << endl;
 
 		data.push_back(stream.str());
 	}
@@ -1023,7 +1093,7 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 	}
 
 	vector<vector<double> > data;
-// nodesiteration
+	// nodesiteration
 	for (vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		// neighboursiteration
@@ -1031,18 +1101,36 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
-			//  print link only if both are not connected over boundary
-			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			if ((!periodic) || ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) {
-				//if (!(*nodeIter)->isEdgenode()) {
-				data.push_back(*(*nodeIter)->getPosition().getVector());
-				data.push_back(*(*neighIter)->getPosition().getVector());
+			// get target link
+			coordinate linkTarget(std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity(),
+					std::numeric_limits<double>::infinity());
+			if (periodic) {
 
-				data.push_back(emptyLine);
-				//}
-				//}
+				double distSqr = std::numeric_limits<double>::infinity();
+				coordinate diff;
+
+				vector<coordinate> shifters = getShifters();
+				for (vector<coordinate>::iterator shifter = shifters.begin();
+						shifter != shifters.end(); ++shifter) {
+					diff = (((*neighIter)->getPosition()) + (*shifter))
+							- ((*nodeIter)->getPosition());
+					if (diff.lengthSqr() < distSqr) {
+						distSqr = diff.lengthSqr();
+						linkTarget =
+								(((*neighIter)->getPosition()) + (*shifter));
+					}
+				}
+
+			} else {
+				linkTarget = (*neighIter)->getPosition();
 			}
+
+			data.push_back(*(*nodeIter)->getPosition().getVector());
+			data.push_back(*linkTarget.getVector());
+
+			data.push_back(emptyLine);
+
 		}
 	}
 	return data;

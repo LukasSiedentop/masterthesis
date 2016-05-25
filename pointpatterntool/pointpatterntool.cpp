@@ -155,7 +155,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 		// adaptable parameter
 		double characteristicLength = stats(list->lengthDistribution())[1]
-				* 1.5;
+				* 2;
 		cout << "Nodes farther away of the edge than " << characteristicLength
 				<< " are declared to be edgenodes." << endl;
 		list->setEdgenodes(characteristicLength);
@@ -442,24 +442,22 @@ int main(int argc, char* argv[]) {
 
 	// No arguments given -> generate diamond and random point pattern
 	if (argc == 1) {
+		// poisson
 		lists.push_back(new nodelist(1, true));
+		// diamond
 		lists.push_back(new nodelist(2, true));
 	}
 
+
+
 	// argument 1: nodes file, 2: neighbours files, 3: isperiodic, 4: name
 	for (int i = 1; i < argc; i += 4) {
-		/*
-		std::string name = "pointpattern";
-		if (i == 1) {
-			name = "HPUChi4CChi0.13NP=1000UC";
-		} else if (i == 4) {
-			name = "recoveredpattern";
-		}*/
+
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
 						argv[i+3]));
 
-		/*
+/*
 		// for resolution validation
 		if (i==5) {
 			// res600
@@ -489,12 +487,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	// scale back to 10^3 cube
-	lists.back()->scaleList(1./(100./12.));
+	//lists.back()->scaleList(1./(6.25));
 	// shift origin to mid of cube
-	lists.back()->shiftList(coordinate(-5,-5,-5));
+	//lists.back()->shiftList(coordinate(-5,-5,-5));
+
+	// normalize agapornis
+	lists.back()->normalize();
 
 	// functions TODO: https://de.wikipedia.org/wiki/Radiale_Verteilungsfunktion, Structure factor, beautify periodic boundary conditions, generation tool
-
+	// write pattern to file, to disable double entries, making reading better...
 	int option = -1;
 	while (option != 0) {
 		//benchmark();
@@ -533,6 +534,8 @@ int main(int argc, char* argv[]) {
 					<< endl;
 			vector<vector<double> > data;
 			vector<string> names;
+
+			double maxLength = 0;
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				vector<double> lengths = (*list)->lengthDistribution();
@@ -543,8 +546,12 @@ int main(int argc, char* argv[]) {
 				cout << "Lengthstatistics of pattern " << (*list)->getName()
 						<< ":" << endl;
 				cout << statsAsString(stats(lengths));
+				maxLength = max(maxLength,stats(lengths)[12]);
 			}
-			plotHist(data, 0, 1, 50, names, "distance of neighbouring nodes",
+
+			cout << "Maximum length: " << maxLength << endl;
+
+			plotHist(data, 0, ceil(maxLength), 50, names, "distance of neighbouring nodes",
 					"data/statistics/lengths_histogram");
 			break;
 		}
@@ -638,8 +645,8 @@ int main(int argc, char* argv[]) {
 			for (vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				double factor = (*list)->normalize();
-				cout << "Pattern " << ctr << "normalized (scaled with factor "
-						<< factor << ").";
+				cout << "Pattern " << ctr << "normalised (scaled with factor "
+						<< factor << ")." << endl;
 				ctr++;
 			}
 			break;

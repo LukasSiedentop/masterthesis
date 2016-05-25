@@ -90,6 +90,8 @@ public:
 
 	// Returns the minimal component of the coordinate.
 	double min() const;
+	// Returns the maximal component of the coordinate.
+	double max() const;
 
 	double euklidian(coordinate point) const;
 	double lengthSqr() const;

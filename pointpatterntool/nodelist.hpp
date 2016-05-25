@@ -76,6 +76,7 @@ public:
 	std::string getName();
 	void shiftList(coordinate shifter);
 	void scaleList(double a);
+	void scaleListAnisotropic(double ax, double ay, double az);
 	void deleteEntries();
 
 	// subscript operator

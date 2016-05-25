@@ -139,6 +139,14 @@ double coordinate::min() const {
 	return minimum;
 }
 
+double coordinate::max() const {
+	double maximum = -numeric_limits<double>::infinity();
+	for (unsigned i = 0; i < dimensions(); i++) {
+		maximum = std::max(maximum, (*this)[i]);
+	}
+	return maximum;
+}
+
 double coordinate::euklidian(coordinate point) const {
 	return coordinate(*this - point).length();
 }

@@ -40,6 +40,7 @@ public:
 	int countNeighbours();
 	void shift(coordinate shifter);
 	void scale(double a);
+	void scaleAnisotropic(double ax, double ay, double az);
 
 	// if this node is farther away than distance from the bounding box, it is not an edgenode
 	void setEdgenode(double distance);

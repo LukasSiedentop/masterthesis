@@ -24,7 +24,10 @@ vector<double> stats(vector<double> data) {
 	// sum
 	double sum = 0;
 	for (unsigned int i = 0; i < data.size(); i++) {
-		sum += data[i];
+		// check for nan: is not equal to itself
+		if (data[i] == data[i]) {
+			sum += data[i];
+		}
 	}
 
 	// expectancy (1st moment) & median
@@ -36,8 +39,12 @@ vector<double> stats(vector<double> data) {
 	double varMedian = 0;
 
 	for (unsigned int i = 0; i < data.size(); i++) {
-		variance += pow((data[i] - expectedValue), 2);
-		varMedian += pow((data[i] - median), 2);
+		// check for nan: is not equal to itself
+		if (data[i] == data[i]) {
+			variance += pow((data[i] - expectedValue), 2);
+			varMedian += pow((data[i] - median), 2);
+		}
+
 	}
 	variance = variance / data.size();
 	varMedian = varMedian / data.size();
@@ -132,14 +139,16 @@ vector<std::string> getColors() {
 	vector<std::string> colors;
 
 	// #55xxxxxx - little bit transparent
+	colors.push_back("#554DAF4A"); // green
+	colors.push_back("#55A65628"); // brown
 
 	colors.push_back("#55E41A1C"); // red
 	colors.push_back("#55377EB8"); // blue
-	colors.push_back("#554DAF4A"); // green
+	// g
 	colors.push_back("#55984EA3"); // purple
 	colors.push_back("#55FF7F00"); // orange
 	colors.push_back("#55FFFF33"); // yellow
-	colors.push_back("#55A65628"); // brown
+	// b
 	colors.push_back("#55F781BF"); // pink
 
 	return colors;
@@ -147,13 +156,14 @@ vector<std::string> getColors() {
 }
 
 void plotHist(vector<vector<double> > datas, double min, double max, int n,
-		vector<std::string> names, const std::string xlabel, const std::string file) {
+		vector<std::string> names, const std::string xlabel,
+		const std::string file) {
 
 	// get filename
 	stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<std::string>::iterator name = names.begin(); name != names.end();
-			++name) {
+	for (vector<std::string>::iterator name = names.begin();
+			name != names.end(); ++name) {
 		std::string filename = (*name);
 		filename.erase(std::remove(filename.begin(), filename.end(), ' '),
 				filename.end());
@@ -224,16 +234,16 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 }
 
 void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<std::string> names, const std::string xlabel, const std::string ylabel,
-		const std::string file) {
+		vector<std::string> names, const std::string xlabel,
+		const std::string ylabel, const std::string file) {
 
 	double xMin = 0;
 
 	// get filename
 	stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<std::string>::iterator name = names.begin(); name != names.end();
-			++name) {
+	for (vector<std::string>::iterator name = names.begin();
+			name != names.end(); ++name) {
 		std::cout << (*name) << "\n";
 		(*name).erase(std::remove((*name).begin(), (*name).end(), ' '),
 				(*name).end());
@@ -302,8 +312,8 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 }
 
 void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
-		const std::string xlabel, const std::string ylabel, const std::string zlabel,
-		const std::string style) {
+		const std::string xlabel, const std::string ylabel,
+		const std::string zlabel, const std::string style) {
 	Gnuplot gp;
 	gp << "reset\n";
 

@@ -115,6 +115,13 @@ void node::scale(double a) {
 	position *= a;
 }
 
+// TODO: prettier?
+void node::scaleAnisotropic(double ax, double ay, double az) {
+	position[0] *= ax;
+	position[1] *= ay;
+	position[2] *= az;
+}
+
 void node::addNeighbour(node* n) {
 	if (this->isNeighbour(n) || (this->equals(n))) {
 		return;
