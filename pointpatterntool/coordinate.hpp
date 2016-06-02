@@ -28,6 +28,8 @@ private:
 public:
 	// Reference: https://en.wikipedia.org/wiki/Rule_of_three_(C%2B%2B_programming)
 	coordinate();
+	// Generates a random point in n dimensions with all coordinates the same value
+	coordinate(double pos, unsigned int n);
 	coordinate(double x, double y);
 	coordinate(double x, double y, double z);
 	// Generates a random point with coordinate in (0,1)^n

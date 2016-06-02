@@ -37,7 +37,7 @@ public:
 	double euklidianPeriodic(node* node);
 	double angle(node* nodeA, node* nodeB);
 	double anglePeriodic(node* nodeA, node* nodeB);
-	int countNeighbours();
+	unsigned int countNeighbours();
 	void shift(coordinate shifter);
 	void scale(double a);
 	void scaleAnisotropic(double ax, double ay, double az);

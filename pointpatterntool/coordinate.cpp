@@ -19,6 +19,13 @@ coordinate::coordinate(unsigned int n) {
 	}
 }
 
+coordinate::coordinate(double pos, unsigned int n) {
+	position.resize(n);
+	for (unsigned int i = 0; i < n; i++) {
+		position[i] = (pos);
+	}
+}
+
 coordinate::coordinate(double x, double y) {
 	position.resize(2);
 	position[0] = x;

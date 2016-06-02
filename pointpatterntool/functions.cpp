@@ -329,6 +329,8 @@ void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
 
 	gp << "set view equal xyz\n";
 
+	gp << "set key noenhanced\n";
+
 	// Farben
 	vector<std::string> colors = getColors();
 

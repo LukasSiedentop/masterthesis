@@ -10,21 +10,24 @@
 using namespace std;
 
 nodelist::nodelist() :
-		periodic(0), name(""), min(coordinate()), max(coordinate()) {
+		periodic(0), ispointpattern(1), name(""), min(coordinate()), max(
+				coordinate()) {
 }
 
-nodelist::nodelist(bool periodicity, string n) :
-		periodic(periodicity), name(n), min(coordinate()), max(coordinate()) {
+nodelist::nodelist(bool periodicity, bool pointpattern, string n) :
+		periodic(periodicity), ispointpattern(pointpattern), name(n), min(
+				coordinate()), max(coordinate()) {
 }
 
 nodelist::nodelist(int pattern, bool periodicity) :
-		periodic(periodicity), min(coordinate(-5, -5, -5)), max(
+		periodic(periodicity), ispointpattern(1), min(coordinate(-5, -5, -5)), max(
 				coordinate(5, 5, 5)) {
 
 	switch (pattern) {
 	case 1: { // poisson pattern
-		cout << "Generate poisson pattern with 1000 points in 10^3 cubicle..."
-				<< endl;
+		std::cout
+				<< "Generate poisson pattern with 1000 points in 10^3 cubicle..."
+				<< std::endl;
 
 		name = "poissonpattern";
 
@@ -36,13 +39,13 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			tmp->setEdgenode(1);
 			list.push_back(tmp);
 		}
-		cout << "Poisson pattern";
+		std::cout << "Poisson pattern";
 		break;
 	}
 	case 2: { // diamond point pattern ((c) Dirk)
-		cout
+		std::cout
 				<< "Generate diamond point pattern with 1000 points in 10^3 cubicle..."
-				<< endl;
+				<< std::endl;
 
 		name = "diamondpattern";
 
@@ -78,34 +81,49 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			(*n)->setEdgenode(1);
 		}
 
-		cout << "Diamond point pattern";
+		std::cout << "Diamond point pattern";
 		break;
 	}
 	}
-	setNeighbours();
+	//setNeighbours();
+	setNeighboursDesignProtocol();
 
-	cout << " generated. Statistics:" << endl << listStats() << endl;
+	std::cout << " generated. Statistics:" << endl << listStats() << std::endl;
 }
 
-void nodelist::setNeighbours() {
+void nodelist::setNeighbours(unsigned int valency) {
+	// TODO: may be computationally optimized: outer loop probably too large
+	// Method should give similar results as designprotocol for crystals
+
+	std::cout << "Generating the neighbours for the pattern " << name
+			<< " in a very unsophisticated way (the closest four without four neighbours)."
+			<< std::endl;
+
+	// meassure the time
+	clock_t t;
+	t = clock();
+
+	boost::progress_display show_progress(valency * list.size());
 	// get four next points
-	for (unsigned int neighs = 0; neighs < 4; neighs++) {
+	for (unsigned int neighs = 0; neighs < valency; neighs++) {
 		// nodesiteration
 		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 			node* neigh = NULL;
-			if ((*n)->countNeighbours() < 4) {
+			// if selected node has less than 4 (valency) neighbours
+			if ((*n)->countNeighbours() < valency) {
 
 				// find closest neighbour with less than four neighbours
 				double distSqr = std::numeric_limits<double>::infinity();
-				// 2nd nodeiteration
 				for (vector<node*>::iterator nextn = list.begin();
 						nextn != list.end(); ++nextn) {
 
+					// don't count if its already a neighbour, is the node itself or valency is already satisfied
 					if ((*n)->isNeighbour((*nextn)) || n == nextn
-							|| (*nextn)->countNeighbours() >= 4) {
+							|| (*nextn)->countNeighbours() >= valency) {
 						continue;
 					}
 
+					// connecting vector of node and going to be neighbour
 					coordinate diff;
 
 					// compare the difference vectors with an added shifter for the periodic case
@@ -114,16 +132,23 @@ void nodelist::setNeighbours() {
 						for (vector<coordinate>::iterator shifter =
 								shifters.begin(); shifter != shifters.end();
 								++shifter) {
+
+							// calculate connecting vector
 							diff = (((*nextn)->getPosition()) + (*shifter))
 									- ((*n)->getPosition());
+
+							// check if the connection is shorter than the previously saved one
 							if (diff.lengthSqr() < distSqr) {
 								distSqr = diff.lengthSqr();
 								neigh = (*nextn);
 							}
 						}
 					} else {
+						// calculate connecting vector
 						diff = ((*nextn)->getPosition())
 								- ((*n)->getPosition());
+
+						// check if the connection is shorter than the previously saved one
 						if (diff.lengthSqr() < distSqr) {
 							distSqr = diff.lengthSqr();
 							neigh = (*nextn);
@@ -136,8 +161,34 @@ void nodelist::setNeighbours() {
 				(*n)->addNeighbour(neigh);
 				neigh->addNeighbour(*n);
 			}
+
+			++show_progress;
 		}
 	}
+
+	ispointpattern = false;
+
+	t = clock() - t;
+	std::cout << "Took " <<  (((float) t) / CLOCKS_PER_SEC)
+			<< "s to generate the neighbours." << std::endl;
+}
+
+void nodelist::setNeighboursDesignProtocol() {
+	std::cout << "Set the neighbours of the " << name
+			<< " pointpattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
+			<< std::endl;
+	// meassure the time
+	clock_t t;
+	t = clock();
+	// TODO
+	// Delaunay triangulation via CGAL
+	// connect neighbouring tetrahedron centre of gravities.
+	boost::progress_display show_progress(1);
+	++show_progress;
+	//ispointpattern = false;
+	t = clock() - t;
+	std::cout << "Took " <<  (((float) t) / CLOCKS_PER_SEC)
+			<< "s to generate the neighbours." << std::endl;
 }
 
 void nodelist::setDensity(double density) {
@@ -274,7 +325,7 @@ void nodelist::scaleListAnisotropic(double ax, double ay, double az) {
  }
  */
 
-string nodelist::getName() {
+std::string nodelist::getName() {
 	return name;
 }
 
@@ -410,22 +461,26 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 }
 
 string nodelist::listStats(const string commentDelimeter) {
-	stringstream stream;
+	std::stringstream stream;
 	stream << commentDelimeter << (periodic ? "Periodic" : "Non-periodic")
-			<< endl;
+			<< std::endl;
 	if (!periodic) {
 		stream << commentDelimeter << "Number of edgenodes: "
-				<< countEdgenodes() << endl;
+				<< countEdgenodes() << std::endl;
 	}
 
-
-	stream << commentDelimeter << "Number of nodes: " << list.size() << endl;
+	stream << commentDelimeter << "Number of nodes: " << list.size()
+			<< std::endl;
 	stream << commentDelimeter << "Bounding box: " << min << ", " << max
-			<< endl;
-	stream << commentDelimeter << "Characteristic length: " << stats(lengthDistribution())[1] << endl;
-	stream << commentDelimeter << "Mid of box: " << getMid() << endl;
-	stream << commentDelimeter << "Volume: " << getVolume() << endl;
-	stream << commentDelimeter << "Density of points: " << getDensity() << endl;
+			<< std::endl;
+	if (!ispointpattern) {
+		stream << commentDelimeter << "Characteristic length: "
+				<< stats(lengthDistribution())[1] << std::endl;
+	}
+	stream << commentDelimeter << "Mid of box: " << getMid() << std::endl;
+	stream << commentDelimeter << "Volume: " << getVolume() << std::endl;
+	stream << commentDelimeter << "Density of points: " << getDensity()
+			<< std::endl;
 
 	return stream.str();
 }
@@ -434,9 +489,9 @@ double nodelist::normalize() {
 	// stats(lengthDistribution())[1]
 
 	// only for agapornis! TODO: function to set scaling for each direction...
-	double resX = 9.067;// nm/px
-	double resY = 9.067;// nm/px
-	double resZ = 25;//nm/px
+	double resX = 9.067; // nm/px
+	double resY = 9.067; // nm/px
+	double resZ = 25; //nm/px
 
 	scaleListAnisotropic(resX, resY, resZ);
 
@@ -625,8 +680,8 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		}
 	}
 	t = clock() - t;
-	cout << "Took " << t << " Clicks (" << (((float) t) / CLOCKS_PER_SEC)
-			<< "s)" << endl;
+	cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
+			<< "s" << endl;
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
 	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
@@ -682,7 +737,7 @@ void nodelist::writeCoordinates() {
 	 */
 
 	// iterate over pattern
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		stringstream stream;
 		stream << ((*n)->getPosition()).toString("", "\t", "", 10) << endl;
 		data.push_back(stream.str());
@@ -711,8 +766,8 @@ void nodelist::writeGWL() {
 	sort(extendedList.begin(), extendedList.end(), node::zmetric);
 
 	// get loops
-	vector<coordinate> loop;
-	for (vector<node*>::iterator nodeIter = extendedList.begin();
+	std::vector<coordinate> loop;
+	for (std::vector<node*>::iterator nodeIter = extendedList.begin();
 			nodeIter != extendedList.end(); ++nodeIter) {
 
 	}
@@ -724,16 +779,17 @@ void nodelist::writeGWL() {
 void nodelist::writePOV() {
 	stringstream fileNameStream;
 	fileNameStream << "./data/rods_" << name << ".pov";
-	string outfileName = fileNameStream.str();
+	std::string outfileName = fileNameStream.str();
 
-	vector<string> data;
+	std::vector<std::string> data;
 
-	for (vector<node*>::iterator nodeIter = list.begin();
+	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		stringstream stream;
 
 		// if point is without bounary...
-		if ((*nodeIter)->getPosition().min() < -5 || (*nodeIter)->getPosition().max() > 5) {
+		if ((*nodeIter)->getPosition().min() < -5
+				|| (*nodeIter)->getPosition().max() > 5) {
 			continue;
 		}
 
@@ -771,8 +827,7 @@ void nodelist::writePOV() {
 			}
 
 			// sphere at joint over the boundary
-			stream << "sphere{"
-					<< linkTarget.toString("<", ",", ">") << ",r}"
+			stream << "sphere{" << linkTarget.toString("<", ",", ">") << ",r}"
 					<< endl;
 
 			// cylinder from a to b TODO: den zurück nicht...

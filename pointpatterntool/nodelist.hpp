@@ -22,6 +22,24 @@
 #include "node.hpp"
 #include "functions.hpp"
 
+// used for design protocol
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_3.h>
+#include <fstream>
+#include <cassert>
+#include <list>
+
+// convenience
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+
+typedef CGAL::Triangulation_3<K>      Triangulation;
+
+typedef Triangulation::Cell_handle    Cell_handle;
+typedef Triangulation::Vertex_handle  Vertex_handle;
+typedef Triangulation::Locate_type    Locate_type;
+typedef Triangulation::Point          Point;
+
 using namespace std;
 
 /**
@@ -30,7 +48,7 @@ using namespace std;
  */
 class nodelist {
 private:
-	bool periodic;
+	bool periodic, ispointpattern;
 	std::string name;
 	// Thou shalt not inherit from STL
 	std::vector<class node*> list;
@@ -48,8 +66,7 @@ private:
 	// distance from midpoint (0,0) to ellipse defined by its (not half) axes w and h. Theta in radians.
 	double r(double theta, double w, double h);
 
-	// sets the neighbours of each point to the closest four (or less) points
-	void setNeighbours();
+
 	// counts the point within a given sphere
 	int pointsInside(const vector<coordinate>& points, const coordinate& mid, const double r) const;
 	// gives a copy of this nodelist repeated nx times in x-direction, ny times in y-, nz times in z-direction
@@ -57,7 +74,7 @@ private:
 public:
 	nodelist();
 	// constructs empty list
-	nodelist(bool periodicity, std::string name);
+	nodelist(bool periodicity,bool pointpattern, std::string name);
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
@@ -78,6 +95,11 @@ public:
 	void scaleList(double a);
 	void scaleListAnisotropic(double ax, double ay, double az);
 	void deleteEntries();
+
+	// sets the neighbours of each point to the closest four (or less) points
+	void setNeighbours(unsigned int valency=4);
+	// sets the neighbours of a point pattern according to the design protocol described in Florescu et. al. 2009 (PNAS) (see http://www.pnas.org/content/106/49/20658.full.pdf)
+	void setNeighboursDesignProtocol();
 
 	// subscript operator
 	//const node& operator[](const int i) const;

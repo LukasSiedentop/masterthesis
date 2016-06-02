@@ -103,7 +103,7 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 	return acos(skp / sqrt(len1sqr * len2sqr));
 }
 
-int node::countNeighbours() {
+unsigned int node::countNeighbours() {
 	return neighbours.size();
 }
 
