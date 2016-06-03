@@ -26,10 +26,10 @@ nodelist::nodelist(int pattern, bool periodicity) :
 	switch (pattern) {
 	case 1: { // poisson pattern
 		std::cout
-				<< "Generate poisson pattern with 1000 points in 10^3 cubicle..."
+				<< "Generate Poisson pattern with 1000 points in 10^3 cubicle..."
 				<< std::endl;
 
-		name = "poissonpattern";
+		name = "Poisson";
 
 		// seed for random numbers generator
 		srand(time(NULL));
@@ -39,15 +39,15 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			tmp->setEdgenode(1);
 			list.push_back(tmp);
 		}
-		std::cout << "Poisson pattern";
+
 		break;
 	}
 	case 2: { // diamond point pattern ((c) Dirk)
 		std::cout
-				<< "Generate diamond point pattern with 1000 points in 10^3 cubicle..."
+				<< "Generate Diamond point pattern with 1000 points in 10^3 cubicle..."
 				<< std::endl;
 
-		name = "diamondpattern";
+		name = "Diamond";
 
 		int x = -5, y = -5, z = -5;
 		int numx = 5, numy = 5, numz = 5;
@@ -81,14 +81,44 @@ nodelist::nodelist(int pattern, bool periodicity) :
 			(*n)->setEdgenode(1);
 		}
 
-		std::cout << "Diamond point pattern";
+		break;
+	}
+
+	case 3: { // test pattern (tetrahedron
+		std::cout
+				<< "Generate Test point pattern with 4 points in 10^3 cubicle..."
+				<< std::endl;
+
+		name = "Test";
+		/*
+		 // Tetrahedron
+		 list.push_back(new node(this, (coordinate(-1, 0, -1))));
+		 list.push_back(new node(this, (coordinate(1, 0, -1))));
+		 list.push_back(new node(this, (coordinate(0, -1, 1))));
+		 list.push_back(new node(this, (coordinate(0, 1, 1))));
+		 */
+
+		list.push_back(new node(this, (coordinate(0.1, 0, 0))));
+		list.push_back(new node(this, (coordinate(-1.2, -1, -1))));
+		list.push_back(new node(this, (coordinate(-1.3, -1, 1))));
+		list.push_back(new node(this, (coordinate(-1.4, 1, -1))));
+		list.push_back(new node(this, (coordinate(-1.5, 1, 1))));
+		list.push_back(new node(this, (coordinate(1.1, -1, -1))));
+		list.push_back(new node(this, (coordinate(1.2, -1, 1))));
+		list.push_back(new node(this, (coordinate(1.3, 1, -1))));
+		list.push_back(new node(this, (coordinate(1.4, 1, 1))));
+
+		min = coordinate(-1.5, -1.5, -1.5);
+		max = coordinate(1.5, 1.5, 1.5);
+
 		break;
 	}
 	}
 	//setNeighbours();
 	setNeighboursDesignProtocol();
 
-	std::cout << " generated. Statistics:" << endl << listStats() << std::endl;
+	std::cout << name << " point pattern generated. Statistics:" << endl
+			<< listStats() << std::endl;
 }
 
 void nodelist::setNeighbours(unsigned int valency) {
@@ -169,25 +199,96 @@ void nodelist::setNeighbours(unsigned int valency) {
 	ispointpattern = false;
 
 	t = clock() - t;
-	std::cout << "Took " <<  (((float) t) / CLOCKS_PER_SEC)
+	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
 			<< "s to generate the neighbours." << std::endl;
 }
 
 void nodelist::setNeighboursDesignProtocol() {
 	std::cout << "Set the neighbours of the " << name
-			<< " pointpattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
+			<< " point pattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
 			<< std::endl;
 	// meassure the time
 	clock_t t;
 	t = clock();
-	// TODO
+	// TODO:
 	// Delaunay triangulation via CGAL
 	// connect neighbouring tetrahedron centre of gravities.
-	boost::progress_display show_progress(1);
-	++show_progress;
+
+	// initialize geomview for visulaization
+	// example1: http://doc.cgal.org/Manual/3.2/doc_html/cgal_manual/Triangulation_3/Chapter_main.html#Section_22.6
+	// example2: http://doc.cgal.org/latest/Geomview/index.html#cite-text-0-0
+	CGAL::Geomview_stream gv(
+			CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
+	gv.clear();
+
+	if (periodic) {
+		// use http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
+		// calculate delaunay triangulation
+		PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
+				max.z());
+		std::cout << "box built" << std::endl;
+		std::vector<Point3> points(this->size());
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
+			std::vector<double> pt = *(*n)->getPosition().getVector();
+			points.push_back(Point3(pt[0], pt[1], pt[2]));
+
+			// draw point pattern
+			//gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
+
+		}
+
+		PDT PD3d(points.begin(), points.end(), box);
+
+		//gv << PD3d;
+	} else {
+		// use http://doc.cgal.org/latest/Triangulation_3/index.html
+
+		// calculate delaunay triangulation
+		DT D3d;
+		std::vector<Point3> points(this->size());
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
+			std::vector<double> pt = *(*n)->getPosition().getVector();
+			D3d.insert(Point3(pt[0], pt[1], pt[2]));
+
+			if (this->size() < 100) {
+				// draw point pattern
+				gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
+			}
+		}
+		/*
+		 // Iterate over every tetrahedron ("cell" internally)
+		 for (CGAL::Triangulation_3::Cell_iterator cell = D3d.cells_begin();
+		 cell != D3d.cells_end(); ++cell) {
+		 std::cout << "jo!" << std::endl;
+		 }
+		 */
+		std::cout << "centroid point pattern: "
+				<< CGAL::centroid(points.begin(), points.end()) << std::endl;
+
+		std::cout << "Drawing 3D Delaunay triangulation in wired mode."
+				<< std::endl;
+		gv << CGAL::BLUE;
+		gv.set_wired(true);
+		gv << D3d;
+
+		// voronoi pattern
+		//gv << CGAL::RED;
+		//gv.set_line_width(4);
+		//D3d.draw_dual(gv);
+
+	}
+
+	std::cout << "Weiter mit Enter." << std::endl;
+	std::cin.get();
+	//boost::progress_display show_progress(1);
+	//++show_progress;
+
 	//ispointpattern = false;
+
 	t = clock() - t;
-	std::cout << "Took " <<  (((float) t) / CLOCKS_PER_SEC)
+	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
 			<< "s to generate the neighbours." << std::endl;
 }
 
@@ -216,7 +317,7 @@ int nodelist::countEdgenodes() {
 		return 0;
 	}
 	int ctr = 0;
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		if ((*n)->isEdgenode()) {
 			ctr++;
 		}
@@ -680,8 +781,7 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		}
 	}
 	t = clock() - t;
-	cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
-			<< "s" << endl;
+	cout << "Took " << (((float) t) / CLOCKS_PER_SEC) << "s" << endl;
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
 	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.

@@ -1,0 +1,97 @@
+18:58:11 **** Incremental Build of configuration Debug for project pointpatterntool ****
+make -j3 all 
+Building file: ../pointpatterntool.cpp
+Building file: ../nodelist.cpp
+Invoking: GCC C++ Compiler
+g++ -std=c++0x -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"pointpatterntool.d" -MT"pointpatterntool.o" -o "pointpatterntool.o" "../pointpatterntool.cpp"
+Invoking: GCC C++ Compiler
+g++ -std=c++0x -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"nodelist.d" -MT"nodelist.o" -o "nodelist.o" "../nodelist.cpp"
+In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12:0,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../pointpatterntool.cpp:43:
+/usr/include/boost/type_traits/detail/bool_trait_def.hpp:18:79: Anmerkung: #pragma message: NOTE: Use of this header (bool_trait_def.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (bool_trait_def.hpp) is deprecated")
+                                                                               ^
+In file included from /usr/include/boost/type_traits/detail/bool_trait_def.hpp:21:0,
+                 from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../pointpatterntool.cpp:43:
+/usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
+                                                                                    ^
+In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:13:0,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../pointpatterntool.cpp:43:
+/usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
+                                                                                    ^
+In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12:0,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../nodelist.hpp:23,
+                 from ../nodelist.cpp:8:
+/usr/include/boost/type_traits/detail/bool_trait_def.hpp:18:79: Anmerkung: #pragma message: NOTE: Use of this header (bool_trait_def.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (bool_trait_def.hpp) is deprecated")
+                                                                               ^
+In file included from /usr/include/boost/type_traits/detail/bool_trait_def.hpp:21:0,
+                 from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../nodelist.hpp:23,
+                 from ../nodelist.cpp:8:
+/usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
+                                                                                    ^
+In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:13:0,
+                 from /usr/include/boost/iostreams/detail/resolve.hpp:26,
+                 from /usr/include/boost/iostreams/detail/push.hpp:24,
+                 from /usr/include/boost/iostreams/detail/streambuf/indirect_streambuf.hpp:31,
+                 from /usr/include/boost/iostreams/stream_buffer.hpp:22,
+                 from /usr/include/boost/iostreams/stream.hpp:21,
+                 from ../gnuplot-iostream.h:80,
+                 from ../functions.hpp:21,
+                 from ../nodelist.hpp:23,
+                 from ../nodelist.cpp:8:
+/usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
+ # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
+                                                                                    ^
+Finished building: ../pointpatterntool.cpp
+ 
+Finished building: ../nodelist.cpp
+ 
+Building target: pointpatterntool
+Invoking: GCC C++ Linker
+g++  -o "pointpatterntool"  ./coordinate.o ./functions.o ./node.o ./nodelist.o ./pointpatterntool.o   -lboost_iostreams -lboost_system -lboost_filesystem -lCGAL_Core -lCGAL -lgmp
+Finished building target: pointpatterntool
+ 
+
+18:58:32 Build Finished (took 21s.460ms)
+

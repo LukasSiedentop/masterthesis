@@ -23,22 +23,44 @@
 #include "functions.hpp"
 
 // used for design protocol
+#include <CGAL/Cartesian.h>
+
+#include <CGAL/Delaunay_triangulation_3.h> // calculate Delaunay triangulation from set  of points
+
+#include <CGAL/IO/Geomview_stream.h> // geomview
+#include <CGAL/IO/Triangulation_geomview_ostream_3.h> // geomview ability to draw 3d-triangulations
+
+#include <CGAL/centroid.h> // calculate centroid from set of points
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_3.h>
-#include <fstream>
-#include <cassert>
-#include <list>
+#include <CGAL/Periodic_3_Delaunay_triangulation_traits_3.h>
+#include <CGAL/Periodic_3_Delaunay_triangulation_3.h>
 
-// convenience
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
-typedef CGAL::Triangulation_3<K>      Triangulation;
 
-typedef Triangulation::Cell_handle    Cell_handle;
-typedef Triangulation::Vertex_handle  Vertex_handle;
-typedef Triangulation::Locate_type    Locate_type;
-typedef Triangulation::Point          Point;
+//#include <CGAL/intersections.h>
+//#include <CGAL/IO/Triangulation_geomview_ostream_2.h>
+//#include <fstream>
+//#include <unistd.h> // for sleep()
+//#include <CGAL/Delaunay_triangulation_2.h>
+//#include <CGAL/Triangulation.h>
+
+
+typedef CGAL::Cartesian<double>  K;
+typedef CGAL::Delaunay_triangulation_3<K>   DT;
+typedef K::Point_3 Point3;
+typedef K::Sphere_3 Sphere3;
+typedef K::Segment_3 Segment3;
+
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> GT;
+typedef CGAL::Periodic_3_Delaunay_triangulation_3<GT> PDT;
+//typedef PDT::Cell_handle       Cell_handle;
+//typedef PDT::Vertex_handle     Vertex_handle;
+//typedef PDT::Locate_type       Locate_type;
+//typedef PDT::Point             Point;
+//typedef PDT::Iso_cuboid        Iso_cuboid;
 
 using namespace std;
 

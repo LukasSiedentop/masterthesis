@@ -16,7 +16,13 @@
 #include <cstdlib>
 #include <iterator>
 #include <stdio.h>
+/*
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_3.h>
 
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Triangulation_3<K>      Triangulation;
+*/
 static const double tolerance = 0.0000001;
 
 /**
@@ -90,6 +96,11 @@ public:
 	// Divides each component by a divisor.
 	friend coordinate operator/(const coordinate& lhs, const double& divisor);
 
+	// get positions
+	double x() const;
+	double y() const;
+	double z() const;
+
 	// Returns the minimal component of the coordinate.
 	double min() const;
 	// Returns the maximal component of the coordinate.
@@ -98,6 +109,9 @@ public:
 	double euklidian(coordinate point) const;
 	double lengthSqr() const;
 	double length() const;
+
+	// returns the CGAL point
+	//Triangulation::Point getPoint() const;
 
 	// dot-product
 	static double scp(const coordinate& a, const coordinate& b);

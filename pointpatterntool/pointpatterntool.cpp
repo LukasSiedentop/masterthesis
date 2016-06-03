@@ -492,7 +492,8 @@ int main(int argc, char* argv[]) {
 	vector<nodelist*> lists;
 
 	// poisson
-	lists.push_back(new nodelist(1, true));
+	//lists.push_back(new nodelist(3, true));
+	lists.push_back(new nodelist(3, false));
 
 	// No arguments given -> generate diamond and random point pattern
 	/*

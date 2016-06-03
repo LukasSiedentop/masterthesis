@@ -138,6 +138,16 @@ string coordinate::toString(const string begin, const string delimiter,
 	return stream.str();
 }
 
+double coordinate::x() const {
+	return position[0];
+}
+double coordinate::y() const {
+	return position[1];
+}
+double coordinate::z() const {
+	return position[2];
+}
+
 double coordinate::min() const {
 	double minimum = numeric_limits<double>::infinity();
 	for (unsigned i = 0; i < dimensions(); i++) {
@@ -169,6 +179,11 @@ double coordinate::lengthSqr() const {
 double coordinate::length() const {
 	return sqrt(lengthSqr());
 }
+
+/*
+ Triangulation::Point coordinate::getPoint() const {
+ return Triangulation::Point(position[0], position[1], position[2]);
+ }*/
 
 double coordinate::scp(const coordinate &a, const coordinate &b) {
 	double scp = 0;
