@@ -24,6 +24,7 @@ node::node(class nodelist* list, coordinate pos) :
 }
 
 void node::setEdgenode(double distance) {
+	// TODO: this must be possible in less costly way!? hopefully without using the underlying list but its extend
 	// Alle knoten die mehr als den 0-shifter haben sind randknoten
 	edgenode =
 			(list->getShifted(position - list->getMid(), distance).size() - 1);

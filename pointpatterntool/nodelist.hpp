@@ -20,60 +20,8 @@
 
 #include "coordinate.hpp"
 #include "node.hpp"
+//#include "pointlist.hpp"
 #include "functions.hpp"
-
-// used for design protocol
-#include <CGAL/Cartesian.h>
-
-#include <CGAL/Triangulation_data_structure_3.h>
-
-#include <CGAL/Delaunay_triangulation_3.h> // calculate Delaunay triangulation from set  of points
-
-#include <CGAL/IO/Geomview_stream.h> // geomview
-#include <CGAL/IO/Triangulation_geomview_ostream_3.h> // geomview ability to draw 3d-triangulations
-
-#include <CGAL/centroid.h> // calculate centroid from set of points
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Periodic_3_Delaunay_triangulation_traits_3.h>
-#include <CGAL/Periodic_3_Delaunay_triangulation_3.h>
-
-
-
-
-//#include <CGAL/intersections.h>
-//#include <CGAL/IO/Triangulation_geomview_ostream_2.h>
-//#include <fstream>
-//#include <unistd.h> // for sleep()
-//#include <CGAL/Delaunay_triangulation_2.h>
-
-//#include <CGAL/Triangulation.h>
-
-// CGAL
-typedef CGAL::Cartesian<double>  K;
-
-// 3D triangulation data structure
-typedef CGAL::Triangulation_data_structure_3<>	Tds;
-
-typedef Tds::Cell_handle	Cell_handle;
-
-// non-periodic delaunay triangulation
-typedef CGAL::Delaunay_triangulation_3<K>   DT;
-typedef K::Point_3 Point3;
-typedef K::Sphere_3 Sphere3;
-typedef K::Segment_3 Segment3;
-
-// periodic delaunay triangulation
-//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> GT;
-typedef CGAL::Periodic_3_Delaunay_triangulation_3<GT> PDT;
-//typedef PDT::Cell_handle       Cell_handle;
-//typedef PDT::Vertex_handle     Vertex_handle;
-//typedef PDT::Locate_type       Locate_type;
-//typedef PDT::Point             Point;
-//typedef PDT::Iso_cuboid        Iso_cuboid;
-
-//using namespace std;
 
 /**
  * Datastructure to hold points of a pattern. Methods for analysis (like distance to neighbours distribution, hyperuniformity,...) of the pattern are provided here.
@@ -81,12 +29,15 @@ typedef CGAL::Periodic_3_Delaunay_triangulation_3<GT> PDT;
  */
 class nodelist {
 private:
-	bool periodic, ispointpattern;
+	bool periodic;
 	std::string name;
 	// Thou shalt not inherit from STL
 	std::vector<class node*> list;
 	// Bounding box
 	coordinate min, max;
+
+	// underlying pointpattern this nodelist is generated from
+	//pointlist pointpattern;
 
 	//coordinate getMins();
 	//coordinate getMaxs();
@@ -107,7 +58,7 @@ private:
 public:
 	nodelist();
 	// constructs empty list
-	nodelist(bool periodicity, bool pointpattern, std::string name);
+	nodelist(bool periodicity, std::string name);
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
@@ -146,9 +97,9 @@ public:
 	std::vector<std::vector<double> > getGnuplotMatrix();
 	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
 	std::vector<coordinate> getShifters();
-	// Returns the 26 shifting vectors to continue the pattern periodically. Assumes the pattern is around (0,0,0). Only necessary vectors are returned so that the given box lies within the continued pattern. TODO: n-Dimensional
+	// Returns the necessary shifting vectors to continue the pattern periodically such that a given box lies within the periodically continued pattern.
 	std::vector<coordinate> getShifted(coordinate mid, double halfExtend);
-	// normalizes the pattern to density of points=1, midpoint of bounding box = (0,0,0)
+	// normalises the pattern to density of points=1, midpoint of bounding box = (0,0,0)
 	double normalize();
 	// returns statistics of the list
 	std::string listStats(const std::string commentDelimeter = "\t");
@@ -164,6 +115,11 @@ public:
 	void writeMEEP();
 	// Writes the pattern in scheme code to be interpreted by MPB as a dielectric written by the Nanoscribe unit (Elliptical rods).
 	void writeMPB();
+
+	/* TODO:
+	 * Filling fraction (interpolate,...)
+	 * write gwl with walls and stuff
+	 */
 };
 
 #endif /* NODELIST_HPP_ */

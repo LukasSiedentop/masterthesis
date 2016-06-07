@@ -110,6 +110,9 @@ public:
 	double lengthSqr() const;
 	double length() const;
 
+	// returns the shifters from this coordinate
+	std::vector<coordinate> getShifters();
+
 	// returns the CGAL point
 	//Triangulation::Point getPoint() const;
 

@@ -120,8 +120,9 @@ std::ostream& operator <<(std::ostream &os, const coordinate &obj) {
 	return os << obj.toString();
 }
 
-std::string coordinate::toString(const std::string begin, const std::string delimiter,
-		const std::string end, const int precision) const {
+std::string coordinate::toString(const std::string begin,
+		const std::string delimiter, const std::string end,
+		const int precision) const {
 	std::stringstream stream;
 
 	// write 4 non-zero digits for each double
@@ -180,10 +181,21 @@ double coordinate::length() const {
 	return sqrt(lengthSqr());
 }
 
-/*
- Triangulation::Point coordinate::getPoint() const {
- return Triangulation::Point(position[0], position[1], position[2]);
- }*/
+std::vector<coordinate> coordinate::getShifters() {
+
+	std::vector<coordinate> shifters;
+
+	// go through all combinations
+	for (int ix = -1; ix < 2; ix++) {
+		for (int iy = -1; iy < 2; iy++) {
+			for (int iz = -1; iz < 2; iz++) {
+				// add the shifting vector
+				shifters.push_back(coordinate(ix * x(), iy * y(), iz * z()));
+			}
+		}
+	}
+	return shifters;
+}
 
 double coordinate::scp(const coordinate &a, const coordinate &b) {
 	double scp = 0;

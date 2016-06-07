@@ -10,19 +10,19 @@
 //using namespace std;
 
 nodelist::nodelist() :
-		periodic(0), ispointpattern(1), name(""), min(coordinate()), max(
-				coordinate()) {
+		periodic(0), name(""), min(coordinate()), max(coordinate()) {
 }
 
-nodelist::nodelist(bool periodicity, bool pointpattern, std::string n) :
-		periodic(periodicity), ispointpattern(pointpattern), name(n), min(
-				coordinate()), max(coordinate()) {
+nodelist::nodelist(bool periodicity, std::string n) :
+		periodic(periodicity), name(n), min(coordinate()), max(coordinate()) {
 }
 
 nodelist::nodelist(int pattern, bool periodicity) :
-		periodic(periodicity), ispointpattern(1), min(coordinate(-5, -5, -5)), max(
+		periodic(periodicity), min(coordinate(-5, -5, -5)), max(
 				coordinate(5, 5, 5)) {
-
+	std::cout
+			<< "Warning! Decorated pattern is not created via underlying point pattern but directly."
+			<< std::endl;
 	switch (pattern) {
 	case 1: { // poisson pattern
 		std::cout
@@ -77,7 +77,8 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		}
 
 		// set edgenodes
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
 			(*n)->setEdgenode(1);
 		}
 
@@ -114,8 +115,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		break;
 	}
 	}
-	//setNeighbours();
-	setNeighboursDesignProtocol();
+	setNeighbours();
 
 	std::cout << name << " point pattern generated. Statistics:" << std::endl
 			<< listStats() << std::endl;
@@ -137,7 +137,8 @@ void nodelist::setNeighbours(unsigned int valency) {
 	// get four next points
 	for (unsigned int neighs = 0; neighs < valency; neighs++) {
 		// nodesiteration
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
 			node* neigh = NULL;
 			// if selected node has less than 4 (valency) neighbours
 			if ((*n)->countNeighbours() < valency) {
@@ -196,107 +197,110 @@ void nodelist::setNeighbours(unsigned int valency) {
 		}
 	}
 
-	ispointpattern = false;
-
 	t = clock() - t;
 	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
 			<< "s to generate the neighbours." << std::endl;
 }
 
-void nodelist::setNeighboursDesignProtocol() {
-	std::cout << "Set the neighbours of the " << name
-			<< " point pattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
-			<< std::endl;
-	// meassure the time
-	clock_t t;
-	t = clock();
-	// TODO:
-	// Delaunay triangulation via CGAL
-	// connect neighbouring tetrahedron centre of gravities.
+/*
+ void nodelist::setNeighboursDesignProtocol() {
+ std::cout << "Set the neighbours of the " << name
+ << " point pattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
+ << std::endl;
+ // meassure the time
+ clock_t t;
+ t = clock();
+ // TODO:
+ // Delaunay triangulation via CGAL
+ // connect neighbouring tetrahedron centre of gravities.
 
-	// initialize geomview for visulaization
-	// example1: http://doc.cgal.org/Manual/3.2/doc_html/cgal_manual/Triangulation_3/Chapter_main.html#Section_22.6
-	// example2: http://doc.cgal.org/latest/Geomview/index.html#cite-text-0-0
-	CGAL::Geomview_stream gv(
-			CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
-	gv.clear();
+ // initialize geomview for visulaization
+ // example1: http://doc.cgal.org/Manual/3.2/doc_html/cgal_manual/Triangulation_3/Chapter_main.html#Section_22.6
+ // example2: http://doc.cgal.org/latest/Geomview/index.html#cite-text-0-0
+ CGAL::Geomview_stream gv(
+ CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
+ gv.clear();
 
-	if (periodic) {
-		// use http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
-		// calculate delaunay triangulation
-		PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
-				max.z());
-		std::cout << "box built" << std::endl;
-		std::vector<Point3> points(this->size());
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
-				++n) {
-			std::vector<double> pt = *(*n)->getPosition().getVector();
-			points.push_back(Point3(pt[0], pt[1], pt[2]));
+ if (periodic) {
+ // use http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
+ // calculate delaunay triangulation
+ PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
+ max.z());
+ std::cout << "box built" << std::endl;
+ std::vector<Point3> points(this->size());
+ for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+ ++n) {
+ std::vector<double> pt = *(*n)->getPosition().getVector();
+ points.push_back(Point3(pt[0], pt[1], pt[2]));
 
-			// draw point pattern
-			//gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
+ // draw point pattern
+ //gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
 
-		}
+ }
 
-		PDT PD3d(points.begin(), points.end(), box);
+ PDT PD3d(points.begin(), points.end(), box);
 
-		//gv << PD3d;
-	} else {
-		// use http://doc.cgal.org/latest/Triangulation_3/index.html
+ //gv << PD3d;
+ } else {
+ // use http://doc.cgal.org/latest/Triangulation_3/index.html
 
-		// calculate delaunay triangulation
-		DT D3d;
-		std::vector<Point3> points(this->size());
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
-				++n) {
-			std::vector<double> pt = *(*n)->getPosition().getVector();
-			D3d.insert(Point3(pt[0], pt[1], pt[2]));
+ // calculate delaunay triangulation
+ DT D3d;
+ std::vector<Point3> points(this->size());
+ for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+ ++n) {
+ std::vector<double> pt = *(*n)->getPosition().getVector();
+ D3d.insert(Point3(pt[0], pt[1], pt[2]));
 
-			if (this->size() < 100) {
-				// draw point pattern
-				gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
-			}
-		}
+ if (this->size() < 100) {
+ // draw point pattern
+ gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
+ }
+ }
 
-		// Iterate over every tetrahedron ("cell" internally)
-		/*
-		 for (Cells::iterator cell = D3d.cells_begin();
-		 cell != D3d.cells_end(); ++cell) {
-		 std::cout << "jo!" << std::endl;
-		 }
-		for (Full_cell_iterator cit = D3d.cells_begin(); cit != D3d.cells_end();
-				++cit) {
-			std::cout << "jo!" << std::endl;
-		}*/
+ std::cout << "non-periodic triangulation built!" << std::endl;
 
-		std::cout << "centroid point pattern: "
-				<< CGAL::centroid(points.begin(), points.end()) << std::endl;
+ // Iterate over every tetrahedron ("cell" internally)
 
-		std::cout << "Drawing 3D Delaunay triangulation in wired mode."
-				<< std::endl;
-		gv << CGAL::BLUE;
-		gv.set_wired(true);
-		gv << D3d;
+ for (CGAL::Triangulation_3<K>::Cell_iterator cell = D3d.cells_begin();
+ cell != D3d.cells_end(); ++cell) {
+ std::cout << "jo!" << std::endl;
+ //(*cell).
+ }
 
-		// voronoi pattern
-		//gv << CGAL::RED;
-		//gv.set_line_width(4);
-		//D3d.draw_dual(gv);
+ for (Full_cell_iterator cit = D3d.cells_begin(); cit != D3d.cells_end();
+ ++cit) {
+ std::cout << "jo!" << std::endl;
+ }
 
-	}
+ std::cout << "centroid point pattern: "
+ << CGAL::centroid(points.begin(), points.end()) << std::endl;
 
-	std::cout << "Weiter mit Enter." << std::endl;
-	std::cin.get();
-	//boost::progress_display show_progress(1);
-	//++show_progress;
+ std::cout << "Drawing 3D Delaunay triangulation in wired mode."
+ << std::endl;
+ gv << CGAL::BLUE;
+ gv.set_wired(true);
+ gv << D3d;
 
-	//ispointpattern = false;
+ // voronoi pattern
+ //gv << CGAL::RED;
+ //gv.set_line_width(4);
+ //D3d.draw_dual(gv);
 
-	t = clock() - t;
-	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
-			<< "s to generate the neighbours." << std::endl;
-}
+ }
 
+ std::cout << "Weiter mit Enter." << std::endl;
+ std::cin.get();
+ //boost::progress_display show_progress(1);
+ //++show_progress;
+
+ //ispointpattern = false;
+
+ t = clock() - t;
+ std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
+ << "s to generate the neighbours." << std::endl;
+ }
+ */
 void nodelist::setDensity(double density) {
 	scaleList(pow((getDensity() / density), 1. / 3.));
 }
@@ -394,7 +398,8 @@ void nodelist::shiftList(coordinate shifter) {
 	max += shifter;
 
 	// shift entries
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		(*it)->shift(shifter);
 	}
 }
@@ -405,7 +410,8 @@ void nodelist::scaleList(double a) {
 	max *= a;
 
 	// scale entries
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		(*it)->scale(a);
 	}
 }
@@ -420,7 +426,8 @@ void nodelist::scaleListAnisotropic(double ax, double ay, double az) {
 	max[2] *= az;
 
 	// scale entries
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		(*it)->scaleAnisotropic(ax, ay, az);
 	}
 }
@@ -436,9 +443,9 @@ std::string nodelist::getName() {
 }
 
 node* nodelist::add(double x, double y, double z) {
-
 	// check if point at given position exist
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		if (periodic) {
 			coordinate pos = ((*it)->getPosition());
 			if ((std::min(fabs(x - pos[0]),
@@ -505,7 +512,8 @@ void nodelist::display() {
 	int i = 1;
 
 	// nodesiteration
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		std::cout << char(9) << i << "-th element: " << ((*it)->getPosition())
 				<< " with " << (*it)->countNeighbours() << " neighbours at: ";
 		// neighbouriteration
@@ -521,28 +529,15 @@ void nodelist::display() {
 }
 
 std::vector<coordinate> nodelist::getShifters() {
-	std::vector<coordinate> shifters;
+	return getLengths().getShifters();
+}
+
+std::vector<coordinate> nodelist::getShifted(coordinate mid,
+		double halfExtend) {
+	std::vector<coordinate> shifted;
 
 	// boxlength
 	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
-
-	// go through all combinations
-	for (int ix = -1; ix < 2; ix++) {
-		for (int iy = -1; iy < 2; iy++) {
-			for (int iz = -1; iz < 2; iz++) {
-				// add the shifting vector
-				shifters.push_back(coordinate(ix * lx, iy * ly, iz * lz));
-			}
-		}
-	}
-	return shifters;
-}
-
-std::vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
-	std::vector<coordinate> shifters;
-
-	// boxlength
-	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2]; // 5
 
 	// go through all combinations, but only if one edge of the given box is not within the pattern...
 	for (int ix = -1; ix < 2; ix++) {
@@ -553,7 +548,7 @@ std::vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) 
 						if ((fabs(mid[2] + (iz * halfExtend))
 								>= fabs(iz * (lz / 2.0)))) {
 							// ... add the shifting vector (Shift sphere contrary to pattern!)
-							shifters.push_back(
+							shifted.push_back(
 									mid
 											- coordinate(ix * lx, iy * ly,
 													iz * lz));
@@ -563,7 +558,7 @@ std::vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) 
 			}
 		}
 	}
-	return shifters;
+	return shifted;
 }
 
 std::string nodelist::listStats(const std::string commentDelimeter) {
@@ -579,10 +574,10 @@ std::string nodelist::listStats(const std::string commentDelimeter) {
 			<< std::endl;
 	stream << commentDelimeter << "Bounding box: " << min << ", " << max
 			<< std::endl;
-	if (!ispointpattern) {
-		stream << commentDelimeter << "Characteristic length: "
-				<< stats(lengthDistribution())[1] << std::endl;
-	}
+
+	stream << commentDelimeter << "Characteristic length: "
+			<< stats(lengthDistribution())[1] << std::endl;
+
 	stream << commentDelimeter << "Mid of box: " << getMid() << std::endl;
 	stream << commentDelimeter << "Volume: " << getVolume() << std::endl;
 	stream << commentDelimeter << "Density of points: " << getDensity()
@@ -617,7 +612,8 @@ std::vector<double> nodelist::neighbourDistribution() {
 	int counter;
 
 	// nodesiteration
-	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
+			++it) {
 		if (!(*it)->isEdgenode()) {
 			counter = 0;
 			// neighboursiteration
@@ -642,7 +638,8 @@ std::vector<double> nodelist::lengthDistribution() {
 		// exclude distances between edgendoes
 		if (!(*n)->isEdgenode()) {
 			// neighboursiteration
-			for (std::vector<node*>::iterator nn = (*n)->getNeighbours()->begin();
+			for (std::vector<node*>::iterator nn =
+					(*n)->getNeighbours()->begin();
 					nn != (*n)->getNeighbours()->end(); ++nn) {
 				if (periodic) {
 					data.push_back((*n)->euklidianPeriodic((*nn)));
@@ -765,7 +762,8 @@ std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 	} else {
 		// get patterns coordinates
 		std::vector<coordinate> pattern;
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
+				++n) {
 			pattern.push_back((*n)->getPosition());
 		}
 
@@ -856,7 +854,8 @@ void nodelist::writeCoordinates() {
 	}
 	outfile.close();
 
-	std::cout << "Pattern written to file '" << outfileName << "'. Enjoy!" << std::endl;
+	std::cout << "Pattern written to file '" << outfileName << "'. Enjoy!"
+			<< std::endl;
 }
 
 void nodelist::writeGWL() {
@@ -917,8 +916,9 @@ void nodelist::writePOV() {
 				coordinate diff;
 
 				std::vector<coordinate> shifters = getShifters();
-				for (std::vector<coordinate>::iterator shifter = shifters.begin();
-						shifter != shifters.end(); ++shifter) {
+				for (std::vector<coordinate>::iterator shifter =
+						shifters.begin(); shifter != shifters.end();
+						++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
 					if (diff.lengthSqr() < distSqr) {
@@ -994,8 +994,9 @@ void nodelist::writeMEEP() {
 				coordinate diff;
 
 				std::vector<coordinate> shifters = getShifters();
-				for (std::vector<coordinate>::iterator shifter = shifters.begin();
-						shifter != shifters.end(); ++shifter) {
+				for (std::vector<coordinate>::iterator shifter =
+						shifters.begin(); shifter != shifters.end();
+						++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
 					if (diff.lengthSqr() < distSqr) {
@@ -1271,8 +1272,9 @@ std::vector<std::vector<double> > nodelist::getGnuplotMatrix() {
 				coordinate diff;
 
 				std::vector<coordinate> shifters = getShifters();
-				for (std::vector<coordinate>::iterator shifter = shifters.begin();
-						shifter != shifters.end(); ++shifter) {
+				for (std::vector<coordinate>::iterator shifter =
+						shifters.begin(); shifter != shifters.end();
+						++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
 					if (diff.lengthSqr() < distSqr) {

@@ -42,6 +42,7 @@
 
 #include "functions.hpp"
 #include "nodelist.hpp"
+#include "pointlist.hpp"
 
 #include "coordinate.hpp"
 
@@ -108,7 +109,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 	neighbourFile.open(neighbours, std::ifstream::in);
 
 	// datastructure of the list
-	nodelist* list = new nodelist(periodic, false, name);
+	nodelist* list = new nodelist(periodic, name);
 
 	if (periodic) {
 		std::cout << "Assume a box of dimensions (-5,5)^3..." << std::endl;
@@ -178,26 +179,27 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 
 /**
  * Reads glass files as provided by Antonio Puertas, see /home/lukas/data/pointpatterns/glass/puertas/README.md
+ * ignore comments start with "#": http://stackoverflow.com/questions/13304028/c-reading-numbers-from-text-files-ignoring-comments
  */
-nodelist* readglassfile(const char* nodes, std::string name) {
-	std::cout << "Read nodesfile " << nodes << "." << std::endl;
+nodelist* readglassfile(const char* points, std::string name) {
+	std::cout << "Read nodesfile " << points<< "." << std::endl;
 
-	// input filestream of both files
+	// input filestream file
 	std::ifstream nodeFile;
-	nodeFile.open(nodes, std::ifstream::in);
+	nodeFile.open(points, std::ifstream::in);
 
-	// datastructure of the list
-	nodelist* list = new nodelist(true, false, name);
+
 
 	// calculation time (unimportant parameter) and boxlenght L
-	double L, time;
+	double time, L;
 	if (!(nodeFile >> time >> L)) {
 		std::cout << "Error: head line is not in the format '  <time>  <sidelength>'!" << std::endl;
-		return list;
+		return nullptr;
 	}
 
-	list->setMins(coordinate((double) -L/2, (unsigned int) 3));
-	list->setMaxs(coordinate((double) L/2, (unsigned int) 3));
+	// pointpattern data structure
+	pointlist* list = new pointlist(coordinate(L, (unsigned int) 3), true, name);
+	//list->setBox(coordinate(L, (unsigned int) 3));
 
 	// position, velocity and radius of the particle
 	double x, y, z, vx, vy, vz, r;
@@ -214,15 +216,10 @@ nodelist* readglassfile(const char* nodes, std::string name) {
 	std::cout << "Normalize from " << L << "^3 cube to 10^3 cube." << std::endl;
 	list->scaleList(10/L);
 
-	// define neighbours
-	list->setNeighbours(4);
+	nodelist* decoratedList = list->decorate();
+	std::cout << "Glass file read and neighbours constructed. Statistics:" << std::endl << decoratedList->listStats();
 
-
-	std::cout << "Glass file read and neighbours constructed. Statistics:" << std::endl << list->listStats();
-
-	//cout << "Needs " << list->capacity() * sizeof(node) + sizeof(list) << " bytes of memory." << endl;
-
-	return list;
+	return decoratedList;
 }
 
 /**
@@ -492,9 +489,11 @@ int main(int argc, char* argv[]) {
 
 	std::vector<nodelist*> lists;
 
-	// poisson
-	lists.push_back(new nodelist(2, true));
+	// 1: poisson, 2: diamon, 3: test
 	//lists.push_back(new nodelist(3, false));
+
+	pointlist pointpattern = pointlist(3, false);
+	lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*
@@ -756,11 +755,12 @@ int main(int argc, char* argv[]) {
 		case 17: {
 			std::cout << "Read glass file as provided by Antonio Puertas." << std::endl;
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-01.dat", "conf1Phi_c=0.50"));
+			/*
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-02.dat", "conf2Phi_c=0.50"));
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-03.dat", "conf3Phi_c=0.50"));
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-04.dat", "conf4Phi_c=0.50"));
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-05.dat", "conf5Phi_c=0.50"));
-
+*/
 			/*
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic053/pos-eq-053-01.dat", "Phi_c=0.53"));
 			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic055/pos-eq-055-01.dat", "Phi_c=0.55"));
