@@ -7,7 +7,7 @@
 
 #include "functions.hpp"
 
-vector<double> stats(vector<double> data) {
+std::vector<double> stats(std::vector<double> data) {
 	// expectancy: E = 1/N \sum_i=0^N x_i
 	// variance: \sigma^2 = 1/N \sum_i=0^N (x_i - E)^2
 	// skewness: v = 1/N \sum_i=0^N ((x_i - E)/\sigma)^3
@@ -72,7 +72,7 @@ vector<double> stats(vector<double> data) {
 	 * 14		variance median
 	 */
 
-	vector<double> statistics;
+	std::vector<double> statistics;
 	statistics.resize(15);
 	statistics[0] = 0;
 	statistics[1] = expectedValue;
@@ -88,7 +88,7 @@ vector<double> stats(vector<double> data) {
 	return statistics;
 }
 
-std::string statsAsString(const vector<double>& data,
+std::string statsAsString(const std::vector<double>& data,
 		const char commentDelimeter[]) {
 	// https://de.wikipedia.org/wiki/Moment_(Stochastik)
 	// Moment	Bedeutung
@@ -110,33 +110,33 @@ std::string statsAsString(const vector<double>& data,
 	// 13		Median
 	// 14		variance Median
 
-	stringstream stream;
+	std::stringstream stream;
 
 	// Daten schreiben
-	stream << commentDelimeter << "Count: " << data[10] << endl;
+	stream << commentDelimeter << "Count: " << data[10] << std::endl;
 	stream << commentDelimeter << "Minimum: " << data[11] << ", Maximum: "
-			<< data[12] << endl;
-	stream << commentDelimeter << "Mode: TODO" << endl;
+			<< data[12] << std::endl;
+	stream << commentDelimeter << "Mode: TODO" << std::endl;
 	stream << commentDelimeter << "Expectancy +- Standard Deviation: "
 			<< data[1] << "+-" << sqrt(data[2]) << ", FWHM: "
-			<< 2 * sqrt(2 * log(2) * data[2]) << endl;
-	stream << commentDelimeter << "Variance: " << data[2] << endl;
+			<< 2 * sqrt(2 * log(2) * data[2]) << std::endl;
+	stream << commentDelimeter << "Variance: " << data[2] << std::endl;
 	stream << commentDelimeter << "Skewness: " << data[3] << " ("
 			<< (((data[3] > 0) - (data[3] < 0)) < 0 ?
-					"left-skewed" : "right-skewed") << ")" << endl;
+					"left-skewed" : "right-skewed") << ")" << std::endl;
 	stream << commentDelimeter << "Excess Kurtosis: " << data[4] - 3 << " ("
 			<< (((data[4] - 3 > 0) - (data[4] - 3 < 0)) < 0 ?
-					"platykurtic" : "leptokurtosis ") << ")" << endl;
+					"platykurtic" : "leptokurtosis ") << ")" << std::endl;
 	stream << commentDelimeter << "Median +- Standard Deviation: " << data[13]
 			<< "+-" << sqrt(data[14]) << ", FWHM: "
-			<< 2 * sqrt(2 * log(2) * data[14]) << endl;
+			<< 2 * sqrt(2 * log(2) * data[14]) << std::endl;
 
 	return stream.str();
 }
 
-vector<std::string> getColors() {
+std::vector<std::string> getColors() {
 	// colors in HEX #argb
-	vector<std::string> colors;
+	std::vector<std::string> colors;
 
 	// #55xxxxxx - little bit transparent
 	colors.push_back("#554DAF4A"); // green
@@ -155,14 +155,14 @@ vector<std::string> getColors() {
 
 }
 
-void plotHist(vector<vector<double> > datas, double min, double max, int n,
-		vector<std::string> names, const std::string xlabel,
+void plotHist(std::vector<std::vector<double> > datas, double min, double max, int n,
+		std::vector<std::string> names, const std::string xlabel,
 		const std::string file) {
 
 	// get filename
-	stringstream filestream;
+	std::stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<std::string>::iterator name = names.begin();
+	for (std::vector<std::string>::iterator name = names.begin();
 			name != names.end(); ++name) {
 		std::string filename = (*name);
 		filename.erase(std::remove(filename.begin(), filename.end(), ' '),
@@ -176,8 +176,8 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	// statistics as comments in file
 	for (unsigned i = 0; i < datas.size(); i++) {
 		gp << "# " << xlabel << " of pattern '" << names[i] << "'. Statistics: "
-				<< endl;
-		gp << statsAsString(stats(datas[i]), "# ") << endl;
+				<< std::endl;
+		gp << statsAsString(stats(datas[i]), "# ") << std::endl;
 	}
 
 	// Don't forget to put "\n" at the end of each line!
@@ -203,9 +203,9 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	gp << "set xlabel '" << xlabel << "'\n";
 	gp << "set ylabel 'frequency'\n";
 
-	vector<std::string> colors = getColors();
+	std::vector<std::string> colors = getColors();
 	// build plotstring and send to gnuplot
-	stringstream plotstring;
+	std::stringstream plotstring;
 
 	plotstring << "plot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
@@ -221,7 +221,7 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 	gp << plotstring.str() << "\n";
 
 	// Daten senden
-	for (vector<vector<double> >::iterator data = datas.begin();
+	for (std::vector<std::vector<double> >::iterator data = datas.begin();
 			data != datas.end(); ++data) {
 		// The send1d() function sends data to gnuplot's stdin.
 		gp.send1d(*data);
@@ -229,20 +229,20 @@ void plotHist(vector<vector<double> > datas, double min, double max, int n,
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
 	// the gnuplot window doesn't get closed.
-	cout << "Weiter mit Enter." << endl;
-	cin.get();
+	std::cout << "Weiter mit Enter." << std::endl;
+	std::cin.get();
 }
 
-void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
-		vector<std::string> names, const std::string xlabel,
+void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > datas, double xMax,
+		std::vector<std::string> names, const std::string xlabel,
 		const std::string ylabel, const std::string file) {
 
 	double xMin = 0;
 
 	// get filename
-	stringstream filestream;
+	std::stringstream filestream;
 	filestream << "tee " << file;
-	for (vector<std::string>::iterator name = names.begin();
+	for (std::vector<std::string>::iterator name = names.begin();
 			name != names.end(); ++name) {
 		std::cout << (*name) << "\n";
 		(*name).erase(std::remove((*name).begin(), (*name).end(), ' '),
@@ -267,9 +267,9 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	gp << "set xlabel '" << xlabel << "'\n";
 	gp << "set ylabel '" << ylabel << "'\n";
 
-	vector<std::string> colors = getColors();
+	std::vector<std::string> colors = getColors();
 
-	stringstream plotstring;
+	std::stringstream plotstring;
 	for (unsigned i = 0; i < datas.size(); i++) {
 
 		gp << "A" << i << " = 1\n";
@@ -297,7 +297,7 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	gp << plotstring.str() << "\n";
 
 	// Daten senden
-	for (vector<vector<vector<double> > >::iterator data = datas.begin();
+	for (std::vector<std::vector<std::vector<double> > >::iterator data = datas.begin();
 			data != datas.end(); ++data) {
 
 		gp.send1d(*data);
@@ -311,7 +311,7 @@ void plotHyperuniformity(vector<vector<vector<double> > > datas, double xMax,
 	std::cin.get();
 }
 
-void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
+void plot3D(std::vector<std::vector<std::vector<double> > > datas, std::vector<std::string> names,
 		const std::string xlabel, const std::string ylabel,
 		const std::string zlabel, const std::string style) {
 	Gnuplot gp;
@@ -332,10 +332,10 @@ void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
 	gp << "set key noenhanced\n";
 
 	// Farben
-	vector<std::string> colors = getColors();
+	std::vector<std::string> colors = getColors();
 
 	// Plotstring bauen und an Gnuplot schicken
-	stringstream plotstring;
+	std::stringstream plotstring;
 	plotstring << "splot ";
 	for (unsigned i = 0; i < datas.size(); i++) {
 		plotstring << "'-' " << style << " lt rgb '" << colors[i] << "' t '"
@@ -347,12 +347,12 @@ void plot3D(vector<vector<vector<double> > > datas, vector<std::string> names,
 	gp << plotstring.str() << "\n";
 
 	// Daten senden
-	for (vector<vector<vector<double> > >::iterator data = datas.begin();
+	for (std::vector<std::vector<std::vector<double> > >::iterator data = datas.begin();
 			data != datas.end(); ++data) {
 
 		gp.send1d(*data);
 	}
 
-	cout << "Weiter mit Enter." << endl;
-	cin.get();
+	std::cout << "Weiter mit Enter." << std::endl;
+	std::cin.get();
 }

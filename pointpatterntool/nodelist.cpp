@@ -7,14 +7,14 @@
 
 #include "nodelist.hpp"
 
-using namespace std;
+//using namespace std;
 
 nodelist::nodelist() :
 		periodic(0), ispointpattern(1), name(""), min(coordinate()), max(
 				coordinate()) {
 }
 
-nodelist::nodelist(bool periodicity, bool pointpattern, string n) :
+nodelist::nodelist(bool periodicity, bool pointpattern, std::string n) :
 		periodic(periodicity), ispointpattern(pointpattern), name(n), min(
 				coordinate()), max(coordinate()) {
 }
@@ -77,7 +77,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 		}
 
 		// set edgenodes
-		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 			(*n)->setEdgenode(1);
 		}
 
@@ -117,7 +117,7 @@ nodelist::nodelist(int pattern, bool periodicity) :
 	//setNeighbours();
 	setNeighboursDesignProtocol();
 
-	std::cout << name << " point pattern generated. Statistics:" << endl
+	std::cout << name << " point pattern generated. Statistics:" << std::endl
 			<< listStats() << std::endl;
 }
 
@@ -137,14 +137,14 @@ void nodelist::setNeighbours(unsigned int valency) {
 	// get four next points
 	for (unsigned int neighs = 0; neighs < valency; neighs++) {
 		// nodesiteration
-		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 			node* neigh = NULL;
 			// if selected node has less than 4 (valency) neighbours
 			if ((*n)->countNeighbours() < valency) {
 
 				// find closest neighbour with less than four neighbours
 				double distSqr = std::numeric_limits<double>::infinity();
-				for (vector<node*>::iterator nextn = list.begin();
+				for (std::vector<node*>::iterator nextn = list.begin();
 						nextn != list.end(); ++nextn) {
 
 					// don't count if its already a neighbour, is the node itself or valency is already satisfied
@@ -158,8 +158,8 @@ void nodelist::setNeighbours(unsigned int valency) {
 
 					// compare the difference vectors with an added shifter for the periodic case
 					if (periodic) {
-						vector<coordinate> shifters = getShifters();
-						for (vector<coordinate>::iterator shifter =
+						std::vector<coordinate> shifters = getShifters();
+						for (std::vector<coordinate>::iterator shifter =
 								shifters.begin(); shifter != shifters.end();
 								++shifter) {
 
@@ -257,13 +257,18 @@ void nodelist::setNeighboursDesignProtocol() {
 				gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
 			}
 		}
+
+		// Iterate over every tetrahedron ("cell" internally)
 		/*
-		 // Iterate over every tetrahedron ("cell" internally)
-		 for (CGAL::Triangulation_3::Cell_iterator cell = D3d.cells_begin();
+		 for (Cells::iterator cell = D3d.cells_begin();
 		 cell != D3d.cells_end(); ++cell) {
 		 std::cout << "jo!" << std::endl;
 		 }
-		 */
+		for (Full_cell_iterator cit = D3d.cells_begin(); cit != D3d.cells_end();
+				++cit) {
+			std::cout << "jo!" << std::endl;
+		}*/
+
 		std::cout << "centroid point pattern: "
 				<< CGAL::centroid(points.begin(), points.end()) << std::endl;
 
@@ -333,12 +338,12 @@ double nodelist::r(double theta, double w, double h) {
 									+ h * h * cos(theta) * cos(theta)));
 }
 
-int nodelist::pointsInside(const vector<coordinate>& points,
+int nodelist::pointsInside(const std::vector<coordinate>& points,
 		const coordinate& mid, const double r) const {
 	int ctr = 0;
 
 	// nodesiterations
-	for (vector<coordinate>::const_iterator point = points.begin();
+	for (std::vector<coordinate>::const_iterator point = points.begin();
 			point != points.end(); ++point) {
 		// bounding box of the sphere
 		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
@@ -389,7 +394,7 @@ void nodelist::shiftList(coordinate shifter) {
 	max += shifter;
 
 	// shift entries
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		(*it)->shift(shifter);
 	}
 }
@@ -400,7 +405,7 @@ void nodelist::scaleList(double a) {
 	max *= a;
 
 	// scale entries
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		(*it)->scale(a);
 	}
 }
@@ -415,7 +420,7 @@ void nodelist::scaleListAnisotropic(double ax, double ay, double az) {
 	max[2] *= az;
 
 	// scale entries
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		(*it)->scaleAnisotropic(ax, ay, az);
 	}
 }
@@ -433,7 +438,7 @@ std::string nodelist::getName() {
 node* nodelist::add(double x, double y, double z) {
 
 	// check if point at given position exist
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		if (periodic) {
 			coordinate pos = ((*it)->getPosition());
 			if ((std::min(fabs(x - pos[0]),
@@ -456,8 +461,8 @@ node* nodelist::add(double x, double y, double z) {
 
 	// ensure that point lies in between boundaries if periodic
 	if (periodic) {
-		vector<coordinate> shifters = getShifters();
-		for (vector<coordinate>::iterator shifter = shifters.begin();
+		std::vector<coordinate> shifters = getShifters();
+		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
 			// as bounding box
 			if ((fabs((*shifter)[0] + newPos[0]) < getLengths()[0] / 2)
@@ -495,28 +500,28 @@ double nodelist::getMaxFeatureSize() {
 }
 
 void nodelist::display() {
-	cout << "Number of elements: " << list.size() << endl;
+	std::cout << "Number of elements: " << list.size() << std::endl;
 
 	int i = 1;
 
 	// nodesiteration
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
-		cout << char(9) << i << "-th element: " << ((*it)->getPosition())
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+		std::cout << char(9) << i << "-th element: " << ((*it)->getPosition())
 				<< " with " << (*it)->countNeighbours() << " neighbours at: ";
 		// neighbouriteration
-		for (vector<class node *>::iterator neighIt =
+		for (std::vector<class node *>::iterator neighIt =
 				(*it)->getNeighbours()->begin();
 				neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
-			cout << ((*neighIt)->getPosition()) << " ";
+			std::cout << ((*neighIt)->getPosition()) << " ";
 		}
-		cout << endl;
+		std::cout << std::endl;
 
 		i++;
 	}
 }
 
-vector<coordinate> nodelist::getShifters() {
-	vector<coordinate> shifters;
+std::vector<coordinate> nodelist::getShifters() {
+	std::vector<coordinate> shifters;
 
 	// boxlength
 	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
@@ -533,8 +538,8 @@ vector<coordinate> nodelist::getShifters() {
 	return shifters;
 }
 
-vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
-	vector<coordinate> shifters;
+std::vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
+	std::vector<coordinate> shifters;
 
 	// boxlength
 	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2]; // 5
@@ -561,7 +566,7 @@ vector<coordinate> nodelist::getShifted(coordinate mid, double halfExtend) {
 	return shifters;
 }
 
-string nodelist::listStats(const string commentDelimeter) {
+std::string nodelist::listStats(const std::string commentDelimeter) {
 	std::stringstream stream;
 	stream << commentDelimeter << (periodic ? "Periodic" : "Non-periodic")
 			<< std::endl;
@@ -606,17 +611,17 @@ double nodelist::normalize() {
 	return factor;
 }
 
-vector<double> nodelist::neighbourDistribution() {
-	vector<double> data;
+std::vector<double> nodelist::neighbourDistribution() {
+	std::vector<double> data;
 
 	int counter;
 
 	// nodesiteration
-	for (vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
+	for (std::vector<node*>::iterator it = list.begin(); it != list.end(); ++it) {
 		if (!(*it)->isEdgenode()) {
 			counter = 0;
 			// neighboursiteration
-			for (vector<node*>::iterator neighIt =
+			for (std::vector<node*>::iterator neighIt =
 					(*it)->getNeighbours()->begin();
 					neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
 				counter++;
@@ -629,15 +634,15 @@ vector<double> nodelist::neighbourDistribution() {
 	return data;
 }
 
-vector<double> nodelist::lengthDistribution() {
-	vector<double> data;
+std::vector<double> nodelist::lengthDistribution() {
+	std::vector<double> data;
 
 	// nodesiteration
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		// exclude distances between edgendoes
 		if (!(*n)->isEdgenode()) {
 			// neighboursiteration
-			for (vector<node*>::iterator nn = (*n)->getNeighbours()->begin();
+			for (std::vector<node*>::iterator nn = (*n)->getNeighbours()->begin();
 					nn != (*n)->getNeighbours()->end(); ++nn) {
 				if (periodic) {
 					data.push_back((*n)->euklidianPeriodic((*nn)));
@@ -654,7 +659,7 @@ vector<double> nodelist::lengthDistribution() {
 
 	// sort data and keep only every second
 	data = mergeSort(data);
-	vector<double> halfData;
+	std::vector<double> halfData;
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
 	}
@@ -662,21 +667,21 @@ vector<double> nodelist::lengthDistribution() {
 	return halfData;
 }
 
-vector<double> nodelist::angleDistribution() {
-	vector<double> data;
+std::vector<double> nodelist::angleDistribution() {
+	std::vector<double> data;
 
 	// nodesiteration
-	for (vector<node*>::iterator nodeIter = list.begin();
+	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		if (!(*nodeIter)->isEdgenode()) {
 			// neighboursiteration
-			for (vector<node*>::iterator neighIter1 =
+			for (std::vector<node*>::iterator neighIter1 =
 					(*nodeIter)->getNeighbours()->begin();
 					neighIter1 != (*nodeIter)->getNeighbours()->end();
 					++neighIter1) {
 
 				// neighbours of neighboursiteration
-				for (vector<node*>::iterator neighIter2 =
+				for (std::vector<node*>::iterator neighIter2 =
 						(*neighIter1)->getNeighbours()->begin();
 						neighIter2 != (*neighIter1)->getNeighbours()->end();
 						++neighIter2) {
@@ -703,7 +708,7 @@ vector<double> nodelist::angleDistribution() {
 
 	// sort data and keep only every second
 	data = mergeSort(data);
-	vector<double> halfData;
+	std::vector<double> halfData;
 	for (unsigned int i = 0; i < data.size(); i += 2) {
 		halfData.push_back(data[i]);
 	}
@@ -711,14 +716,14 @@ vector<double> nodelist::angleDistribution() {
 	return halfData;
 }
 
-vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
+std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		unsigned int n) {
 	// radiusincrement + maximal radius
 	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
 			rMax / nr;
 
 	// datastructure to save the number of points in each sphere
-	vector<vector<double> > data;
+	std::vector<std::vector<double> > data;
 	data.resize(nr);
 	for (unsigned int i = 0; i < nr; ++i) {
 		data[i].resize(n);
@@ -734,11 +739,11 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 
 	if (periodic) {
 		// precalculate extended pattern
-		vector<coordinate> shifters = getShifters();
-		vector<coordinate> extendedPattern;
-		for (vector<coordinate>::iterator shifter = shifters.begin();
+		std::vector<coordinate> shifters = getShifters();
+		std::vector<coordinate> extendedPattern;
+		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
-			for (vector<node*>::iterator n = list.begin(); n != list.end();
+			for (std::vector<node*>::iterator n = list.begin(); n != list.end();
 					++n) {
 				extendedPattern.push_back((*n)->getPosition() + *shifter);
 			}
@@ -759,8 +764,8 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		}
 	} else {
 		// get patterns coordinates
-		vector<coordinate> pattern;
-		for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+		std::vector<coordinate> pattern;
+		for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 			pattern.push_back((*n)->getPosition());
 		}
 
@@ -781,11 +786,11 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		}
 	}
 	t = clock() - t;
-	cout << "Took " << (((float) t) / CLOCKS_PER_SEC) << "s" << endl;
+	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC) << "s" << std::endl;
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
 	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
-	vector<double> expectedValue;
+	std::vector<double> expectedValue;
 	expectedValue.resize(nr);
 	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
@@ -798,7 +803,7 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 	}
 
 	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
-	vector<vector<double> > variance;
+	std::vector<std::vector<double> > variance;
 	variance.resize(nr);
 	// iteration over radius
 	for (unsigned int j = 0; j < nr; j++) {
@@ -816,7 +821,7 @@ vector<vector<double> > nodelist::hyperuniformity(unsigned int nr,
 }
 
 void nodelist::writeCoordinates() {
-	stringstream fileNameStream;
+	std::stringstream fileNameStream;
 	fileNameStream << "./data/points_" << name << ".csv";
 	std::string outfileName = fileNameStream.str();
 
@@ -838,20 +843,20 @@ void nodelist::writeCoordinates() {
 
 	// iterate over pattern
 	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
-		stringstream stream;
-		stream << ((*n)->getPosition()).toString("", "\t", "", 10) << endl;
+		std::stringstream stream;
+		stream << ((*n)->getPosition()).toString("", "\t", "", 10) << std::endl;
 		data.push_back(stream.str());
 	}
 
 	// write to outfile
-	ofstream outfile;
+	std::ofstream outfile;
 	outfile.open(outfileName.c_str());
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i];
 	}
 	outfile.close();
 
-	cout << "Pattern written to file '" << outfileName << "'. Enjoy!" << endl;
+	std::cout << "Pattern written to file '" << outfileName << "'. Enjoy!" << std::endl;
 }
 
 void nodelist::writeGWL() {
@@ -877,7 +882,7 @@ void nodelist::writeGWL() {
 }
 
 void nodelist::writePOV() {
-	stringstream fileNameStream;
+	std::stringstream fileNameStream;
 	fileNameStream << "./data/rods_" << name << ".pov";
 	std::string outfileName = fileNameStream.str();
 
@@ -885,7 +890,7 @@ void nodelist::writePOV() {
 
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		stringstream stream;
+		std::stringstream stream;
 
 		// if point is without bounary...
 		if ((*nodeIter)->getPosition().min() < -5
@@ -896,9 +901,9 @@ void nodelist::writePOV() {
 		// sphere at joint
 		stream << "sphere{"
 				<< (*nodeIter)->getPosition().toString("<", ",", ">") << ",r}"
-				<< endl;
+				<< std::endl;
 
-		for (vector<node*>::iterator neighIter =
+		for (std::vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
@@ -911,8 +916,8 @@ void nodelist::writePOV() {
 				double distSqr = std::numeric_limits<double>::infinity();
 				coordinate diff;
 
-				vector<coordinate> shifters = getShifters();
-				for (vector<coordinate>::iterator shifter = shifters.begin();
+				std::vector<coordinate> shifters = getShifters();
+				for (std::vector<coordinate>::iterator shifter = shifters.begin();
 						shifter != shifters.end(); ++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
@@ -928,44 +933,44 @@ void nodelist::writePOV() {
 
 			// sphere at joint over the boundary
 			stream << "sphere{" << linkTarget.toString("<", ",", ">") << ",r}"
-					<< endl;
+					<< std::endl;
 
 			// cylinder from a to b TODO: den zurück nicht...
 			stream << "cylinder{"
 					<< (*nodeIter)->getPosition().toString("<", ",", ">") << ","
-					<< linkTarget.toString("<", ",", ">") << ",r}" << endl;
+					<< linkTarget.toString("<", ",", ">") << ",r}" << std::endl;
 
 		}
 		data.push_back(stream.str());
 	}
 
 	// write to outfile
-	ofstream outfile;
+	std::ofstream outfile;
 	outfile.open(outfileName.c_str());
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i];
 	}
 	outfile.close();
 
-	cout << "Pattern written to file '" << outfileName
-			<< "', ready to be rendered by POV-Ray." << endl;
+	std::cout << "Pattern written to file '" << outfileName
+			<< "', ready to be rendered by POV-Ray." << std::endl;
 
 }
 
 void nodelist::writeMEEP() {
-	stringstream fileNameStream;
+	std::stringstream fileNameStream;
 	fileNameStream << "./data/meep-dielectric_" << name << ".ctl";
-	string outfileName = fileNameStream.str();
+	std::string outfileName = fileNameStream.str();
 
-	vector<string> data;
+	std::vector<std::string> data;
 
 	// open list
 	data.push_back("(list\n");
 
 	// Iteration over nodes
-	for (vector<node*>::iterator nodeIter = list.begin();
+	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		stringstream stream;
+		std::stringstream stream;
 		stream.precision(4);
 
 		// Cylinders for rods
@@ -974,7 +979,7 @@ void nodelist::writeMEEP() {
 				<< (*nodeIter)->getPosition().toString("", " ", "")
 				<< ") (radius rad)) ";
 
-		for (vector<node*>::iterator neighIter =
+		for (std::vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
@@ -988,8 +993,8 @@ void nodelist::writeMEEP() {
 				double distSqr = std::numeric_limits<double>::infinity();
 				coordinate diff;
 
-				vector<coordinate> shifters = getShifters();
-				for (vector<coordinate>::iterator shifter = shifters.begin();
+				std::vector<coordinate> shifters = getShifters();
+				for (std::vector<coordinate>::iterator shifter = shifters.begin();
 						shifter != shifters.end(); ++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
@@ -1010,7 +1015,7 @@ void nodelist::writeMEEP() {
 			double height = axis.length();
 
 			// center: middpoint of points
-			string center =
+			std::string center =
 					(((*nodeIter)->getPosition() + linkTarget) / 2).toString("",
 							" ", "");
 
@@ -1071,7 +1076,7 @@ void nodelist::writeMEEP() {
 
 		 }
 		 }*/
-		stream << endl;
+		stream << std::endl;
 
 		data.push_back(stream.str());
 	}
@@ -1080,30 +1085,30 @@ void nodelist::writeMEEP() {
 	data.push_back(")\n");
 
 // write to outfile
-	ofstream outfile;
+	std::ofstream outfile;
 	outfile.open(outfileName.c_str());
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i];
 	}
 	outfile.close();
 
-	cout << "Pattern written as " << outfileName << ", ready to be MEEPed."
-			<< endl;
+	std::cout << "Pattern written as " << outfileName << ", ready to be MEEPed."
+			<< std::endl;
 }
 
 void nodelist::writeMPB() {
 
 	const char outfileName[] = "./data/mpb-dielectric.ctl";
 
-	vector<string> data;
+	std::vector<std::string> data;
 
 	// open list
 	data.push_back("(list\n");
 
 	// Iteration over nodes
-	for (vector<node*>::iterator nodeIter = list.begin();
+	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		stringstream stream;
+		std::stringstream stream;
 		stream.precision(4);
 
 		// Cylinders for rods
@@ -1113,7 +1118,7 @@ void nodelist::writeMPB() {
 						"(make sphere (material polymer) (center (c->l ", " ",
 						")) (radius rad)) ");
 
-		for (vector<node*>::iterator neighIter =
+		for (std::vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
@@ -1131,7 +1136,7 @@ void nodelist::writeMPB() {
 				double height = axis.length();
 
 				// center: middpoint of points
-				string center = (((*nodeIter)->getPosition()
+				std::string center = (((*nodeIter)->getPosition()
 						+ (*neighIter)->getPosition()) / 2).toString("", " ",
 						"");
 
@@ -1195,7 +1200,7 @@ void nodelist::writeMPB() {
 
 		 }
 		 }*/
-		stream << endl;
+		stream << std::endl;
 
 		data.push_back(stream.str());
 	}
@@ -1204,15 +1209,15 @@ void nodelist::writeMPB() {
 	data.push_back(")\n");
 
 // write to outfile
-	ofstream outfile;
+	std::ofstream outfile;
 	outfile.open(outfileName);
 	for (unsigned int i = 0; i < data.size(); i++) {
 		outfile << data[i];
 	}
 	outfile.close();
 
-	cout << "Pattern written as " << outfileName << ", ready to be MPBed."
-			<< endl;
+	std::cout << "Pattern written as " << outfileName << ", ready to be MPBed."
+			<< std::endl;
 }
 
 std::vector<node*>::iterator nodelist::begin() {
@@ -1224,7 +1229,7 @@ std::vector<node*>::iterator nodelist::end() {
 }
 
 void nodelist::setEdgenodes(double distance) {
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		(*n)->setEdgenode(distance);
 	}
 }
@@ -1241,18 +1246,18 @@ int nodelist::size() {
 	return list.size();
 }
 
-vector<vector<double> > nodelist::getGnuplotMatrix() {
-	vector<double> emptyLine;
+std::vector<std::vector<double> > nodelist::getGnuplotMatrix() {
+	std::vector<double> emptyLine;
 	for (unsigned int i = 0; i < 3; i++) {
 		emptyLine.push_back(nan(""));
 	}
 
-	vector<vector<double> > data;
+	std::vector<std::vector<double> > data;
 	// nodesiteration
-	for (vector<node*>::iterator nodeIter = list.begin();
+	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		// neighboursiteration
-		for (vector<node*>::iterator neighIter =
+		for (std::vector<node*>::iterator neighIter =
 				(*nodeIter)->getNeighbours()->begin();
 				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
 
@@ -1265,8 +1270,8 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 				double distSqr = std::numeric_limits<double>::infinity();
 				coordinate diff;
 
-				vector<coordinate> shifters = getShifters();
-				for (vector<coordinate>::iterator shifter = shifters.begin();
+				std::vector<coordinate> shifters = getShifters();
+				for (std::vector<coordinate>::iterator shifter = shifters.begin();
 						shifter != shifters.end(); ++shifter) {
 					diff = (((*neighIter)->getPosition()) + (*shifter))
 							- ((*nodeIter)->getPosition());
@@ -1292,7 +1297,7 @@ vector<vector<double> > nodelist::getGnuplotMatrix() {
 }
 
 void nodelist::deleteEntries() {
-	for (vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
+	for (std::vector<node*>::iterator n = list.begin(); n != list.end(); ++n) {
 		delete (*n);
 	}
 }

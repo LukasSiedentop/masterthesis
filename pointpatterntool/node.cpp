@@ -7,7 +7,7 @@
 
 #include "node.hpp"
 
-using namespace std;
+//using namespace std;
 
 node::node() :
 		position(coordinate()), edgenode(false) { //, inBox(NULL) {
@@ -131,7 +131,7 @@ void node::addNeighbour(node* n) {
 }
 
 bool node::isNeighbour(node* node) {
-	for (vector<class node*>::iterator it = neighbours.begin();
+	for (std::vector<class node*>::iterator it = neighbours.begin();
 			it != neighbours.end(); ++it) {
 		if ((*it) == node) {
 			return true;

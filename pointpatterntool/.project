@@ -24,10 +24,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<variableList>
-		<variable>
-			<name>GNUPLOT_IOSTREAM</name>
-			<value>file:/home/lukas/Git/gnuplot-iostream</value>
-		</variable>
-	</variableList>
 </projectDescription>

@@ -22,7 +22,7 @@
 #include "nodelist.hpp"
 #include "coordinate.hpp"
 
-using namespace std;
+//using namespace std;
 
 /* Statistiken */
 
@@ -41,12 +41,12 @@ using namespace std;
  * 13		median
  * 14		variance median
  */
-vector<double> stats(vector<double> data);
+std::vector<double> stats(std::vector<double> data);
 
 /**
  * Gibt eine Liste mit Statistiken als menschenlesbaren String zurück.
  */
-std::string statsAsString(const vector<double>& data, const char commentDelimeter[] =
+std::string statsAsString(const std::vector<double>& data, const char commentDelimeter[] =
 		"\t");
 
 /* I/O */
@@ -61,7 +61,7 @@ T input(T& in) {
 
 	while (true) {
 		// füllt den input-string mit der Eingabe
-		getline(cin, input);
+		std::getline(std::cin, input);
 
 		// setzt den Defaultwert bei einem leeren String (getline löscht das letzte \n!)
 		if (input == "") {
@@ -69,11 +69,11 @@ T input(T& in) {
 		}
 
 		// Konvertieren von string nach T
-		stringstream inputStream(input);
+		std::stringstream inputStream(input);
 		if (inputStream >> in) {
 			break;
 		}
-		cout << "Falscher Input! Nochmal." << endl;
+		std::cout << "Falscher Input! Nochmal." << std::endl;
 	}
 
 	return in;
@@ -85,14 +85,14 @@ T input(T& in) {
 template<typename T>
 T convert(std::string input, T type) {
 	// Konvertieren von string nach T
-	stringstream inputStream(input);
+	std::stringstream inputStream(input);
 	if (inputStream >> type) {
 		return type;
 	}
 
 	// Error
-	cout << "Konnte string '" << input << "' nicht in " << typeid(type).name()
-			<< " umwandeln, nehme " << type << "." << endl;
+	std::cout << "Konnte string '" << input << "' nicht in " << typeid(type).name()
+			<< " umwandeln, nehme " << type << "." << std::endl;
 	return type;
 }
 
@@ -133,8 +133,8 @@ void writeHist(vector<T> data, bool includeStats, const char header[],
  *
  */
 template<typename T>
-vector<T> merge(vector<T> left, vector<T> right) {
-	vector<T> result;
+std::vector<T> merge(std::vector<T> left, std::vector<T> right) {
+	std::vector<T> result;
 	while ((int) left.size() > 0 || (int) right.size() > 0) {
 		if ((int) left.size() > 0 && (int) right.size() > 0) {
 
@@ -161,11 +161,11 @@ vector<T> merge(vector<T> left, vector<T> right) {
 }
 
 template<typename T>
-vector<T> mergeSort(vector<T> m) {
+std::vector<T> mergeSort(std::vector<T> m) {
 	if (m.size() <= 1)
 		return m;
 
-	vector<T> left, right, result;
+	std::vector<T> left, right, result;
 	int middle = ((int) m.size() + 1) / 2;
 
 	for (int i = 0; i < middle; i++) {
@@ -192,7 +192,7 @@ std::vector<std::string> getColors();
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.
  */
 void plotHist(std::vector<std::vector<double> > data, double min, double max,
-		int n, vector<std::string> names, const std::string xlabel = "x",
+		int n, std::vector<std::string> names, const std::string xlabel = "x",
 		const std::string file = "/dev/null/");
 
 /**
@@ -206,7 +206,7 @@ void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
 /**
  * Plottet die gegebenen Daten im Format Spalten(Zeilen[3]) mit den gegebenen Grenzen.
  */
-void plot3D(vector<vector<vector<double> > > data, vector<std::string> names,
+void plot3D(std::vector<std::vector<std::vector<double> > > data, std::vector<std::string> names,
 		const std::string xlabel = "x", const std::string ylabel = "y",
 		const std::string zlabel = "z", const std::string style = "w l");
 

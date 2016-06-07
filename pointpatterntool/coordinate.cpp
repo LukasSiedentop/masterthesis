@@ -7,7 +7,7 @@
 
 #include "coordinate.hpp"
 
-using namespace std;
+//using namespace std;
 
 coordinate::coordinate() {
 }
@@ -39,7 +39,7 @@ coordinate::coordinate(double x, double y, double z) {
 	position[2] = z;
 }
 
-vector<double>* coordinate::getVector() {
+std::vector<double>* coordinate::getVector() {
 	return &position;
 }
 
@@ -116,13 +116,13 @@ coordinate & coordinate::operator /=(const double &factor) {
 	return *this;
 }
 
-ostream& operator <<(ostream &os, const coordinate &obj) {
+std::ostream& operator <<(std::ostream &os, const coordinate &obj) {
 	return os << obj.toString();
 }
 
-string coordinate::toString(const string begin, const string delimiter,
-		const string end, const int precision) const {
-	stringstream stream;
+std::string coordinate::toString(const std::string begin, const std::string delimiter,
+		const std::string end, const int precision) const {
+	std::stringstream stream;
 
 	// write 4 non-zero digits for each double
 	stream.precision(precision);
@@ -149,7 +149,7 @@ double coordinate::z() const {
 }
 
 double coordinate::min() const {
-	double minimum = numeric_limits<double>::infinity();
+	double minimum = std::numeric_limits<double>::infinity();
 	for (unsigned i = 0; i < dimensions(); i++) {
 		minimum = std::min(minimum, (*this)[i]);
 	}
@@ -157,7 +157,7 @@ double coordinate::min() const {
 }
 
 double coordinate::max() const {
-	double maximum = -numeric_limits<double>::infinity();
+	double maximum = -std::numeric_limits<double>::infinity();
 	for (unsigned i = 0; i < dimensions(); i++) {
 		maximum = std::max(maximum, (*this)[i]);
 	}
@@ -199,7 +199,7 @@ coordinate coordinate::cpr(const coordinate &a, const coordinate &b) {
 }
 
 coordinate coordinate::getVec(const coordinate & a, const coordinate & b,
-		vector<coordinate> shifters) {
+		std::vector<coordinate> shifters) {
 	coordinate vec = a - b;
 	double maxFeatureSize = shifters.back().lengthSqr() / 4;
 
