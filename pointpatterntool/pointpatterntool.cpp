@@ -2,7 +2,7 @@
  * pointpatterntool.cpp
  *
  *  Created on: 24.07.2015
- *      Author: lukas
+ *      Author: Lukas Siedentop
  */
 
 /*
@@ -36,8 +36,6 @@
 
 #include <ctime>
 
-//#include <voro++/voro++.hh>
-
 #include <boost/tuple/tuple.hpp>
 
 #include "functions.hpp"
@@ -50,7 +48,7 @@
 //using namespace std;
 
 /**
- * Schreibt die Optionen auf die Koinsole und wartet auf einen Input.
+ * Writes the GUI to the command line and waits for an input integer.
  */
 int gui() {
 	std::cout << "---------------------------------------------------" << std::endl;
@@ -78,6 +76,7 @@ int gui() {
 	std::cout << "16 - add diamond pattern" << std::endl;
 
 	std::cout << "17 - read glass file" << std::endl;
+	std::cout << "18 - read hpu file" << std::endl;
 
 	std::cout << "0 - Nothing." << std::endl;
 	std::cout << "---------------------------------------------------" << std::endl;
@@ -227,18 +226,20 @@ nodelist* readglassfile(const char* points, std::string name) {
  */
 void gnuplotPattern(std::vector<nodelist*>& lists) {
 	std::vector<std::vector<std::vector<double> > > datas;
+	std::vector<std::string> names;
 
 	// listiteration
 	for (std::vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
 			++list) {
 		datas.push_back((*list)->getGnuplotMatrix());
-	}
-
-	// get names of lists
-	std::vector<std::string> names;
-	for (std::vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
-			++list) {
 		names.push_back((*list)->getName());
+		if ((*list)->isPeriodic()) {
+			std::cout << "get edge links" << std::endl;
+			datas.push_back((*list)->getEdgelinksGnuplotMatrix());
+			names.push_back((*list)->getName() + "_edgelinks");
+		}
+		// get names of lists
+
 	}
 
 	plot3D(datas, names);
@@ -489,11 +490,11 @@ int main(int argc, char* argv[]) {
 
 	std::vector<nodelist*> lists;
 
-	// 1: poisson, 2: diamon, 3: test
-	//lists.push_back(new nodelist(3, false));
+	// 1: poisson, 2: diamond, 3: test
+	//lists.push_back(new nodelist(3, true));
 
-	pointlist pointpattern = pointlist(3, false);
-	lists.push_back(pointpattern.decorate());
+	//pointlist pointpattern = pointlist(3, true);
+	//lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*
@@ -753,24 +754,29 @@ int main(int argc, char* argv[]) {
 
 
 		case 17: {
-			std::cout << "Read glass file as provided by Antonio Puertas." << std::endl;
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-01.dat", "conf1Phi_c=0.50"));
-			/*
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-02.dat", "conf2Phi_c=0.50"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-03.dat", "conf3Phi_c=0.50"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-04.dat", "conf4Phi_c=0.50"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-05.dat", "conf5Phi_c=0.50"));
-*/
-			/*
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic053/pos-eq-053-01.dat", "Phi_c=0.53"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic055/pos-eq-055-01.dat", "Phi_c=0.55"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic057/pos-eq-057-01.dat", "Phi_c=0.57"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic058/pos-eq-058-01.dat", "Phi_c=0.58"));
-			lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic0585/pos-eq-0585-01.dat", "Phi_c=0.585"));
-			*/
-			break;
-		}
+					std::cout << "Read glass file as provided by Antonio Puertas." << std::endl;
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-01.dat", "conf1Phi_c=0.50"));
+					/*
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-02.dat", "conf2Phi_c=0.50"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-03.dat", "conf3Phi_c=0.50"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-04.dat", "conf4Phi_c=0.50"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-05.dat", "conf5Phi_c=0.50"));
+		*/
+					/*
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic053/pos-eq-053-01.dat", "Phi_c=0.53"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic055/pos-eq-055-01.dat", "Phi_c=0.55"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic057/pos-eq-057-01.dat", "Phi_c=0.57"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic058/pos-eq-058-01.dat", "Phi_c=0.58"));
+					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic0585/pos-eq-0585-01.dat", "Phi_c=0.585"));
+					*/
+					break;
+				}
+		case 18: {
+					std::cout << "Read HPU file as provided by Marian Florescu, Paul Steinhard and Paul Chaikin." << std::endl;
+					lists.push_back(readfile("/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Left.dat", "/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Right.dat", true, "HPU"));
 
+					break;
+				}
 		default:
 			std::cout << "This option does not (yet) exist, unfortunately." << std::endl;
 		}

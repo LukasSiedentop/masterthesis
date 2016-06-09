@@ -139,16 +139,13 @@ std::vector<std::string> getColors() {
 	std::vector<std::string> colors;
 
 	// #55xxxxxx - little bit transparent
-	colors.push_back("#554DAF4A"); // green
-	colors.push_back("#55A65628"); // brown
-
 	colors.push_back("#55E41A1C"); // red
 	colors.push_back("#55377EB8"); // blue
-	// g
+	colors.push_back("#554DAF4A"); // green
 	colors.push_back("#55984EA3"); // purple
 	colors.push_back("#55FF7F00"); // orange
 	colors.push_back("#55FFFF33"); // yellow
-	// b
+	colors.push_back("#55A65628"); // brown
 	colors.push_back("#55F781BF"); // pink
 
 	return colors;
@@ -353,6 +350,6 @@ void plot3D(std::vector<std::vector<std::vector<double> > > datas, std::vector<s
 		gp.send1d(*data);
 	}
 
-	std::cout << "Weiter mit Enter." << std::endl;
+	std::cout << "Continue with Enter." << std::endl;
 	std::cin.get();
 }

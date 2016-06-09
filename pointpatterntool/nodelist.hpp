@@ -62,6 +62,7 @@ public:
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
+	bool isPeriodic();
 	std::vector<node*>::iterator begin();
 	std::vector<node*>::iterator end();
 	void setEdgenodes(double distance);
@@ -95,6 +96,8 @@ public:
 	node* add(double x, double y, double z);
 	// Returns the pattern in a matrix gnuplot can interpret.
 	std::vector<std::vector<double> > getGnuplotMatrix();
+	// same as getGnuplotMatrix() bit returns the edge links
+	std::vector<std::vector<double> > getEdgelinksGnuplotMatrix();
 	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
 	std::vector<coordinate> getShifters();
 	// Returns the necessary shifting vectors to continue the pattern periodically such that a given box lies within the periodically continued pattern.
