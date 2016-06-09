@@ -49,7 +49,7 @@ typedef K::Segment_3 Segment3;
 //typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> GT;
 typedef CGAL::Periodic_3_Delaunay_triangulation_3<GT> PDT;
-typedef GT::Point_3 PeriodicPoint3;
+
 
 class pointlist {
 private:

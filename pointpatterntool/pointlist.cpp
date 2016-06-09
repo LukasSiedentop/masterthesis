@@ -82,16 +82,20 @@ pointlist::pointlist(int pattern, bool periodicity) :
 				<< std::endl;
 
 		name = "Test";
-		/*
-		 // Tetrahedron
-		 list.push_back(new node(this, (coordinate(-1, 0, -1))));
-		 list.push_back(new node(this, (coordinate(1, 0, -1))));
-		 list.push_back(new node(this, (coordinate(0, -1, 1))));
-		 list.push_back(new node(this, (coordinate(0, 1, 1))));
-		 */
 
-		list.push_back(new coordinate(0, 0, 0));
+		// Tetrahedron
+		list.push_back(new coordinate(-1, 0, -1));
+		list.push_back(new coordinate(1, 0, -1));
+		list.push_back(new coordinate(0, -1, 1));
+		list.push_back(new coordinate(0, 1, 1));
+		list.push_back(new coordinate(0, 2, -1));
+		list.push_back(new coordinate(0, -2, -1));
+		list.push_back(new coordinate(2, 0, 1));
+		list.push_back(new coordinate(-2, 0, 1));
+
 		/*
+		 list.push_back(new coordinate(0, 0, 0));
+
 		 list.push_back(new coordinate(-1, -1, -1));
 		 list.push_back(new coordinate(-1, -1, 1));
 		 list.push_back(new coordinate(-1, 1, -1));
@@ -197,14 +201,14 @@ nodelist* pointlist::decorate() {
 		PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
 				max.z());
 		std::vector<Point3> points(this->size());
-		PDT PD3d(box);
 
 		boost::progress_display show_progress(list.size());
 
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
+			points.push_back(Point3((*c)->x(), (*c)->y(), (*c)->z()));
 			//std::cout << (*c)->toString() << std::endl;
-			PD3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
+//			PD3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
 			++show_progress;
 			if (list.size() < 100) {
 				gv
@@ -213,20 +217,41 @@ nodelist* pointlist::decorate() {
 			}
 
 		}
+		PDT PD3d(points.begin(), points.end(), box);
 
-		show_progress.restart(PD3d.number_of_cells() * 27);
+		std::cout << "DT tetrahedrons " << PD3d.number_of_cells() << std::endl;
+		//show_progress.restart(PD3d.number_of_cells() * 27);
 
-
+		int i = 0;
 		// Iterate over every tetrahedron ("cell" internally), 27 sheet due to periodic boundary conditions
-		for (PDT::All_cells_iterator cell =
-				PD3d.cells_begin(); cell != PD3d.cells_end(); ++cell) {
+		for (PDT::All_cells_iterator cell = PD3d.all_cells_begin();
+				cell != PD3d.all_cells_end(); ++cell) {
+
+			// vertex handle
+			if (((*cell).vertex(0)->get_offset_flag())) {
+				std::cout << "jep" << std::endl;
+			}
+
+			// (*cell).offset(i) funktioniert nur für 0<i<3
+			for (int ii = 0; ii < 4; ii++) {
+				std::cout << "cell: " << i << " offset " << ii << ": "
+						<< (*cell).offset(ii) << std::endl;
+			}
+			CGAL::Periodic_3_triangulation_ds_vertex_base_3<PDT>::Offset o;
+			o = (*cell).vertex(0)->offset();
+			std::cout << "cell: " << i << " offset: " << o.x() << ", " << o.y()
+					<< ", " << o.z() << std::endl;
+
 			// calculate midpoint and add to nodelist
 			Point3 centre = CGAL::centroid((*cell).vertex(0)->point(),
 					(*cell).vertex(1)->point(), (*cell).vertex(2)->point(),
 					(*cell).vertex(3)->point());
+
+			gv << Sphere3(centre, (double) 0.005);
+
 			node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
-			if ((*cell).vertex(0)->point().x() > 5) {
+			if (centre.x() > 5 || centre.y() > 5 || centre.z() > 5) {
 				std::cout << "alles gut" << std::endl;
 
 			}
@@ -246,7 +271,8 @@ nodelist* pointlist::decorate() {
 				n->addNeighbour(neigh);
 				neigh->addNeighbour(n);
 			}
-			++show_progress;
+			//++show_progress;
+			i++;
 		}
 		/*
 		 PDT::Periodic_tetrahedron pt;
@@ -273,9 +299,9 @@ nodelist* pointlist::decorate() {
 		 Point3(t_bd.vertex(1)), Point3(t_bd.vertex(2)),
 		 Point3(t_bd.vertex(3)));
 		 gv << Sphere3(centre, (double) 0.005);
-		 /*
-		 node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
+
+		 node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
 		 // iterate of all four neighbours, calculate their centroid and set the neighbourhood. TODO: points are being added fourfold...
 		 for (int neighIdx = 0; neighIdx < 4; neighIdx++) {
@@ -293,9 +319,9 @@ nodelist* pointlist::decorate() {
 		 // set the neighbourhood
 		 n->addNeighbour(neigh);
 		 neigh->addNeighbour(n);
+		 }
+		 }
 		 }*/
-		//}
-		//}
 	}
 
 	else {
@@ -307,13 +333,26 @@ nodelist* pointlist::decorate() {
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
 			D3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
+			if (list.size() < 100) {
+				gv
+						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
+								(double) 0.1);
+			}
 		}
-
+		/*
+		 gv.set_wired(true);
+		 gv << D3d;
+		 gv << CGAL::GREEN;
+		 D3d.draw_dual(gv);
+		 gv.set_wired(false);
+		 */
 		boost::progress_display show_progress(D3d.number_of_cells());
 
-		// Iterate over every tetrahedron ("cell" internally)
-		for (CGAL::Triangulation_3<K>::Cell_iterator cell = D3d.cells_begin();
-				cell != D3d.cells_end(); ++cell) {
+		int i = 0;
+		// Iterate over every tetrahedra ("cell" internally)
+		for (DT::Finite_cells_iterator cell = D3d.finite_cells_begin();
+				cell != D3d.finite_cells_end(); ++cell) {
+
 			// calculate midpoint and add to nodelist
 			Point3 centre = CGAL::centroid((*cell).vertex(0)->point(),
 					(*cell).vertex(1)->point(), (*cell).vertex(2)->point(),
@@ -321,27 +360,38 @@ nodelist* pointlist::decorate() {
 
 			node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
-			// plot for debug
-			//gv << Sphere3(centre, (double) 0.005);
-
+			/*
+			 std::cout << "cell: " << i << std::endl;
+			 gv << CGAL::RED;
+			 */
 			// iterate of all four neighbours, calculate their centroid and set the neighbourhood. TODO: points are being added fourfold...
 			for (int neighIdx = 0; neighIdx < 4; neighIdx++) {
-				Point3 neighbour = CGAL::centroid(
-						(*cell).neighbor(neighIdx)->vertex(0)->point(),
-						(*cell).neighbor(neighIdx)->vertex(1)->point(),
-						(*cell).neighbor(neighIdx)->vertex(2)->point(),
-						(*cell).neighbor(neighIdx)->vertex(3)->point());
+				// exclude infinite cells
+				if (!D3d.is_infinite((*cell).neighbor(neighIdx))) {
 
-				node* neigh = nlist->add(neighbour.x(), neighbour.y(),
-						neighbour.z());
+					Point3 neighbour = CGAL::centroid(
+							(*cell).neighbor(neighIdx)->vertex(0)->point(),
+							(*cell).neighbor(neighIdx)->vertex(1)->point(),
+							(*cell).neighbor(neighIdx)->vertex(2)->point(),
+							(*cell).neighbor(neighIdx)->vertex(3)->point());
+					/*
+					 gv << CGAL::BLUE;
+					 gv << Sphere3(neighbour, (double) 0.005);
+					 */
+					node* neigh = nlist->add(neighbour.x(), neighbour.y(),
+							neighbour.z());
 
-				// set the neighbourhood
-				n->addNeighbour(neigh);
-				neigh->addNeighbour(n);
+					// set the neighbourhood
+					n->addNeighbour(neigh);
+					neigh->addNeighbour(n);
+				}
 			}
 
 			++show_progress;
+			i++;
 		}
+		std::cout << "#cells: " << i << " #cells2: " << D3d.number_of_cells()
+				<< std::endl;
 	}
 
 	t = clock() - t;

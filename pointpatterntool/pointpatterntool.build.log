@@ -1,9 +1,6 @@
-11:51:17 **** Incremental Build of configuration Debug for project pointpatterntool ****
+15:34:43 **** Incremental Build of configuration Debug for project pointpatterntool ****
 Info: Internal Builder is used for build
 g++ -O0 -g3 -Wall -c -fmessage-length=0 -o pointlist.o ../pointlist.cpp 
-../pointlist.cpp:276:4: Warnung: »/*« innerhalb des Kommentars [-Wcomment]
-    /*
-     
 In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12:0,
                  from /usr/include/boost/iostreams/detail/resolve.hpp:26,
                  from /usr/include/boost/iostreams/detail/push.hpp:24,
@@ -49,5 +46,5 @@ In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp
                                                                                     ^
 g++ -o pointpatterntool coordinate.o functions.o node.o nodelist.o pointlist.o pointpatterntool.o -lboost_iostreams -lboost_system -lboost_filesystem -lCGAL_Core -lCGAL -lgmp 
 
-11:51:28 Build Finished (took 10s.351ms)
+15:34:59 Build Finished (took 16s.14ms)
 
