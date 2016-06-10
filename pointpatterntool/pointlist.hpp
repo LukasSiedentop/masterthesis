@@ -31,26 +31,33 @@
 #include <CGAL/Periodic_3_Delaunay_triangulation_traits_3.h>
 #include <CGAL/Periodic_3_Delaunay_triangulation_3.h>
 
+#include <CGAL/Periodic_3_triangulation_ds_vertex_base_3.h>
+#include <CGAL/Triangulation_vertex_base_3.h>
+#include <CGAL/Periodic_3_triangulation_ds_cell_base_3.h>
+#include <CGAL/Triangulation_cell_base_3.h>
+
 // CGAL
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Cartesian<double>  K;
 
 // 3D triangulation data structure
-typedef CGAL::Triangulation_data_structure_3<>	Tds;
+typedef CGAL::Triangulation_data_structure_3<>	TDS;
 
-typedef Tds::Cell_handle	Cell_handle;
+typedef TDS::Cell_handle	Cell_handle;
 
 // non-periodic delaunay triangulation
 typedef CGAL::Delaunay_triangulation_3<K>   DT;
 typedef K::Point_3 Point3;
 typedef K::Sphere_3 Sphere3;
-typedef K::Segment_3 Segment3;
+//typedef K::Segment_3 Segment3;
 
 // periodic delaunay triangulation
-//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> GT;
-typedef CGAL::Periodic_3_Delaunay_triangulation_3<GT> PDT;
-typedef GT::Sphere_3 Pshere3;
+typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> PT;
+typedef CGAL::Periodic_3_Delaunay_triangulation_3<PT> PDT;
+//typedef GT::Sphere_3 Pshere3;
 
+typedef PDT::Periodic_point         Periodic_point;
+typedef PDT::Offset                 Offset;
 
 class pointlist {
 private:
@@ -62,6 +69,9 @@ private:
 	std::string name;
 
 	std::vector<class coordinate*> list;
+
+	// returns the points of a given periodic data structure cell, periodically shifted such that the original cell is centred
+	std::vector<Point3> getPoints(PDT::Cell_iterator cell, PDT PD3d);
 public:
 	pointlist();
 	pointlist(coordinate box, bool periodicity, std::string n);

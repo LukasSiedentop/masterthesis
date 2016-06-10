@@ -454,11 +454,15 @@ node* nodelist::add(double x, double y, double z) {
 		std::vector<coordinate> shifters = getShifters();
 		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
-			// as bounding box
-			if ((fabs((*shifter)[0] + newPos.x()) < getLengths().x() / 2)
-					&& (fabs((*shifter)[1] + newPos.y()) < getLengths().y() / 2)
-					&& (fabs((*shifter)[2] + newPos.z()) < getLengths().z() / 2)) {
-				newPos += (*shifter);
+			// as bounding box: choose the right shifter where all components are in t
+			if ((fabs((*shifter).x() + (x + getMid().x()))
+					< getLengths().x() / 2)
+					&& (fabs((*shifter).y() + (y + getMid().y()))
+							< getLengths().y() / 2)
+					&& (fabs((*shifter).z() + (z + getMid().z()))
+							< getLengths().z() / 2)) {
+				newPos = (*shifter) + coordinate(x, y, z);
+				continue;
 			}
 		}
 	}
