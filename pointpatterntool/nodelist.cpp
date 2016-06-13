@@ -462,7 +462,7 @@ node* nodelist::add(double x, double y, double z) {
 					&& (fabs((*shifter).z() + (z + getMid().z()))
 							< getLengths().z() / 2)) {
 				newPos = (*shifter) + coordinate(x, y, z);
-				continue;
+				continue; // break
 			}
 		}
 	}

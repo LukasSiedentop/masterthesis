@@ -22,7 +22,8 @@
 #include "nodelist.hpp"
 #include "coordinate.hpp"
 
-//using namespace std;
+
+//#include <CGAL/IO/Geomview_stream.h>
 
 /* Statistiken */
 
@@ -187,6 +188,9 @@ std::vector<T> mergeSort(std::vector<T> m) {
 // TODO: anzeigen UND svg speichern
 // returns eight colors
 std::vector<std::string> getColors();
+
+// draw points in geomview
+//void drawPointsGeomview(std::vector<std::vector<double> > points, coordinate min = coordinate(-5,-5,-5), coordinate max = coordinate(5,5,5));
 
 /**
  * Plottet ein Histogramm der gegebenen (1D-)Daten mit der Binsize (max-min)/n und der x-Achsen-Beschriftung xlabel.

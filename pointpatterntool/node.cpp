@@ -116,11 +116,14 @@ void node::scale(double a) {
 	position *= a;
 }
 
-// TODO: prettier?
+
 void node::scaleAnisotropic(double ax, double ay, double az) {
+	// TODO: valid?
+	position *= coordinate(ax, ay, az);
+	/*
 	position[0] *= ax;
 	position[1] *= ay;
-	position[2] *= az;
+	position[2] *= az;*/
 }
 
 void node::addNeighbour(node* n) {
@@ -147,5 +150,6 @@ bool node::equals(node* node) {
 }
 
 bool node::zmetric(const node* a, const node* b) {
-	return a->getPosition()[2] < b->getPosition()[2];
+	// TODO: generalizable with nmetric, n being the dimension to compare
+	return a->getPosition().z() < b->getPosition().z();
 }

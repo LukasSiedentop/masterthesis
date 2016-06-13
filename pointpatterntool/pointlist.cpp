@@ -31,13 +31,15 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		// seed for random numbers generator
 		srand(time(NULL));
 
-		for (unsigned n = 0; n < 1000; n++) {
-			list.push_back(new coordinate((coordinate(3) * 10) - extend / 2));
+		for (unsigned n = 0; n < 10; n++) {
+			// add in a little displacement such that point can not lie directly on the boundary
+			list.push_back(
+					new coordinate((coordinate(3) * (10)) - (extend) / 2));
 		}
 
 		break;
 	}
-	case 2: { // diamond point pattern ((c) Dirk)
+	case 2: { // diamond point pattern ((c) Dirk Ropers)
 		std::cout
 				<< "Generate Diamond point pattern with 1000 points in 10^3 cubicle..."
 				<< std::endl;
@@ -83,15 +85,15 @@ pointlist::pointlist(int pattern, bool periodicity) :
 
 		name = "Test";
 
-		list.push_back(new coordinate(0, 0, 0));
+		//list.push_back(new coordinate(0, 0, 0));
 
 		// Tetrahedron
-		/*
-		 list.push_back(new coordinate(-1, 0, -1));
-		 list.push_back(new coordinate(1, 0, -1));
-		 list.push_back(new coordinate(0, -1, 1));
-		 list.push_back(new coordinate(0, 1, 1));
-		 */
+
+		list.push_back(new coordinate(-1, 0, -1));
+		list.push_back(new coordinate(1, 0, -1));
+		list.push_back(new coordinate(0, -1, 1));
+		list.push_back(new coordinate(0, 1, 1));
+
 		/*
 		 list.push_back(new coordinate(0, 2, -1));
 		 list.push_back(new coordinate(0, -2, -1));
@@ -123,29 +125,29 @@ std::vector<Point3> pointlist::getPoints(PDT::Cell_iterator cell, PDT PD3d) {
 	// inspired by http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
 	// Extract the Periodic_points from the data structure
 	Periodic_point pp[4];
-	for (int i=0 ; i<4 ; i++) {
-	  pp[i] = PD3d.periodic_point(cell,i);
+	for (int i = 0; i < 4; i++) {
+		pp[i] = PD3d.periodic_point(cell, i);
 	}
 
 	// Figure out in which directions the cell wraps around
 	int off[3];
-	for (int d=0 ; d<3 ; d++) {
-	  bool does_wrap=false;
-	  for (int i=0 ; i<4 ; i++) {
-	    does_wrap = does_wrap || (pp[i].second[d]!=0);
-	  }
-	  off[d] = (does_wrap ? -1 : 0);
+	for (int d = 0; d < 3; d++) {
+		bool does_wrap = false;
+		for (int i = 0; i < 4; i++) {
+			does_wrap = does_wrap || (pp[i].second[d] != 0);
+		}
+		off[d] = (does_wrap ? -1 : 0);
 	}
 
 	// wrap_offset contains the required translation
-	Offset wrap_offset(off[0],off[1],off[2]);
+	Offset wrap_offset(off[0], off[1], off[2]);
 
 	std::vector<Point3> pts;
 	// Apply the translation in wrap_offset to the Periodic_points
-	for (int i=0 ; i<4 ; i++) {
-	  pp[i] = std::make_pair(pp[i].first, pp[i].second + wrap_offset);
-	  pts.push_back(PD3d.point(pp[i]));
-	  std::cout<< PD3d.point(pp[i])<<std::endl;
+	for (int i = 0; i < 4; i++) {
+		pp[i] = std::make_pair(pp[i].first, pp[i].second + wrap_offset);
+		pts.push_back(PD3d.point(pp[i]));
+
 	}
 	return pts;
 }
@@ -206,6 +208,8 @@ void pointlist::scaleList(double a) {
 }
 
 nodelist* pointlist::decorate() {
+	//drawGeomview();
+
 	std::cout << "Set the neighbours of the " << name
 			<< " point pattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
 			<< std::endl;
@@ -219,16 +223,7 @@ nodelist* pointlist::decorate() {
 
 	nodelist* nlist = new nodelist(periodic, name);
 
-
-
-	// as in CGAL the unique domain is in the corner of the periodically continued pattern, set a shifted midpoint
 	coordinate min = extend / -2, max = extend / 2;
-
-	nlist->setMins(min + extend*1.5);
-	nlist->setMaxs(max + extend*1.5);
-
-
-	std::cout << "Mid: " << nlist->getMid()<< " Lengths: " << nlist->getLengths() << std::endl;
 
 	// initialize geomview for visulaization
 	CGAL::Geomview_stream gv(
@@ -239,8 +234,27 @@ nodelist* pointlist::decorate() {
 	gv.clear();
 
 	if (periodic) {
+
 		// uses http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
 		// inspiration: http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
+
+		// as in CGAL the unique domain is in the corner of the periodically continued pattern, set a shifted midpoint
+
+		nlist->setMins(coordinate(-2, -2, -2));
+		nlist->setMaxs(coordinate(2, 2, 2));
+
+		node* nTest = nlist->add(0, 0, 0);
+		node* neighTest = nlist->add(3, 3, 3);
+
+		nTest->addNeighbour(neighTest);
+		neighTest->addNeighbour(nTest);
+
+		return nlist;
+
+		nlist->setMins(min + extend * 1.5);
+		nlist->setMaxs(max + extend * 1.5);
+
+
 
 		// calculate delaunay triangulation
 		PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
@@ -265,6 +279,10 @@ nodelist* pointlist::decorate() {
 			}
 
 		}
+
+		std::cout << "Continue with Enter." << std::endl;
+		std::cin.get();
+
 		//PDT PD3d(points.begin(), points.end(), box);
 
 		PD3d.insert(points.begin(), points.end());
@@ -272,10 +290,6 @@ nodelist* pointlist::decorate() {
 		int i = 0;
 		for (PDT::Cell_iterator cit = PD3d.cells_begin();
 				cit != PD3d.cells_end(); ++cit) {
-
-			// convert periodic points of each cell to actual ones and calculate their centroid.
-//			std::vector<Point3> pts = getPoints(cit,PD3d);
-// pts[0], pts[1], pts[2], pts[3]
 
 			Point3 centre = CGAL::centroid(
 					PD3d.point(PD3d.periodic_point(cit, 0)),
@@ -286,25 +300,28 @@ nodelist* pointlist::decorate() {
 			node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
 			// verification
-			/*
-			 if (i == 55) {
-			 PDT::Tetrahedron tet = PD3d.construct_tetrahedron(
-			 PD3d.point(PD3d.periodic_point(cit, 0)),
-			 PD3d.point(PD3d.periodic_point(cit, 1)),
-			 PD3d.point(PD3d.periodic_point(cit, 2)),
-			 PD3d.point(PD3d.periodic_point(cit, 3)));
+			if (1) {
 
-			 gv << CGAL::RED;
-			 gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 0)), 1);
-			 gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 1)), 1);
-			 gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 2)), 1);
-			 gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 3)), 1);
-			 gv << CGAL::RED;
-			 gv << tet;
-			 gv << CGAL::GREEN;
-			 gv << Sphere3(centre, 2);
-			 }
-			 */
+				PDT::Tetrahedron tet = PD3d.construct_tetrahedron(
+						PD3d.point(PD3d.periodic_point(cit, 0)),
+						PD3d.point(PD3d.periodic_point(cit, 1)),
+						PD3d.point(PD3d.periodic_point(cit, 2)),
+						PD3d.point(PD3d.periodic_point(cit, 3)));
+
+				//PDT::Tetrahedron tet = PD3d.construct_tetrahedron(pts[0], pts[1], pts[2], pts[3]);
+				gv << CGAL::RED;
+				gv << tet;
+
+				gv << CGAL::RED;
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 0)), 0.2);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 1)), 0.2);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 2)), 0.2);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 3)), 0.2);
+
+				gv << CGAL::GREEN;
+				gv << Sphere3(centre, 0.5);
+			}
+
 			// get periodic points of neighbouring cells
 			for (int neighIdx = 0; neighIdx < 4; neighIdx++) {
 				// convert periodic points of the neighbouring cell to actual ones and calculate their centroid.
@@ -370,10 +387,12 @@ nodelist* pointlist::decorate() {
 			i++;
 		}
 		// shift back
-		nlist->shiftList((nlist->getMid())*(-1));
+		nlist->shiftList((nlist->getMid()) * (-1));
 		//std::cout << "#cells: " << i << " #cells2: " << PD3d.number_of_cells() << std::endl;
 
 	} else {
+		nlist->setMins(min);
+		nlist->setMaxs(max);
 		// use http://doc.cgal.org/latest/Triangulation_3/index.html
 
 		// calculate delaunay triangulation
@@ -382,12 +401,12 @@ nodelist* pointlist::decorate() {
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
 			D3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
-			/*
-			 if (list.size() < 100) {
-			 gv
-			 << Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
-			 (double) 0.1);
-			 }*/
+
+			if (list.size() < 100) {
+				gv
+						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
+								(double) 0.1);
+			}
 		}
 		/*
 		 gv.set_wired(true);
@@ -410,10 +429,9 @@ nodelist* pointlist::decorate() {
 
 			node* n = nlist->add(centre.x(), centre.y(), centre.z());
 
-			/*
-			 std::cout << "cell: " << i << std::endl;
-			 gv << CGAL::RED;
-			 */
+			gv << CGAL::RED;
+			gv << Sphere3(centre, (double) 0.005);
+
 			// iterate of all four neighbours, calculate their centroid and set the neighbourhood. TODO: points are being added fourfold...
 			for (int neighIdx = 0; neighIdx < 4; neighIdx++) {
 				// exclude infinite cells
@@ -424,10 +442,10 @@ nodelist* pointlist::decorate() {
 							(*cell).neighbor(neighIdx)->vertex(1)->point(),
 							(*cell).neighbor(neighIdx)->vertex(2)->point(),
 							(*cell).neighbor(neighIdx)->vertex(3)->point());
-					/*
-					 gv << CGAL::BLUE;
-					 gv << Sphere3(neighbour, (double) 0.005);
-					 */
+
+					gv << CGAL::BLUE;
+					gv << Sphere3(neighbour, (double) 0.005);
+
 					node* neigh = nlist->add(neighbour.x(), neighbour.y(),
 							neighbour.z());
 
@@ -440,8 +458,10 @@ nodelist* pointlist::decorate() {
 			++show_progress;
 			i++;
 		}
-		//std::cout << "#cells: " << i << " #cells2: " << D3d.number_of_cells() << std::endl;
 	}
+
+	std::cout << "Mid: " << nlist->getMid() << " Lengths: "
+			<< nlist->getLengths() << std::endl;
 
 	t = clock() - t;
 	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
@@ -450,3 +470,15 @@ nodelist* pointlist::decorate() {
 	std::cin.get();
 	return nlist;
 }
+
+/*
+ void pointlist::drawGeomview() {
+ std::vector<std::vector<double> > points;
+
+ for (std::vector<coordinate*>::iterator it = list.begin(); it != list.end();
+ ++it) {
+ points.push_back(*(*it)->getVector());
+ }
+
+ drawPointsGeomview(points, extend / -2, extend / 2);
+ }*/

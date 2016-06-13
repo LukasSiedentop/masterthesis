@@ -91,6 +91,9 @@ public:
 	// returns the decorated pattern, constructed with the design protocol by Florescu et. al. 2009 (PNAS)
 	nodelist* decorate();
 
+	// draw the pointlist in geomview
+	//void drawGeomview();
+
 	/* TODO:
 	 * Structure factor
 	 * Hyperuniformity

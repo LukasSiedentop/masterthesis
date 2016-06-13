@@ -151,6 +151,33 @@ std::vector<std::string> getColors() {
 	return colors;
 
 }
+/*
+void drawPointsGeomview(std::vector<std::vector<double> > points, coordinate min, coordinate max) {
+	// see http://www.geomview.org/FAQ/answers.shtml
+	// initialize geomview for visulaization
+	CGAL::Geomview_stream gv(
+			CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
+	gv.set_line_width(4);
+	// gv.set_trace(true);
+	gv.set_bg_color(CGAL::Color(0, 200, 200));
+	gv.clear();
+
+	gv << "VECT\n";
+	gv << points.size() << " " << points.size() << " 0\n";      // num. of polylines, num. of vertices, num. of colors.
+
+	for (unsigned int i = 0; i < points.size(); i++) {
+		gv << "1"; // num. of vertices in each of the 3 polylines,
+	}
+	gv << "\n";
+
+	for (std::vector<std::vector<double> >::iterator point = points.begin();
+			point != points.end(); ++point) {
+		gv << (*point)[0] << " " << (*point)[1] << " " << (*point)[2] << "\n"; // Here are the coordinates of each point.
+	}
+
+	std::cout << "Continue with Enter." << std::endl;
+	std::cin.get();
+}*/
 
 void plotHist(std::vector<std::vector<double> > datas, double min, double max, int n,
 		std::vector<std::string> names, const std::string xlabel,
@@ -226,7 +253,7 @@ void plotHist(std::vector<std::vector<double> > datas, double min, double max, i
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
 	// the gnuplot window doesn't get closed.
-	std::cout << "Weiter mit Enter." << std::endl;
+	std::cout << "Continue with Enter." << std::endl;
 	std::cin.get();
 }
 
@@ -304,7 +331,7 @@ void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > datas, 
 
 	// For Windows, prompt for a keystroke before the Gnuplot object goes out of scope so that
 	// the gnuplot window doesn't get closed.
-	std::cout << "Weiter mit Enter." << std::endl;
+	std::cout << "Continue with Enter." << std::endl;
 	std::cin.get();
 }
 

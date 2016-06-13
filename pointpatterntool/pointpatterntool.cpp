@@ -233,11 +233,12 @@ void gnuplotPattern(std::vector<nodelist*>& lists) {
 			++list) {
 		datas.push_back((*list)->getGnuplotMatrix());
 		names.push_back((*list)->getName());
+		/*
 		if ((*list)->isPeriodic()) {
 			std::cout << "get edge links" << std::endl;
 			datas.push_back((*list)->getEdgelinksGnuplotMatrix());
 			names.push_back((*list)->getName() + "_edgelinks");
-		}
+		}*/
 		// get names of lists
 
 	}
@@ -494,6 +495,7 @@ int main(int argc, char* argv[]) {
 	//lists.push_back(new nodelist(3, true));
 
 	//pointlist pointpattern = pointlist(3, false);
+
 	pointlist pointpattern = pointlist(3, true);
 	lists.push_back(pointpattern.decorate());
 
