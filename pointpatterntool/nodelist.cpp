@@ -446,6 +446,10 @@ std::string nodelist::getName() {
 	return name;
 }
 
+node* nodelist::add(coordinate pos) {
+	return add(pos.x(), pos.y(), pos.z());
+}
+
 node* nodelist::add(double x, double y, double z) {
 	coordinate newPos = coordinate(x, y, z);
 
@@ -462,7 +466,7 @@ node* nodelist::add(double x, double y, double z) {
 					&& (fabs((*shifter).z() + (z + getMid().z()))
 							< getLengths().z() / 2)) {
 				newPos = (*shifter) + coordinate(x, y, z);
-				continue; // break
+				break;
 			}
 		}
 	}
@@ -522,6 +526,46 @@ void nodelist::display() {
 
 		i++;
 	}
+}
+
+coordinate nodelist::getShifter(coordinate point) {
+	if (!periodic) {
+		std::cout
+				<< "WARNING: shifter vector requested whilst the pattern is not periodic!";
+		return coordinate(0, 0, 0);
+	}
+
+	// ensure that point lies in between boundaries if periodic
+	std::vector<coordinate> shifters = getShifters();
+
+	unsigned int nBoxes = 100;
+	for (unsigned int n = 1; n < nBoxes; n++) {
+		if (n > 1) {
+			std::cout
+					<< "Note: No Shifter vector found; requested point may be "
+					<< n << " boxes away..." << std::endl;
+		}
+
+		for (std::vector<coordinate>::iterator shifter = shifters.begin();
+				shifter != shifters.end(); ++shifter) {
+			coordinate largeShifter = (*shifter) * n;
+			// as bounding box: choose the right shifter where all components are in t
+			if ((fabs(largeShifter.x() + (point.x() + getMid().x()))
+					< getLengths().x() / 2)
+					&& (fabs(largeShifter.y() + (point.y() + getMid().y()))
+							< getLengths().y() / 2)
+					&& (fabs(largeShifter.z() + (point.z() + getMid().z()))
+							< getLengths().z() / 2)) {
+				return largeShifter;
+			}
+		}
+	}
+	std::cout << "Note: no shifting vector was found for point "
+			<< point.toString() << " into the box " << min.toString() << ", "
+			<< max.toString() << " despite looking for shifters over " << nBoxes
+			<< " boxes. Return zero Shifter." << std::endl;
+
+	return coordinate(0, 0, 0);
 }
 
 std::vector<coordinate> nodelist::getShifters() {
@@ -1256,43 +1300,58 @@ std::vector<std::vector<double> > nodelist::getGnuplotMatrix() {
 	// nodesiteration
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		// neighboursiteration
-		for (std::vector<node*>::iterator neighIter =
-				(*nodeIter)->getNeighbours()->begin();
-				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+		for (unsigned int n = 0; n < (*nodeIter)->countNeighbours(); n++) {
 
-			// get target link
-			coordinate linkTarget(std::numeric_limits<double>::infinity(),
-					std::numeric_limits<double>::infinity(),
-					std::numeric_limits<double>::infinity());
-			if (periodic) {
+			coordinate shifter = (*nodeIter)->getNeighbourShifters()->at(n);
+			// do not plot links over the boundary
+			if ((*nodeIter)->getNeighbourShifters()->at(n)
+					== coordinate(0, 0, 0)) {
+				data.push_back(*(*nodeIter)->getPosition().getVector());
+				data.push_back(
+						*((*nodeIter)->getNeighbours()->at(n)->getPosition()
+								- shifter).getVector());
 
-				double distSqr = std::numeric_limits<double>::infinity();
-				coordinate diff;
-
-				std::vector<coordinate> shifters = getShifters();
-				for (std::vector<coordinate>::iterator shifter =
-						shifters.begin(); shifter != shifters.end();
-						++shifter) {
-					diff = (((*neighIter)->getPosition()) + (*shifter))
-							- ((*nodeIter)->getPosition());
-					if (diff.lengthSqr() < distSqr) {
-						distSqr = diff.lengthSqr();
-						linkTarget =
-								(((*neighIter)->getPosition()) + (*shifter));
-					}
-				}
-
-			} else {
-				linkTarget = (*neighIter)->getPosition();
+				data.push_back(emptyLine);
 			}
-
-			data.push_back(*(*nodeIter)->getPosition().getVector());
-			data.push_back(*linkTarget.getVector());
-
-			data.push_back(emptyLine);
-
 		}
+
+		// neighboursiteration
+		/*		for (std::vector<node*>::iterator neighIter =
+		 (*nodeIter)->getNeighbours()->begin();
+		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+		 // get target link
+		 coordinate linkTarget(std::numeric_limits<double>::infinity(),
+		 std::numeric_limits<double>::infinity(),
+		 std::numeric_limits<double>::infinity());
+		 if (periodic) {
+
+		 double distSqr = std::numeric_limits<double>::infinity();
+		 coordinate diff;
+
+		 std::vector<coordinate> shifters = getShifters();
+		 for (std::vector<coordinate>::iterator shifter =
+		 shifters.begin(); shifter != shifters.end();
+		 ++shifter) {
+		 diff = (((*neighIter)->getPosition()) + (*shifter))
+		 - ((*nodeIter)->getPosition());
+		 if (diff.lengthSqr() < distSqr) {
+		 distSqr = diff.lengthSqr();
+		 linkTarget =
+		 (((*neighIter)->getPosition()) + (*shifter));
+		 }
+		 }
+
+		 } else {
+		 linkTarget = (*neighIter)->getPosition();
+		 }
+
+		 data.push_back(*(*nodeIter)->getPosition().getVector());
+		 data.push_back(*linkTarget.getVector());
+
+		 data.push_back(emptyLine);
+
+		 }*/
 	}
 	return data;
 }
@@ -1307,42 +1366,57 @@ std::vector<std::vector<double> > nodelist::getEdgelinksGnuplotMatrix() {
 	// nodesiteration
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		// neighboursiteration
-		for (std::vector<node*>::iterator neighIter =
-				(*nodeIter)->getNeighbours()->begin();
-				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+		// neighboursiteration TODO: still an error somewhere... possibly in the shifter assigning
+		for (unsigned int n = 0; n < (*nodeIter)->countNeighbours(); n++) {
 
-			// get target link
-			coordinate linkTarget(std::numeric_limits<double>::infinity(),
-					std::numeric_limits<double>::infinity(),
-					std::numeric_limits<double>::infinity());
-
-			double distSqr = std::numeric_limits<double>::infinity();
-			coordinate diff;
-
-			coordinate usedShifter = coordinate(0, 0, 0);
-
-			// shift the neighbour with the periodic boundary conditions until its closest to the node
-			std::vector<coordinate> shifters = getShifters();
-			for (std::vector<coordinate>::iterator shifter = shifters.begin();
-					shifter != shifters.end(); ++shifter) {
-				diff = (((*neighIter)->getPosition()) + (*shifter))
-						- ((*nodeIter)->getPosition());
-				if (diff.lengthSqr() < distSqr) {
-					distSqr = diff.lengthSqr();
-					linkTarget = (((*neighIter)->getPosition()) + (*shifter));
-					usedShifter = (*shifter);
-				}
-			}
-
-			// exclude the zero shifter
-			if (usedShifter != coordinate(0, 0, 0)) {
+			coordinate shifter = (*nodeIter)->getNeighbourShifters()->at(n);
+			// its only a link over the boundary if there's not the 0-shifter...
+			if ((*nodeIter)->getNeighbourShifters()->at(n)
+					!= coordinate(0, 0, 0)) {
 				data.push_back(*(*nodeIter)->getPosition().getVector());
-				data.push_back(*linkTarget.getVector());
+				data.push_back(
+						*((*nodeIter)->getNeighbours()->at(n)->getPosition()
+								- shifter).getVector());
 
 				data.push_back(emptyLine);
 			}
+			/*
 
+			 for (std::vector<node*>::iterator neighIter =
+			 (*nodeIter)->getNeighbours()->begin();
+			 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+
+			 // get target link
+			 coordinate linkTarget(std::numeric_limits<double>::infinity(),
+			 std::numeric_limits<double>::infinity(),
+			 std::numeric_limits<double>::infinity());
+
+			 double distSqr = std::numeric_limits<double>::infinity();
+			 coordinate diff;
+
+			 coordinate usedShifter = coordinate(0, 0, 0);
+
+			 // shift the neighbour with the periodic boundary conditions until its closest to the node
+			 std::vector<coordinate> shifters = getShifters();
+			 for (std::vector<coordinate>::iterator shifter = shifters.begin();
+			 shifter != shifters.end(); ++shifter) {
+			 diff = (((*neighIter)->getPosition()) + (*shifter))
+			 - ((*nodeIter)->getPosition());
+			 if (diff.lengthSqr() < distSqr) {
+			 distSqr = diff.lengthSqr();
+			 linkTarget = (((*neighIter)->getPosition()) + (*shifter));
+			 usedShifter = (*shifter);
+			 }
+			 }
+
+			 // exclude the zero shifter
+			 if (usedShifter != coordinate(0, 0, 0)) {
+			 data.push_back(*(*nodeIter)->getPosition().getVector());
+			 data.push_back(*linkTarget.getVector());
+
+			 data.push_back(emptyLine);
+			 }
+			 */
 		}
 	}
 	return data;

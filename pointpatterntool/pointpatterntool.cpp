@@ -51,7 +51,8 @@
  * Writes the GUI to the command line and waits for an input integer.
  */
 int gui() {
-	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "---------------------------------------------------"
+			<< std::endl;
 	std::cout << "1 - number of neighbours histogram" << std::endl;
 	std::cout << "2 - distance to neighbours histogram" << std::endl;
 	std::cout << "3 - angle between neighbours histogram" << std::endl;
@@ -79,7 +80,8 @@ int gui() {
 	std::cout << "18 - read hpu file" << std::endl;
 
 	std::cout << "0 - Nothing." << std::endl;
-	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "---------------------------------------------------"
+			<< std::endl;
 	std::cout << "What do you want to do? (0-17; default: 0) << ";
 
 	int option = 0;
@@ -99,8 +101,8 @@ int gui() {
  */
 nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 		std::string name) {
-	std::cout << "Read nodesfile " << nodes << " and neighboursfile " << neighbours
-			<< "." << std::endl;
+	std::cout << "Read nodesfile " << nodes << " and neighboursfile "
+			<< neighbours << "." << std::endl;
 
 	// input filestream of both files
 	std::ifstream nodeFile, neighbourFile;
@@ -131,12 +133,12 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 		node* n = list->add(x, y, z);
 		node* neighbour = list->add(nx, ny, nz);
 
-		// set neighbourhood
-		n->addNeighbour(neighbour);
-		neighbour->addNeighbour(n);
-
 		// evaluate boundaries for nonperiodic patterns
 		if (!periodic) {
+			// set neighbourhood
+			n->addNeighbour(neighbour);
+			neighbour->addNeighbour(n);
+
 			minX = std::min(minX, x);
 			minY = std::min(minY, y);
 			minZ = std::min(minZ, z);
@@ -144,6 +146,11 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 			maxX = std::max(maxX, x);
 			maxY = std::max(maxY, y);
 			maxZ = std::max(maxZ, z);
+		} else {
+			// account for the shifter
+			n->addNeighbour(neighbour,list->getShifter(coordinate(x, y, z)),
+					list->getShifter(coordinate(nx, ny, nz)));
+			neighbour->addNeighbour(n, list->getShifter(coordinate(nx, ny, nz)),  list->getShifter(coordinate(x, y, z)));
 		}
 
 	}
@@ -157,10 +164,10 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 		list->setMaxs(coordinate(maxX, maxY, maxZ));
 
 		// adaptable parameter
-		double characteristicLength = stats(list->lengthDistribution())[1]
-				* 2;
-		std::cout << "Nodes farther away of the edge than " << characteristicLength
-				<< " are declared to be edgenodes." << std::endl;
+		double characteristicLength = stats(list->lengthDistribution())[1] * 2;
+		std::cout << "Nodes farther away of the edge than "
+				<< characteristicLength << " are declared to be edgenodes."
+				<< std::endl;
 		list->setEdgenodes(characteristicLength);
 	}
 
@@ -181,23 +188,24 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
  * ignore comments start with "#": http://stackoverflow.com/questions/13304028/c-reading-numbers-from-text-files-ignoring-comments
  */
 nodelist* readglassfile(const char* points, std::string name) {
-	std::cout << "Read nodesfile " << points<< "." << std::endl;
+	std::cout << "Read nodesfile " << points << "." << std::endl;
 
 	// input filestream file
 	std::ifstream nodeFile;
 	nodeFile.open(points, std::ifstream::in);
 
-
-
 	// calculation time (unimportant parameter) and boxlenght L
 	double time, L;
 	if (!(nodeFile >> time >> L)) {
-		std::cout << "Error: head line is not in the format '  <time>  <sidelength>'!" << std::endl;
+		std::cout
+				<< "Error: head line is not in the format '  <time>  <sidelength>'!"
+				<< std::endl;
 		return nullptr;
 	}
 
 	// pointpattern data structure
-	pointlist* list = new pointlist(coordinate(L, (unsigned int) 3), true, name);
+	pointlist* list = new pointlist(coordinate(L, (unsigned int) 3), true,
+			name);
 	//list->setBox(coordinate(L, (unsigned int) 3));
 
 	// position, velocity and radius of the particle
@@ -213,10 +221,11 @@ nodelist* readglassfile(const char* points, std::string name) {
 
 	// normalize to 10x10x10 box
 	std::cout << "Normalize from " << L << "^3 cube to 10^3 cube." << std::endl;
-	list->scaleList(10/L);
+	list->scaleList(10 / L);
 
 	nodelist* decoratedList = list->decorate();
-	std::cout << "Glass file read and neighbours constructed. Statistics:" << std::endl << decoratedList->listStats();
+	std::cout << "Glass file read and neighbours constructed. Statistics:"
+			<< std::endl << decoratedList->listStats();
 
 	return decoratedList;
 }
@@ -229,18 +238,16 @@ void gnuplotPattern(std::vector<nodelist*>& lists) {
 	std::vector<std::string> names;
 
 	// listiteration
-	for (std::vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
-			++list) {
+	for (std::vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
 		datas.push_back((*list)->getGnuplotMatrix());
 		names.push_back((*list)->getName());
-		/*
-		if ((*list)->isPeriodic()) {
-			std::cout << "get edge links" << std::endl;
-			datas.push_back((*list)->getEdgelinksGnuplotMatrix());
-			names.push_back((*list)->getName() + "_edgelinks");
-		}*/
-		// get names of lists
 
+		 if ((*list)->isPeriodic()) {
+		 std::cout << "get edge links" << std::endl;
+		 datas.push_back((*list)->getEdgelinksGnuplotMatrix());
+		 names.push_back((*list)->getName() + "_edgelinks");
+		 }
 	}
 
 	plot3D(datas, names);
@@ -253,8 +260,8 @@ void compareLists(std::vector<nodelist*>& lists) {
 
 	// get names of lists
 	std::vector<std::string> names;
-	for (std::vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
-			++list) {
+	for (std::vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
 		names.push_back((*list)->getName());
 	}
 
@@ -272,27 +279,27 @@ void compareLists(std::vector<nodelist*>& lists) {
 	}
 
 	plotHist(neighData, 0, 10, 10, names, "number of neighbours",
-						"data/resolution-validation/neighbours_histogram");
-
+			"data/resolution-validation/neighbours_histogram");
 
 	// length stats
 	std::cout << "Evaluate the distance between neighbouring nodes..."
-					<< std::endl;
+			<< std::endl;
 	std::vector<std::vector<double> > lenData;
 	for (std::vector<nodelist*>::iterator list = lists.begin();
 			list != lists.end(); ++list) {
 		std::vector<double> lengths = (*list)->lengthDistribution();
 		lenData.push_back(lengths);
 
-		std::cout << "Lengthstatistics of pattern " << (*list)->getName()
-				<< ":" << std::endl;
+		std::cout << "Lengthstatistics of pattern " << (*list)->getName() << ":"
+				<< std::endl;
 		std::cout << statsAsString(stats(lengths));
 	}
 	plotHist(lenData, 0, 1, 50, names, "distance of neighbouring nodes",
-					"data/resolution-validation/lengths_histogram");
+			"data/resolution-validation/lengths_histogram");
 
 	// angle stats
-	std::cout << "Evaluate the angle between neighbouring nodes..." << std::endl;
+	std::cout << "Evaluate the angle between neighbouring nodes..."
+			<< std::endl;
 	std::vector<std::vector<double> > angData;
 	for (std::vector<nodelist*>::iterator list = lists.begin();
 			list != lists.end(); ++list) {
@@ -300,12 +307,11 @@ void compareLists(std::vector<nodelist*>& lists) {
 		angData.push_back(angles);
 
 		names.push_back((*list)->getName());
-		std::cout << "Anglestatistics of pattern " << (*list)->getName()
-				<< ":" << std::endl;
+		std::cout << "Anglestatistics of pattern " << (*list)->getName() << ":"
+				<< std::endl;
 		std::cout << statsAsString(stats(angles));
 	}
-	plotHist(angData, 0, 180, 180, names,
-			"angle between neighbouring nodes",
+	plotHist(angData, 0, 180, 180, names, "angle between neighbouring nodes",
 			"data/resolution-validation/angles_histogram");
 
 	// TODO: evtl guiabfrage
@@ -368,7 +374,8 @@ void compareLists(std::vector<nodelist*>& lists) {
 
 	title.push_back(names[1]);
 
-	plotHist(histData, 0, 0.1, 50, title, "difference vector lengths", "data/resolution-validation/difference-length");
+	plotHist(histData, 0, 0.1, 50, title, "difference vector lengths",
+			"data/resolution-validation/difference-length");
 	// Punktewolke
 	plot3D(plotData, names, "x", "y", "z", "w p ls 7");
 	// Angepasste Muster
@@ -487,7 +494,8 @@ void compareLists(std::vector<nodelist*>& lists) {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char* argv[]) {
-	 std::cout << "Pointpatterns are to be characterized. Here we go!" << std::endl;
+	std::cout << "Pointpatterns are to be characterized. Here we go!"
+			<< std::endl;
 
 	std::vector<nodelist*> lists;
 
@@ -501,50 +509,48 @@ int main(int argc, char* argv[]) {
 
 	// No arguments given -> generate diamond and random point pattern
 	/*
-	if (argc == 1) {
-		// poisson
-		lists.push_back(new nodelist(1, true));
-		// diamond
-		lists.push_back(new nodelist(2, true));
-	}
-	*/
-
-
+	 if (argc == 1) {
+	 // poisson
+	 lists.push_back(new nodelist(1, true));
+	 // diamond
+	 lists.push_back(new nodelist(2, true));
+	 }
+	 */
 
 	// argument 1: nodes file, 2: neighbours files, 3: isperiodic, 4: name
 	for (int i = 1; i < argc; i += 4) {
 
 		lists.push_back(
 				readfile(argv[i], argv[i + 1], convert(argv[i + 2], false),
-						argv[i+3]));
+						argv[i + 3]));
 
-/*
-		// for resolution validation
-		if (i==5) {
-			// res600
-			lists.back()->scaleList(1./50.);
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		} else if (i==9) {
-			// res300
-			lists.back()->scaleList(1./25.);
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		} else if (i==13) {
-			// res150
-			lists.back()->scaleList(1./12.5);
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		} else if (i==17) {
-			// res120
-			lists.back()->scaleList(1./10.);
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		} else if (i==21) {
-			// res100
-			lists.back()->scaleList(1./(100./12.));
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		} else if (i==25) {
-			// res75
-			lists.back()->scaleList(1./6.25);
-			lists.back()->shiftList(coordinate(-5,-5,-5));
-		}*/
+		/*
+		 // for resolution validation
+		 if (i==5) {
+		 // res600
+		 lists.back()->scaleList(1./50.);
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 } else if (i==9) {
+		 // res300
+		 lists.back()->scaleList(1./25.);
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 } else if (i==13) {
+		 // res150
+		 lists.back()->scaleList(1./12.5);
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 } else if (i==17) {
+		 // res120
+		 lists.back()->scaleList(1./10.);
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 } else if (i==21) {
+		 // res100
+		 lists.back()->scaleList(1./(100./12.));
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 } else if (i==25) {
+		 // res75
+		 lists.back()->scaleList(1./6.25);
+		 lists.back()->shiftList(coordinate(-5,-5,-5));
+		 }*/
 	}
 
 	// scale back to 10^3 cube
@@ -575,13 +581,14 @@ int main(int argc, char* argv[]) {
 			std::vector<std::string> names;
 			for (std::vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				std::vector<double> neighbours = (*list)->neighbourDistribution();
+				std::vector<double> neighbours =
+						(*list)->neighbourDistribution();
 				data.push_back(neighbours);
 
 				names.push_back((*list)->getName());
 
-				std::cout << "Neighbourstatistics of pattern '" << (*list)->getName()
-						<< "':" << std::endl;
+				std::cout << "Neighbourstatistics of pattern '"
+						<< (*list)->getName() << "':" << std::endl;
 				std::cout << statsAsString(stats(neighbours));
 			}
 
@@ -604,20 +611,22 @@ int main(int argc, char* argv[]) {
 
 				names.push_back((*list)->getName());
 
-				std::cout << "Lengthstatistics of pattern " << (*list)->getName()
-						<< ":" << std::endl;
+				std::cout << "Lengthstatistics of pattern "
+						<< (*list)->getName() << ":" << std::endl;
 				std::cout << statsAsString(stats(lengths));
-				maxLength = std::max(maxLength,stats(lengths)[12]);
+				maxLength = std::max(maxLength, stats(lengths)[12]);
 			}
 
 			std::cout << "Maximum length: " << maxLength << std::endl;
 
-			plotHist(data, 0, ceil(maxLength), 50, names, "distance of neighbouring nodes",
+			plotHist(data, 0, ceil(maxLength), 50, names,
+					"distance of neighbouring nodes",
 					"data/statistics/lengths_histogram");
 			break;
 		}
 		case 3: {
-			std::cout << "Evaluate the angle between neighbouring nodes..." << std::endl;
+			std::cout << "Evaluate the angle between neighbouring nodes..."
+					<< std::endl;
 			std::vector<std::vector<double> > data;
 			std::vector<std::string> names;
 			for (std::vector<nodelist*>::iterator list = lists.begin();
@@ -643,7 +652,8 @@ int main(int argc, char* argv[]) {
 			std::cout << "Number of radii (default: 50) << ";
 			input(nr);
 
-			std::cout << "Determine the degree of hyperuniformity for " << std::endl;
+			std::cout << "Determine the degree of hyperuniformity for "
+					<< std::endl;
 			std::vector<std::vector<std::vector<double> > > variances;
 			std::vector<std::string> names;
 			double xMax = 0;
@@ -679,8 +689,8 @@ int main(int argc, char* argv[]) {
 			ctr = 0;
 			for (std::vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
-				std::cout << "List " << ctr << ": " << (*list)->getName() << std::endl
-						<< (*list)->listStats();
+				std::cout << "List " << ctr << ": " << (*list)->getName()
+						<< std::endl << (*list)->listStats();
 				ctr++;
 			}
 			break;
@@ -706,8 +716,9 @@ int main(int argc, char* argv[]) {
 			for (std::vector<nodelist*>::iterator list = lists.begin();
 					list != lists.end(); ++list) {
 				double factor = (*list)->normalize();
-				std::cout << "Pattern " << ctr << "normalised (scaled with factor "
-						<< factor << ")." << std::endl;
+				std::cout << "Pattern " << ctr
+						<< "normalised (scaled with factor " << factor << ")."
+						<< std::endl;
 				ctr++;
 			}
 			break;
@@ -755,33 +766,43 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 
-
 		case 17: {
-					std::cout << "Read glass file as provided by Antonio Puertas." << std::endl;
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-01.dat", "conf1Phi_c=0.50"));
-					/*
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-02.dat", "conf2Phi_c=0.50"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-03.dat", "conf3Phi_c=0.50"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-04.dat", "conf4Phi_c=0.50"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-05.dat", "conf5Phi_c=0.50"));
-		*/
-					/*
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic053/pos-eq-053-01.dat", "Phi_c=0.53"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic055/pos-eq-055-01.dat", "Phi_c=0.55"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic057/pos-eq-057-01.dat", "Phi_c=0.57"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic058/pos-eq-058-01.dat", "Phi_c=0.58"));
-					lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic0585/pos-eq-0585-01.dat", "Phi_c=0.585"));
-					*/
-					break;
-				}
+			std::cout << "Read glass file as provided by Antonio Puertas."
+					<< std::endl;
+			lists.push_back(
+					readglassfile(
+							"/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-01.dat",
+							"conf1Phi_c=0.50"));
+			/*
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-02.dat", "conf2Phi_c=0.50"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-03.dat", "conf3Phi_c=0.50"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-04.dat", "conf4Phi_c=0.50"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic050/pos-eq-050-05.dat", "conf5Phi_c=0.50"));
+			 */
+			/*
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic053/pos-eq-053-01.dat", "Phi_c=0.53"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic055/pos-eq-055-01.dat", "Phi_c=0.55"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic057/pos-eq-057-01.dat", "Phi_c=0.57"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic058/pos-eq-058-01.dat", "Phi_c=0.58"));
+			 lists.push_back(readglassfile("/home/lukas/data/pointpatterns/raw/glass/puertas/phic0585/pos-eq-0585-01.dat", "Phi_c=0.585"));
+			 */
+			break;
+		}
 		case 18: {
-					std::cout << "Read HPU file as provided by Marian Florescu, Paul Steinhard and Paul Chaikin." << std::endl;
-					lists.push_back(readfile("/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Left.dat", "/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Right.dat", true, "HPU"));
+			std::cout
+					<< "Read HPU file as provided by Marian Florescu, Paul Steinhard and Paul Chaikin."
+					<< std::endl;
+			lists.push_back(
+					readfile(
+							"/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Left.dat",
+							"/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Right.dat",
+							true, "HPU"));
 
-					break;
-				}
+			break;
+		}
 		default:
-			std::cout << "This option does not (yet) exist, unfortunately." << std::endl;
+			std::cout << "This option does not (yet) exist, unfortunately."
+					<< std::endl;
 		}
 
 		if (option != 0) {
@@ -789,8 +810,8 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	for (std::vector<nodelist*>::iterator list = lists.begin(); list != lists.end();
-			++list) {
+	for (std::vector<nodelist*>::iterator list = lists.begin();
+			list != lists.end(); ++list) {
 		(*list)->deleteEntries();
 		delete (*list);
 	}

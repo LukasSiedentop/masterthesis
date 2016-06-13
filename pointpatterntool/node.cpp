@@ -14,13 +14,18 @@ node::node() :
 	list = NULL;
 
 	std::vector<class node*> neighs;
-	neighbours = neighs;
+		neighbours = neighs;
+		std::vector<class coordinate> neighShifters;
+		neighbourShifter = neighShifters;
 }
 
 node::node(class nodelist* list, coordinate pos) :
 		list(list), position(pos), edgenode(false) {	//, inBox(NULL) {
 	std::vector<class node *> neighs;
 	neighbours = neighs;
+
+	std::vector<class coordinate> neighShifters;
+	neighbourShifter = neighShifters;
 }
 
 void node::setEdgenode(double distance) {
@@ -36,6 +41,10 @@ bool node::isEdgenode() {
 
 coordinate node::getPosition() const {
 	return position;
+}
+
+std::vector<class coordinate>* node::getNeighbourShifters() {
+	return &neighbourShifter;
 }
 
 std::vector<class node*>* node::getNeighbours() {
@@ -105,6 +114,9 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 }
 
 unsigned int node::countNeighbours() {
+	if (neighbours.size()!=neighbourShifter.size()){
+		std::cout << "Error: not as many shifters as neighbours!" << std::endl;
+	}
 	return neighbours.size();
 }
 
@@ -126,12 +138,12 @@ void node::scaleAnisotropic(double ax, double ay, double az) {
 	position[2] *= az;*/
 }
 
-void node::addNeighbour(node* n) {
+void node::addNeighbour(node* n, coordinate ownShifter, coordinate foreignShifter ) {
 	if (this->isNeighbour(n) || (this->equals(n))) {
 		return;
 	}
-
 	neighbours.push_back(n);
+	neighbourShifter.push_back(foreignShifter-ownShifter);
 }
 
 bool node::isNeighbour(node* node) {

@@ -239,22 +239,23 @@ nodelist* pointlist::decorate() {
 		// inspiration: http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
 
 		// as in CGAL the unique domain is in the corner of the periodically continued pattern, set a shifted midpoint
-
+/*
 		nlist->setMins(coordinate(-2, -2, -2));
 		nlist->setMaxs(coordinate(2, 2, 2));
 
-		node* nTest = nlist->add(0, 0, 0);
-		node* neighTest = nlist->add(3, 3, 3);
+		// test case for neighbour shifter shit
+		coordinate pos1 = coordinate(0,0,0), pos2 = coordinate(3,3,3);
 
-		nTest->addNeighbour(neighTest);
-		neighTest->addNeighbour(nTest);
+		node* nTest = nlist->add(pos1);
+		node* neighTest = nlist->add(pos2);
+
+		nTest->addNeighbour(neighTest, nlist->getShifter(pos1), nlist->getShifter(pos2));
+		neighTest->addNeighbour(nTest, nlist->getShifter(pos2), nlist->getShifter(pos1));
 
 		return nlist;
-
+*/
 		nlist->setMins(min + extend * 1.5);
 		nlist->setMaxs(max + extend * 1.5);
-
-
 
 		// calculate delaunay triangulation
 		PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
@@ -296,11 +297,12 @@ nodelist* pointlist::decorate() {
 					PD3d.point(PD3d.periodic_point(cit, 1)),
 					PD3d.point(PD3d.periodic_point(cit, 2)),
 					PD3d.point(PD3d.periodic_point(cit, 3)));
+			coordinate ctr = coordinate(centre.x(),centre.y(), centre.z());
 
-			node* n = nlist->add(centre.x(), centre.y(), centre.z());
+			node* n = nlist->add(ctr);
 
 			// verification
-			if (1) {
+			if (i<1) {
 
 				PDT::Tetrahedron tet = PD3d.construct_tetrahedron(
 						PD3d.point(PD3d.periodic_point(cit, 0)),
@@ -338,12 +340,17 @@ nodelist* pointlist::decorate() {
 						PD3d.point(
 								PD3d.periodic_point(cit->neighbor(neighIdx),
 										3)));
-				node* neigh = nlist->add(neighbourCentre.x(),
+				coordinate neighCtr = coordinate(neighbourCentre.x(),
 						neighbourCentre.y(), neighbourCentre.z());
+				node* neigh = nlist->add(neighCtr);
 
 				// set the neighbourhood
-				n->addNeighbour(neigh);
-				neigh->addNeighbour(n);
+				//n->addNeighbour(neigh);
+				//neigh->addNeighbour(n);
+// TODO: debug from here
+				n->addNeighbour(neigh, nlist->getShifter(ctr), nlist->getShifter(neighCtr));
+				neigh->addNeighbour(n, nlist->getShifter(neighCtr), nlist->getShifter(ctr));
+
 				// verification
 				/*
 				 if (i ==55) {

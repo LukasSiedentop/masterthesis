@@ -93,11 +93,14 @@ public:
 	// returns the number of nodes
 	int size();
 	// Adds a node at the given coordinate if none exists there and returns it in order to be able to set the neighbourhood.
+	node* add(coordinate pos);
 	node* add(double x, double y, double z);
 	// Returns the pattern in a matrix gnuplot can interpret.
 	std::vector<std::vector<double> > getGnuplotMatrix();
 	// same as getGnuplotMatrix() bit returns the edge links
 	std::vector<std::vector<double> > getEdgelinksGnuplotMatrix();
+	// Returns the Shifter vector necessary to shift a given point into the periodic bounadry
+	coordinate getShifter(coordinate point);
 	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
 	std::vector<coordinate> getShifters();
 	// Returns the necessary shifting vectors to continue the pattern periodically such that a given box lies within the periodically continued pattern.
