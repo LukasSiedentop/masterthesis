@@ -39,8 +39,6 @@ private:
 	// underlying pointpattern this nodelist is generated from
 	//pointlist pointpattern;
 
-	//coordinate getMins();
-	//coordinate getMaxs();
 	//bool isPeriodic() const;
 	void setDensity(double density);
 	double getDensity();
@@ -80,6 +78,8 @@ public:
 	void scaleList(double a);
 	void scaleListAnisotropic(double ax, double ay, double az);
 	void deleteEntries();
+	coordinate getMins();
+	coordinate getMaxs();
 
 	// sets the neighbours of each point to the closest four (or less) points
 	void setNeighbours(unsigned int valency=4);

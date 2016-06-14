@@ -31,8 +31,9 @@ node::node(class nodelist* list, coordinate pos) :
 void node::setEdgenode(double distance) {
 	// TODO: this must be possible in less costly way!? hopefully without using the underlying list but its extend
 	// Alle knoten die mehr als den 0-shifter haben sind randknoten
-	edgenode =
-			(list->getShifted(position - list->getMid(), distance).size() - 1);
+	//edgenode = (list->getShifted(position - list->getMid(), distance).size() - 1);
+	// valid?
+	edgenode = position.insideAABB(list->getMins()+distance, list->getMaxs()-distance);
 }
 
 bool node::isEdgenode() {
@@ -143,6 +144,7 @@ void node::addNeighbour(node* n, coordinate ownShifter, coordinate foreignShifte
 		return;
 	}
 	neighbours.push_back(n);
+	// subtract own shifter, as it is done so when adding the node to the list
 	neighbourShifter.push_back(foreignShifter-ownShifter);
 }
 

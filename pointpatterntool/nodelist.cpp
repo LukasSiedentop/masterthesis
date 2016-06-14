@@ -206,105 +206,6 @@ void nodelist::setNeighbours(unsigned int valency) {
 			<< "s to generate the neighbours." << std::endl;
 }
 
-/*
- void nodelist::setNeighboursDesignProtocol() {
- std::cout << "Set the neighbours of the " << name
- << " point pattern according to the design protocol suggested by Florescu et. al. 2009 (PNAS)."
- << std::endl;
- // meassure the time
- clock_t t;
- t = clock();
- // TODO:
- // Delaunay triangulation via CGAL
- // connect neighbouring tetrahedron centre of gravities.
-
- // initialize geomview for visulaization
- // example1: http://doc.cgal.org/Manual/3.2/doc_html/cgal_manual/Triangulation_3/Chapter_main.html#Section_22.6
- // example2: http://doc.cgal.org/latest/Geomview/index.html#cite-text-0-0
- CGAL::Geomview_stream gv(
- CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
- gv.clear();
-
- if (periodic) {
- // use http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
- // calculate delaunay triangulation
- PDT::Iso_cuboid box(min.x(), min.y(), min.z(), max.x(), max.y(),
- max.z());
- std::cout << "box built" << std::endl;
- std::vector<Point3> points(this->size());
- for (std::vector<node*>::iterator n = list.begin(); n != list.end();
- ++n) {
- std::vector<double> pt = *(*n)->getPosition().getVector();
- points.push_back(Point3(pt[0], pt[1], pt[2]));
-
- // draw point pattern
- //gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
-
- }
-
- PDT PD3d(points.begin(), points.end(), box);
-
- //gv << PD3d;
- } else {
- // use http://doc.cgal.org/latest/Triangulation_3/index.html
-
- // calculate delaunay triangulation
- DT D3d;
- std::vector<Point3> points(this->size());
- for (std::vector<node*>::iterator n = list.begin(); n != list.end();
- ++n) {
- std::vector<double> pt = *(*n)->getPosition().getVector();
- D3d.insert(Point3(pt[0], pt[1], pt[2]));
-
- if (this->size() < 100) {
- // draw point pattern
- gv << Sphere3(Point3(pt[0], pt[1], pt[2]), (double) 0.01);
- }
- }
-
- std::cout << "non-periodic triangulation built!" << std::endl;
-
- // Iterate over every tetrahedron ("cell" internally)
-
- for (CGAL::Triangulation_3<K>::Cell_iterator cell = D3d.cells_begin();
- cell != D3d.cells_end(); ++cell) {
- std::cout << "jo!" << std::endl;
- //(*cell).
- }
-
- for (Full_cell_iterator cit = D3d.cells_begin(); cit != D3d.cells_end();
- ++cit) {
- std::cout << "jo!" << std::endl;
- }
-
- std::cout << "centroid point pattern: "
- << CGAL::centroid(points.begin(), points.end()) << std::endl;
-
- std::cout << "Drawing 3D Delaunay triangulation in wired mode."
- << std::endl;
- gv << CGAL::BLUE;
- gv.set_wired(true);
- gv << D3d;
-
- // voronoi pattern
- //gv << CGAL::RED;
- //gv.set_line_width(4);
- //D3d.draw_dual(gv);
-
- }
-
- std::cout << "Weiter mit Enter." << std::endl;
- std::cin.get();
- //boost::progress_display show_progress(1);
- //++show_progress;
-
- //ispointpattern = false;
-
- t = clock() - t;
- std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
- << "s to generate the neighbours." << std::endl;
- }
- */
 void nodelist::setDensity(double density) {
 	scaleList(pow((getDensity() / density), 1. / 3.));
 }
@@ -348,14 +249,24 @@ double nodelist::r(double theta, double w, double h) {
 
 int nodelist::pointsInside(const std::vector<coordinate>& points,
 		const coordinate& mid, const double r) const {
+	if (r==0){
+		return 0;
+	}
 	int ctr = 0;
 
 	// nodesiterations
 	for (std::vector<coordinate>::const_iterator point = points.begin();
 			point != points.end(); ++point) {
+
+
 		// bounding box of the sphere
+
 		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
 				&& (fabs((*point)[2] - mid[2]) < r)) {
+		/*
+		std::cout << (mid-r).toString() << std::endl;
+		std::cout << (mid+r).toString() << std::endl;
+		if ((*point).insideAABB(mid-r, mid+r)) {*/
 			// sphere itself
 			if (((*point) - mid).lengthSqr() < r * r) {
 				ctr++;
@@ -459,12 +370,16 @@ node* nodelist::add(double x, double y, double z) {
 		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
 			// as bounding box: choose the right shifter where all components are in t
+			/*
 			if ((fabs((*shifter).x() + (x + getMid().x()))
 					< getLengths().x() / 2)
 					&& (fabs((*shifter).y() + (y + getMid().y()))
 							< getLengths().y() / 2)
 					&& (fabs((*shifter).z() + (z + getMid().z()))
-							< getLengths().z() / 2)) {
+							< getLengths().z() / 2)) {*/
+			if ((newPos+(*shifter)).insideAABB(min, max)) {
+
+
 				newPos = (*shifter) + coordinate(x, y, z);
 				break;
 			}
@@ -485,14 +400,13 @@ node* nodelist::add(double x, double y, double z) {
 	return n;
 }
 
-/* unnecessary
  coordinate nodelist::getMins() {
  return min;
  }
 
  coordinate nodelist::getMaxs() {
  return max;
- }*/
+ }
 
 coordinate nodelist::getLengths() {
 	return max - min;
@@ -767,7 +681,10 @@ std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 	data.resize(nr);
 	for (unsigned int i = 0; i < nr; ++i) {
 		data[i].resize(n);
+		// do not calculate radius=0
+		data[0][i] = 0;
 	}
+
 	clock_t t;
 	t = clock();
 
@@ -796,7 +713,7 @@ std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 			mid = (coordinate(3) - 0.5) * getLengths();
 
 			// iteration over radius: count points within sphere
-			for (unsigned int j = 0; j < nr; j++) {
+			for (unsigned int j = 1; j < nr; j++) {
 				data[j][i] = pointsInside(extendedPattern, mid, j * dr);
 			}
 

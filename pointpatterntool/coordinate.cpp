@@ -78,7 +78,7 @@ coordinate & coordinate::operator +=(const coordinate &rhs) {
 
 coordinate & coordinate::operator +=(const double &summand) {
 	for (unsigned i = 0; i < dimensions(); i++) {
-		(*this)[i] -= summand;
+		(*this)[i] += summand;
 	}
 	return *this;
 }
@@ -137,6 +137,16 @@ std::string coordinate::toString(const std::string begin,
 	stream << position[dimensions() - 1] << end;
 
 	return stream.str();
+}
+
+bool coordinate::insideAABB(const coordinate min, const coordinate max) const {
+	if (x()>max.x()) return false;
+	if (x()<min.x()) return false;
+	if (y()>max.y()) return false;
+	if (y()<min.y()) return false;
+	if (z()>max.z()) return false;
+	if (z()<min.z()) return false;
+	return true;
 }
 
 double coordinate::x() const {

@@ -499,13 +499,17 @@ int main(int argc, char* argv[]) {
 
 	std::vector<nodelist*> lists;
 
+	coordinate pos = coordinate(0,0,0);
+	std::cout << (pos - 1) << std::endl;
+	std::cout << (pos + 1) << std::endl;
+
 	// 1: poisson, 2: diamond, 3: test
 	//lists.push_back(new nodelist(3, true));
 
 	//pointlist pointpattern = pointlist(3, false);
 
-	pointlist pointpattern = pointlist(3, true);
-	lists.push_back(pointpattern.decorate());
+//	pointlist pointpattern = pointlist(3, true);
+	//lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*

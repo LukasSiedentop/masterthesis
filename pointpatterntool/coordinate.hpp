@@ -83,7 +83,7 @@ public:
 	// Adds lhs's to rhs's components.
 	friend coordinate operator+(const coordinate& lhs, const coordinate& rhs);
 	// Adds a summand to every component.
-	friend coordinate operator-(const coordinate& lhs, const double& summand);
+	friend coordinate operator+(const coordinate& lhs, const double& summand); //TODO!?!? used to be minus...
 	// Subtracts lhs's components from rhs's.
 	friend coordinate operator-(const coordinate& lhs, const coordinate& rhs);
 	// Subtracts a subtrahend from every component.
@@ -96,6 +96,9 @@ public:
 	// Divides each component by a divisor.
 	friend coordinate operator/(const coordinate& lhs, const double& divisor);
 
+	// checks whether this coordinate resides within the given axis aligned bounding box
+	bool insideAABB(const coordinate min, const coordinate max) const;
+
 	// get positions
 	double x() const;
 	double y() const;
@@ -106,6 +109,7 @@ public:
 	// Returns the maximal component of the coordinate.
 	double max() const;
 
+	// TODO: const?
 	double euklidian(coordinate point) const;
 	double lengthSqr() const;
 	double length() const;
