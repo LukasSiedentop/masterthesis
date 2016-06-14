@@ -72,6 +72,8 @@ private:
 
 	// returns the points of a given periodic data structure cell, periodically shifted such that the original cell is centred
 	std::vector<Point3> getPoints(PDT::Cell_iterator cell, PDT PD3d);
+	// returns true if at least one vertice is in the original domain
+	bool withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d);
 public:
 	pointlist();
 	pointlist(coordinate box, bool periodicity, std::string n);

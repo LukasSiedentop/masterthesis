@@ -83,7 +83,7 @@ public:
 	// Adds lhs's to rhs's components.
 	friend coordinate operator+(const coordinate& lhs, const coordinate& rhs);
 	// Adds a summand to every component.
-	friend coordinate operator+(const coordinate& lhs, const double& summand); //TODO!?!? used to be minus...
+	friend coordinate operator+(const coordinate& lhs, const double& summand);
 	// Subtracts lhs's components from rhs's.
 	friend coordinate operator-(const coordinate& lhs, const coordinate& rhs);
 	// Subtracts a subtrahend from every component.
@@ -98,6 +98,8 @@ public:
 
 	// checks whether this coordinate resides within the given axis aligned bounding box
 	bool insideAABB(const coordinate min, const coordinate max) const;
+	// checks whether this point is within the given cube
+	bool insideAABB(const coordinate mid, const double r) const;
 
 	// get positions
 	double x() const;

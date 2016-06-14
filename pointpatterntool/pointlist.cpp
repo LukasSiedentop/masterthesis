@@ -88,30 +88,31 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		//list.push_back(new coordinate(0, 0, 0));
 
 		// Tetrahedron
-
-		list.push_back(new coordinate(-1, 0, -1));
-		list.push_back(new coordinate(1, 0, -1));
-		list.push_back(new coordinate(0, -1, 1));
-		list.push_back(new coordinate(0, 1, 1));
-
+		/*
+		 list.push_back(new coordinate(-1, 0, -1));
+		 list.push_back(new coordinate(1, 0, -1));
+		 list.push_back(new coordinate(0, -1, 1));
+		 list.push_back(new coordinate(0, 1, 1));
+		 */
 		/*
 		 list.push_back(new coordinate(0, 2, -1));
 		 list.push_back(new coordinate(0, -2, -1));
 		 list.push_back(new coordinate(2, 0, 1));
 		 list.push_back(new coordinate(-2, 0, 1));
 		 */
-		/*
-		 list.push_back(new coordinate(0, 0, 0));
 
-		 list.push_back(new coordinate(-1, -1, -1));
-		 list.push_back(new coordinate(-1, -1, 1));
-		 list.push_back(new coordinate(-1, 1, -1));
-		 list.push_back(new coordinate(-1, 1, 1));
-		 list.push_back(new coordinate(1, -1, -1));
-		 list.push_back(new coordinate(1, -1, 1));
-		 list.push_back(new coordinate(1, 1, -1));
-		 list.push_back(new coordinate(1, 1, 1));
-		 */
+		// point set large enough so that there are no self edges
+		list.push_back(new coordinate(0, 0, 0));
+
+		list.push_back(new coordinate(-1, -1, -1));
+		list.push_back(new coordinate(-1, -1, 1));
+		list.push_back(new coordinate(-1, 1, -1));
+		list.push_back(new coordinate(-1, 1, 1));
+		list.push_back(new coordinate(1, -1, -1));
+		list.push_back(new coordinate(1, -1, 1));
+		list.push_back(new coordinate(1, 1, -1));
+		list.push_back(new coordinate(1, 1, 1));
+
 		extend = coordinate(5, 5, 5);
 
 		break;
@@ -147,9 +148,25 @@ std::vector<Point3> pointlist::getPoints(PDT::Cell_iterator cell, PDT PD3d) {
 	for (int i = 0; i < 4; i++) {
 		pp[i] = std::make_pair(pp[i].first, pp[i].second + wrap_offset);
 		pts.push_back(PD3d.point(pp[i]));
-
 	}
 	return pts;
+}
+
+bool pointlist::withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d) {
+	/*
+	 for (int i = 0; i < 4; i++) {
+	 if (!PD3d.periodic_point(cell, i).second.is_null()) {
+	 return false;
+	 }
+	 }
+	 return true;*/
+
+	for (int i = 0; i < 4; i++) {
+		if (PD3d.periodic_point(cell, i).second.is_null()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void pointlist::add(double x, double y, double z) {
@@ -239,21 +256,6 @@ nodelist* pointlist::decorate() {
 		// inspiration: http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
 
 		// as in CGAL the unique domain is in the corner of the periodically continued pattern, set a shifted midpoint
-/*
-		nlist->setMins(coordinate(-2, -2, -2));
-		nlist->setMaxs(coordinate(2, 2, 2));
-
-		// test case for neighbour shifter shit
-		coordinate pos1 = coordinate(0,0,0), pos2 = coordinate(3,3,3);
-
-		node* nTest = nlist->add(pos1);
-		node* neighTest = nlist->add(pos2);
-
-		nTest->addNeighbour(neighTest, nlist->getShifter(pos1), nlist->getShifter(pos2));
-		neighTest->addNeighbour(nTest, nlist->getShifter(pos2), nlist->getShifter(pos1));
-
-		return nlist;
-*/
 		nlist->setMins(min + extend * 1.5);
 		nlist->setMaxs(max + extend * 1.5);
 
@@ -276,11 +278,13 @@ nodelist* pointlist::decorate() {
 			if (list.size() < 100) {
 				gv
 						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
-								(double) 0.1);
+								(double) 0.2);
 			}
 
 		}
 
+		std::cout << "Is tri in 1 sheet: " << PD3d.is_triangulation_in_1_sheet()
+				<< std::endl;
 		std::cout << "Continue with Enter." << std::endl;
 		std::cin.get();
 
@@ -292,17 +296,30 @@ nodelist* pointlist::decorate() {
 		for (PDT::Cell_iterator cit = PD3d.cells_begin();
 				cit != PD3d.cells_end(); ++cit) {
 
+			// only consider cells that intersect the _original domain_
+			if (withinOriginalDomain(cit, PD3d)) {
+				//std::cout << "jo" << std::endl;
+				continue;
+			}
+
+			// calculate centroid of the cell
 			Point3 centre = CGAL::centroid(
 					PD3d.point(PD3d.periodic_point(cit, 0)),
 					PD3d.point(PD3d.periodic_point(cit, 1)),
 					PD3d.point(PD3d.periodic_point(cit, 2)),
 					PD3d.point(PD3d.periodic_point(cit, 3)));
-			coordinate ctr = coordinate(centre.x(),centre.y(), centre.z());
+
+			coordinate ctr = coordinate(centre.x(), centre.y(), centre.z());
+
+			// only consider points in the _original domain_
+			if (ctr.insideAABB(min, max)) {
+				continue;
+			}
 
 			node* n = nlist->add(ctr);
 
 			// verification
-			if (i<1) {
+			if (0) {
 
 				PDT::Tetrahedron tet = PD3d.construct_tetrahedron(
 						PD3d.point(PD3d.periodic_point(cit, 0)),
@@ -312,16 +329,16 @@ nodelist* pointlist::decorate() {
 
 				//PDT::Tetrahedron tet = PD3d.construct_tetrahedron(pts[0], pts[1], pts[2], pts[3]);
 				gv << CGAL::RED;
-				gv << tet;
+				//gv << tet;
 
 				gv << CGAL::RED;
-				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 0)), 0.2);
-				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 1)), 0.2);
-				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 2)), 0.2);
-				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 3)), 0.2);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 0)), 0.1);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 1)), 0.1);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 2)), 0.1);
+				gv << Sphere3(PD3d.point(PD3d.periodic_point(cit, 3)), 0.1);
 
 				gv << CGAL::GREEN;
-				gv << Sphere3(centre, 0.5);
+				//gv << Sphere3(centre, 0.5);
 			}
 
 			// get periodic points of neighbouring cells
@@ -348,8 +365,10 @@ nodelist* pointlist::decorate() {
 				//n->addNeighbour(neigh);
 				//neigh->addNeighbour(n);
 // TODO: debug from here
-				n->addNeighbour(neigh, nlist->getShifter(ctr), nlist->getShifter(neighCtr));
-				neigh->addNeighbour(n, nlist->getShifter(neighCtr), nlist->getShifter(ctr));
+				n->addNeighbour(neigh, nlist->getShifter(ctr),
+						nlist->getShifter(neighCtr));
+				neigh->addNeighbour(n, nlist->getShifter(neighCtr),
+						nlist->getShifter(ctr));
 
 				// verification
 				/*
@@ -395,8 +414,6 @@ nodelist* pointlist::decorate() {
 		}
 		// shift back
 		nlist->shiftList((nlist->getMid()) * (-1));
-		//std::cout << "#cells: " << i << " #cells2: " << PD3d.number_of_cells() << std::endl;
-
 	} else {
 		nlist->setMins(min);
 		nlist->setMaxs(max);

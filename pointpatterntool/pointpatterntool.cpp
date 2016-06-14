@@ -148,9 +148,10 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 			maxZ = std::max(maxZ, z);
 		} else {
 			// account for the shifter
-			n->addNeighbour(neighbour,list->getShifter(coordinate(x, y, z)),
+			n->addNeighbour(neighbour, list->getShifter(coordinate(x, y, z)),
 					list->getShifter(coordinate(nx, ny, nz)));
-			neighbour->addNeighbour(n, list->getShifter(coordinate(nx, ny, nz)),  list->getShifter(coordinate(x, y, z)));
+			neighbour->addNeighbour(n, list->getShifter(coordinate(nx, ny, nz)),
+					list->getShifter(coordinate(x, y, z)));
 		}
 
 	}
@@ -243,11 +244,11 @@ void gnuplotPattern(std::vector<nodelist*>& lists) {
 		datas.push_back((*list)->getGnuplotMatrix());
 		names.push_back((*list)->getName());
 
-		 if ((*list)->isPeriodic()) {
-		 std::cout << "get edge links" << std::endl;
-		 datas.push_back((*list)->getEdgelinksGnuplotMatrix());
-		 names.push_back((*list)->getName() + "_edgelinks");
-		 }
+		if ((*list)->isPeriodic()) {
+			std::cout << "get edge links" << std::endl;
+			datas.push_back((*list)->getEdgelinksGnuplotMatrix());
+			names.push_back((*list)->getName() + "_edgelinks");
+		}
 	}
 
 	plot3D(datas, names);
@@ -499,17 +500,13 @@ int main(int argc, char* argv[]) {
 
 	std::vector<nodelist*> lists;
 
-	coordinate pos = coordinate(0,0,0);
-	std::cout << (pos - 1) << std::endl;
-	std::cout << (pos + 1) << std::endl;
-
 	// 1: poisson, 2: diamond, 3: test
 	//lists.push_back(new nodelist(3, true));
 
 	//pointlist pointpattern = pointlist(3, false);
 
-//	pointlist pointpattern = pointlist(3, true);
-	//lists.push_back(pointpattern.decorate());
+	pointlist pointpattern = pointlist(3, true);
+	lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*

@@ -249,7 +249,7 @@ double nodelist::r(double theta, double w, double h) {
 
 int nodelist::pointsInside(const std::vector<coordinate>& points,
 		const coordinate& mid, const double r) const {
-	if (r==0){
+	if (r == 0) {
 		return 0;
 	}
 	int ctr = 0;
@@ -257,16 +257,11 @@ int nodelist::pointsInside(const std::vector<coordinate>& points,
 	// nodesiterations
 	for (std::vector<coordinate>::const_iterator point = points.begin();
 			point != points.end(); ++point) {
-
-
 		// bounding box of the sphere
-
 		if ((fabs((*point)[0] - mid[0]) < r) && (fabs((*point)[1] - mid[1]) < r)
 				&& (fabs((*point)[2] - mid[2]) < r)) {
-		/*
-		std::cout << (mid-r).toString() << std::endl;
-		std::cout << (mid+r).toString() << std::endl;
-		if ((*point).insideAABB(mid-r, mid+r)) {*/
+			// TODO: more elegant but slower by a factor of 3. why?
+			//if ((*point).insideAABB(mid, r)) {
 			// sphere itself
 			if (((*point) - mid).lengthSqr() < r * r) {
 				ctr++;
@@ -362,29 +357,23 @@ node* nodelist::add(coordinate pos) {
 }
 
 node* nodelist::add(double x, double y, double z) {
-	coordinate newPos = coordinate(x, y, z);
 
+	coordinate newPos = coordinate(x, y, z)+getShifter(coordinate(x, y, z));
+/*
 	// ensure that point lies in between boundaries if periodic
 	if (periodic) {
 		std::vector<coordinate> shifters = getShifters();
 		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
 			// as bounding box: choose the right shifter where all components are in t
-			/*
-			if ((fabs((*shifter).x() + (x + getMid().x()))
-					< getLengths().x() / 2)
-					&& (fabs((*shifter).y() + (y + getMid().y()))
-							< getLengths().y() / 2)
-					&& (fabs((*shifter).z() + (z + getMid().z()))
-							< getLengths().z() / 2)) {*/
-			if ((newPos+(*shifter)).insideAABB(min, max)) {
-
-
+			if ((newPos + (*shifter)).insideAABB(min, max)) {
 				newPos = (*shifter) + coordinate(x, y, z);
 				break;
 			}
 		}
 	}
+*/
+
 
 	// check if point at given position exist
 	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
@@ -400,13 +389,13 @@ node* nodelist::add(double x, double y, double z) {
 	return n;
 }
 
- coordinate nodelist::getMins() {
- return min;
- }
+coordinate nodelist::getMins() {
+	return min;
+}
 
- coordinate nodelist::getMaxs() {
- return max;
- }
+coordinate nodelist::getMaxs() {
+	return max;
+}
 
 coordinate nodelist::getLengths() {
 	return max - min;
@@ -443,49 +432,45 @@ void nodelist::display() {
 }
 
 coordinate nodelist::getShifter(coordinate point) {
-	if (!periodic) {
-		std::cout
-				<< "WARNING: shifter vector requested whilst the pattern is not periodic!";
-		return coordinate(0, 0, 0);
+	if (periodic) {
+		std::vector<coordinate> shifters = getShifters();
+		for (std::vector<coordinate>::iterator shifter = shifters.begin();
+				shifter != shifters.end(); ++shifter) {
+			//coordinate largeShifter = (*shifter) * n;
+			// as bounding box: choose the right shifter where all components are in t
+			if ((point + (*shifter)).insideAABB(min, max)) {
+				return (*shifter);
+			}
+		}
+
 	}
-
+	//std::cout << "WARNING: shifter vector requested for a point outside the once periodically continued box." << std::endl;
+	return coordinate(0, 0, 0);
 	// ensure that point lies in between boundaries if periodic
-	std::vector<coordinate> shifters = getShifters();
 
-	unsigned int nBoxes = 100;
+
+	/*unsigned int nBoxes = 100;
 	for (unsigned int n = 1; n < nBoxes; n++) {
 		if (n > 1) {
 			std::cout
 					<< "Note: No Shifter vector found; requested point may be "
 					<< n << " boxes away..." << std::endl;
-		}
+		}*/
 
-		for (std::vector<coordinate>::iterator shifter = shifters.begin();
-				shifter != shifters.end(); ++shifter) {
-			coordinate largeShifter = (*shifter) * n;
-			// as bounding box: choose the right shifter where all components are in t
-			if ((fabs(largeShifter.x() + (point.x() + getMid().x()))
-					< getLengths().x() / 2)
-					&& (fabs(largeShifter.y() + (point.y() + getMid().y()))
-							< getLengths().y() / 2)
-					&& (fabs(largeShifter.z() + (point.z() + getMid().z()))
-							< getLengths().z() / 2)) {
-				return largeShifter;
-			}
-		}
-	}
+
+	/*}
 	std::cout << "Note: no shifting vector was found for point "
 			<< point.toString() << " into the box " << min.toString() << ", "
 			<< max.toString() << " despite looking for shifters over " << nBoxes
 			<< " boxes. Return zero Shifter." << std::endl;
 
-	return coordinate(0, 0, 0);
+	return coordinate(0, 0, 0);*/
 }
 
 std::vector<coordinate> nodelist::getShifters() {
 	return getLengths().getShifters();
 }
-
+/*
 std::vector<coordinate> nodelist::getShifted(coordinate mid,
 		double halfExtend) {
 	std::vector<coordinate> shifted;
@@ -513,7 +498,7 @@ std::vector<coordinate> nodelist::getShifted(coordinate mid,
 		}
 	}
 	return shifted;
-}
+}*/
 
 std::string nodelist::listStats(const std::string commentDelimeter) {
 	std::stringstream stream;
@@ -744,7 +729,9 @@ std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		}
 	}
 	t = clock() - t;
-	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC) << "s" << std::endl;
+	std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
+			<< "s to calculate the hyperuniformity of pattern " << name << "."
+			<< std::endl;
 
 	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
 	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.

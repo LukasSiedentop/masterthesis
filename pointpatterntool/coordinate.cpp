@@ -148,6 +148,10 @@ bool coordinate::insideAABB(const coordinate min, const coordinate max) const {
 	if (z()<min.z()) return false;
 	return true;
 }
+bool coordinate::insideAABB(const coordinate mid, const double r) const {
+	return (fabs(x() - mid[0]) < r) && (fabs(y() - mid[1]) < r)
+			&& (fabs(z() - mid[2]) < r);
+}
 
 double coordinate::x() const {
 	return position[0];

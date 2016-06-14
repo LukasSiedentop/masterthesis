@@ -104,7 +104,7 @@ public:
 	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
 	std::vector<coordinate> getShifters();
 	// Returns the necessary shifting vectors to continue the pattern periodically such that a given box lies within the periodically continued pattern.
-	std::vector<coordinate> getShifted(coordinate mid, double halfExtend);
+	//std::vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// normalises the pattern to density of points=1, midpoint of bounding box = (0,0,0)
 	double normalize();
 	// returns statistics of the list
