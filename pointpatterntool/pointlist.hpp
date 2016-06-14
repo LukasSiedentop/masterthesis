@@ -39,6 +39,7 @@
 // CGAL
 //typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Cartesian<double>  K;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 // 3D triangulation data structure
 typedef CGAL::Triangulation_data_structure_3<>	TDS;
