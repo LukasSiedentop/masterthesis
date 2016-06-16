@@ -147,6 +147,7 @@ nodelist* readfile(const char* nodes, const char* neighbours, bool periodic,
 			maxY = std::max(maxY, y);
 			maxZ = std::max(maxZ, z);
 		} else {
+			// TODO: put function addPair(coordinate p1, coordinate p2) in nodelist?
 			// account for the shifter
 			n->addNeighbour(neighbour, list->getShifter(coordinate(x, y, z)),
 					list->getShifter(coordinate(nx, ny, nz)));

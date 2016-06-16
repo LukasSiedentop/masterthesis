@@ -38,16 +38,16 @@
 
 // CGAL
 //typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Cartesian<double>  K;
+typedef CGAL::Cartesian<double> K;
 //typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 // 3D triangulation data structure
-typedef CGAL::Triangulation_data_structure_3<>	TDS;
+typedef CGAL::Triangulation_data_structure_3<> TDS;
 
-typedef TDS::Cell_handle	Cell_handle;
+typedef TDS::Cell_handle Cell_handle;
 
 // non-periodic delaunay triangulation
-typedef CGAL::Delaunay_triangulation_3<K>   DT;
+typedef CGAL::Delaunay_triangulation_3<K> DT;
 typedef K::Point_3 Point3;
 typedef K::Sphere_3 Sphere3;
 //typedef K::Segment_3 Segment3;
@@ -57,8 +57,9 @@ typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<K> PT;
 typedef CGAL::Periodic_3_Delaunay_triangulation_3<PT> PDT;
 //typedef GT::Sphere_3 Pshere3;
 
-typedef PDT::Periodic_point         Periodic_point;
-typedef PDT::Offset                 Offset;
+typedef PDT::Periodic_point Periodic_point;
+typedef PDT::Offset Offset;
+typedef PDT::Tetrahedron Tetrahedron;
 
 class pointlist {
 private:
@@ -72,9 +73,16 @@ private:
 	std::vector<class coordinate*> list;
 
 	// returns the points of a given periodic data structure cell, periodically shifted such that the original cell is centred
-	std::vector<Point3> getPoints(PDT::Cell_iterator cell, PDT PD3d);
+	//std::vector<Point3> getPoints(PDT::Cell_iterator cell, PDT PD3d);
 	// returns true if at least one vertice is in the original domain
-	bool withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d);
+	//bool withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d);
+
+	// calculates the centroid of a given tetrahedron and returns it as a coordinate
+	coordinate centroid(const Tetrahedron tet) const;
+
+	// returns the centres of neighbouring tetrahedra
+	std::vector<coordinate> getNeighbourcentres(Point3 t_bd, PDT PD3d) const;
+	Point3 getPoint(Periodic_point pt, PDT PD3d);
 public:
 	pointlist();
 	pointlist(coordinate box, bool periodicity, std::string n);
