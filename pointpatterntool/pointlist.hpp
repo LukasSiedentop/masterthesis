@@ -78,10 +78,10 @@ private:
 	//bool withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d);
 
 	// calculates the centroid of a given tetrahedron and returns it as a coordinate
-	coordinate centroid(const Tetrahedron tet) const;
+	//coordinate centroid(const Tetrahedron tet) const;
 
 	// returns the centres of neighbouring tetrahedra
-	std::vector<coordinate> getNeighbourcentres(Point3 t_bd, PDT PD3d) const;
+	//std::vector<coordinate> getNeighbourcentres(Point3 t_bd, PDT PD3d) const;
 	Point3 getPoint(Periodic_point pt, PDT PD3d);
 public:
 	pointlist();

@@ -104,7 +104,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		// point set large enough so that there are no self edges
 
 		list.push_back(new coordinate(0, 0, 0));
-
+/*
 		list.push_back(new coordinate(-1, -1, -1));
 		list.push_back(new coordinate(-1, -1, 1));
 		list.push_back(new coordinate(-1, 1, -1));
@@ -113,7 +113,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		list.push_back(new coordinate(1, -1, 1));
 		list.push_back(new coordinate(1, 1, -1));
 		list.push_back(new coordinate(1, 1, 1));
-
+*/
 		extend = coordinate(5, 5, 5);
 
 		break;
@@ -123,58 +123,8 @@ pointlist::pointlist(int pattern, bool periodicity) :
 	std::cout << name << " point pattern generated." << std::endl;
 }
 
-coordinate pointlist::centroid(const Tetrahedron tet) const {
-	Point3 centr = CGAL::centroid(tet.vertex(0), tet.vertex(1), tet.vertex(2),
-			tet.vertex(3));
-	return coordinate(centr.x(), centr.y(), centr.z());
-}
-
-std::vector<coordinate> pointlist::getNeighbourcentres(Point3 nodeCentre, PDT PD3d) const {
-
-	// **************** debugging ***************
-	coordinate min = extend / -2, max = extend / 2;
-		CGAL::Geomview_stream gv(
-					CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
-			gv.set_line_width(4);
-			// gv.set_trace(true);
-			gv.set_bg_color(CGAL::Color(200, 200, 0));
-			gv.clear();
-			// **************** debugging ***************
-	std::vector<coordinate> centres;
-
-	 gv << Sphere3(PD3d.locate(nodeCentre)->vertex(0)->point(),0.5);
-/*
-
-
-	// iteration over unique tetrahedra
-	PDT::Periodic_tetrahedron pt;
-	Tetrahedron tet;
-	for (PDT::Periodic_tetrahedron_iterator ptit =
-			PD3d.periodic_tetrahedra_begin(PDT::UNIQUE_COVER_DOMAIN);
-			ptit != PD3d.periodic_tetrahedra_end(PDT::UNIQUE_COVER_DOMAIN);
-			++ptit) {
-		pt = (*ptit);
-		// Convert the current Periodic_tetrahedron to a Tetrahedron
-		tet = PD3d.construct_tetrahedron(pt);
-		// construct real tetrahedron
-
-		//tet = PD3d.construct_tetrahedron(pt);
-
-		gv << CGAL::RED;
-				gv <<t_bd;
-				gv << CGAL::BLUE;
-						gv <<tet;
-
-	}
-	std::cout << "Continue with Enter." << std::endl;
-	std::cin.get();*/
-	return centres;
-}
-
 Point3 pointlist::getPoint(Periodic_point pt, PDT PD3d) {
 	CGAL::Periodic_3_offset_3 offset = pt.second;
-	 //PD3d.locate(pt)
-	//CGAL::Periodic_3_offset_3 offset =
 
 	for (unsigned int i = 0; i < 3; i++) {
 
@@ -188,54 +138,6 @@ Point3 pointlist::getPoint(Periodic_point pt, PDT PD3d) {
 	return PD3d.construct_point(pt.first, offset);
 }
 
-/*
- std::vector<Point3> pointlist::getPoints(PDT::Cell_iterator cell, PDT PD3d) {
- // inspired by http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
- // Extract the Periodic_points from the data structure
- Periodic_point pp[4];
- for (int i = 0; i < 4; i++) {
- pp[i] = PD3d.periodic_point(cell, i);
- }
-
- // Figure out in which directions the cell wraps around
- int off[3];
- for (int d = 0; d < 3; d++) {
- bool does_wrap = false;
- for (int i = 0; i < 4; i++) {
- does_wrap = does_wrap || (pp[i].second[d] != 0);
- }
- off[d] = (does_wrap ? -1 : 0);
- }
-
- // wrap_offset contains the required translation
- Offset wrap_offset(off[0], off[1], off[2]);
-
- std::vector<Point3> pts;
- // Apply the translation in wrap_offset to the Periodic_points
- for (int i = 0; i < 4; i++) {
- pp[i] = std::make_pair(pp[i].first, pp[i].second + wrap_offset);
- pts.push_back(PD3d.point(pp[i]));
- }
- return pts;
- }
-
- bool pointlist::withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d) {
-
- for (int i = 0; i < 4; i++) {
- if (!PD3d.periodic_point(cell, i).second.is_null()) {
- return false;
- }
- }
- return true;
-
- for (int i = 0; i < 4; i++) {
- if (PD3d.periodic_point(cell, i).second.is_null()) {
- return true;
- }
- }
- return false;
- }
- */
 void pointlist::add(double x, double y, double z) {
 	coordinate* newPos = new coordinate(x, y, z);
 
@@ -311,7 +213,7 @@ nodelist* pointlist::decorate() {
 	nodelist* nlist = new nodelist(periodic, name);
 	nlist->setMins(min);
 	nlist->setMaxs(max);
-
+/*
 	// initialize geomview for visulaization
 	CGAL::Geomview_stream gv(
 			CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
@@ -319,13 +221,11 @@ nodelist* pointlist::decorate() {
 	// gv.set_trace(true);
 	gv.set_bg_color(CGAL::Color(0, 200, 200));
 	gv.clear();
-
+*/
 	if (periodic) {
 
 		// uses http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
 		// inspiration: http://cgal-discuss.949826.n4.nabble.com/offset-td950040.html
-
-
 
 		PDT::Iso_cuboid domain(min.x(), min.y(), min.z(), max.x(), max.y(),
 				max.z());
@@ -338,26 +238,38 @@ nodelist* pointlist::decorate() {
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
 			PD3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
+			/*
 			// verification
 			if (list.size() < 100) {
 				gv
 						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
 								(double) 0.005);
-			}
+			}*/
 			++show_progress;
 		}
 
 		// iteration over unique tetrahedra that intersects the original domain (centre may lie in between boundaries even if corners of tetrahedron lies outside)
+		// initialisation of objects
 		PDT::Periodic_tetrahedron pt;
 		Tetrahedron tet;
 		PDT::Cell_handle cell;
 		PDT::Cell_handle neighbourCell;
+
+		Point3 nodePoint;
+		coordinate nodeCentre;
+		node* n;
+
+		Point3 neighbourPoint;
+		coordinate neighbourCentre;
+		node* neighbour;
 
 		// estimate duration
 		std::cout << "Calculate centroids (nodes) and links to attached tetrahedra (to neighbours)... Takes a lot of time!" << std::endl;
 		std::cout << "Iterator estimate: " << PD3d.number_of_cells()*1.5 << std::endl;
 		int count = 0;
 		show_progress.restart(PD3d.number_of_cells()*1.5);
+
+		// TODO: speed up the process by iterating through cells and skip the locate part?
 		for (PDT::Periodic_tetrahedron_iterator ptit =
 				PD3d.periodic_tetrahedra_begin(PDT::UNIQUE_COVER_DOMAIN);
 				ptit != PD3d.periodic_tetrahedra_end(PDT::UNIQUE_COVER_DOMAIN);
@@ -368,9 +280,9 @@ nodelist* pointlist::decorate() {
 			tet = PD3d.construct_tetrahedron(pt);
 
 			// calculate centre
-			Point3 nodePoint = CGAL::centroid(tet.vertex(0), tet.vertex(1), tet.vertex(2),
+			nodePoint = CGAL::centroid(tet.vertex(0), tet.vertex(1), tet.vertex(2),
 						tet.vertex(3));
-			coordinate nodeCentre = coordinate(nodePoint.x(), nodePoint.y(), nodePoint.z());
+			nodeCentre = coordinate(nodePoint.x(), nodePoint.y(), nodePoint.z());
 
 			// don't evaluate tetrahedron if its centroid is not in the original volume
 			if (!nodeCentre.insideAABB(min, max)) {
@@ -378,9 +290,9 @@ nodelist* pointlist::decorate() {
 			}
 
 			// add node to nodelist
-			node* n = nlist->add(nodeCentre);
+			n = nlist->add(nodeCentre);
 
-			// get cell for the current nodepoint
+			// get cell for the current nodepoint. Most timeconsuming part.
 			cell = PD3d.locate(nodePoint);
 
 			// get neighbouring tetrahedra list: function taking the PD3d and the current tetrahedron. Neighbour is found when three out of four vertices are the same. Calculate centre and add neighbourhoos to nodelist.
@@ -424,11 +336,11 @@ nodelist* pointlist::decorate() {
 				neighbourCell = cell->neighbor(i);
 
 				// construct neighbouring tetrahedron midpoint (by applying the periodicity as in the periodicpointpatterntool)
-				Point3 neighbourPoint = CGAL::centroid(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d));
-				coordinate neighbourCentre = coordinate(neighbourPoint.x(), neighbourPoint.y(), neighbourPoint.z());
+				neighbourPoint = CGAL::centroid(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d));
+				neighbourCentre = coordinate(neighbourPoint.x(), neighbourPoint.y(), neighbourPoint.z());
 
 				// add the neighbouring node
-				node* neighbour = nlist->add(neighbourCentre);
+				neighbour = nlist->add(neighbourCentre);
 
 				// TODO: put function addPair(coordinate p1, coordinate p2) in nodelist?
 				// set neighbourhood
@@ -464,9 +376,6 @@ nodelist* pointlist::decorate() {
 			count++;
 		}
 		std::cout << "Actual size: " << count << std::endl;
-
-		// shift back
-		//nlist->shiftList((nlist->getMid()) * (-1));
 	} else {
 		// use http://doc.cgal.org/latest/Triangulation_3/index.html
 
@@ -476,12 +385,12 @@ nodelist* pointlist::decorate() {
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
 			D3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
-
+/*
 			if (list.size() < 100) {
 				gv
 						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
 								(double) 0.1);
-			}
+			}*/
 		}
 		/*
 		 gv.set_wired(true);
@@ -492,7 +401,7 @@ nodelist* pointlist::decorate() {
 		 */
 		boost::progress_display show_progress(D3d.number_of_cells());
 
-		int i = 0;
+		//int i = 0;
 		// Iterate over every tetrahedra ("cell" internally)
 		for (DT::Finite_cells_iterator cell = D3d.finite_cells_begin();
 				cell != D3d.finite_cells_end(); ++cell) {
@@ -503,10 +412,10 @@ nodelist* pointlist::decorate() {
 					(*cell).vertex(3)->point());
 
 			node* n = nlist->add(centre.x(), centre.y(), centre.z());
-
+/*
 			gv << CGAL::RED;
 			gv << Sphere3(centre, (double) 0.005);
-
+*/
 			// iterate of all four neighbours, calculate their centroid and set the neighbourhood. TODO: points are being added fourfold...
 			for (int neighIdx = 0; neighIdx < 4; neighIdx++) {
 				// exclude infinite cells
@@ -517,10 +426,10 @@ nodelist* pointlist::decorate() {
 							(*cell).neighbor(neighIdx)->vertex(1)->point(),
 							(*cell).neighbor(neighIdx)->vertex(2)->point(),
 							(*cell).neighbor(neighIdx)->vertex(3)->point());
-
+/*
 					gv << CGAL::BLUE;
 					gv << Sphere3(neighbour, (double) 0.005);
-
+*/
 					node* neigh = nlist->add(neighbour.x(), neighbour.y(),
 							neighbour.z());
 
@@ -531,25 +440,14 @@ nodelist* pointlist::decorate() {
 			}
 
 			++show_progress;
-			i++;
+			//i++;
 		}
 	}
 	t = clock() - t;
 	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
 			<< "s to generate the neighbours." << std::endl;
+	/*
 	std::cout << "Continue with Enter." << std::endl;
-	std::cin.get();
+	std::cin.get();*/
 	return nlist;
 }
-
-/*
- void pointlist::drawGeomview() {
- std::vector<std::vector<double> > points;
-
- for (std::vector<coordinate*>::iterator it = list.begin(); it != list.end();
- ++it) {
- points.push_back(*(*it)->getVector());
- }
-
- drawPointsGeomview(points, extend / -2, extend / 2);
- }*/

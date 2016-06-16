@@ -1,6 +1,6 @@
-16:56:15 **** Incremental Build of configuration Debug for project pointpatterntool ****
+17:08:49 **** Incremental Build of configuration Debug for project pointpatterntool ****
 Info: Internal Builder is used for build
-g++ -O0 -g3 -Wall -c -fmessage-length=0 -o pointlist.o ../pointlist.cpp 
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -o pointpatterntool.o ../pointpatterntool.cpp 
 In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp:12:0,
                  from /usr/include/boost/iostreams/detail/resolve.hpp:26,
                  from /usr/include/boost/iostreams/detail/push.hpp:24,
@@ -9,9 +9,7 @@ In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp
                  from /usr/include/boost/iostreams/stream.hpp:21,
                  from ../gnuplot-iostream.h:80,
                  from ../functions.hpp:21,
-                 from ../nodelist.hpp:24,
-                 from ../pointlist.hpp:15,
-                 from ../pointlist.cpp:10:
+                 from ../pointpatterntool.cpp:41:
 /usr/include/boost/type_traits/detail/bool_trait_def.hpp:18:79: Anmerkung: #pragma message: NOTE: Use of this header (bool_trait_def.hpp) is deprecated
  # pragma message("NOTE: Use of this header (bool_trait_def.hpp) is deprecated")
                                                                                ^
@@ -24,9 +22,7 @@ In file included from /usr/include/boost/type_traits/detail/bool_trait_def.hpp:2
                  from /usr/include/boost/iostreams/stream.hpp:21,
                  from ../gnuplot-iostream.h:80,
                  from ../functions.hpp:21,
-                 from ../nodelist.hpp:24,
-                 from ../pointlist.hpp:15,
-                 from ../pointlist.cpp:10:
+                 from ../pointpatterntool.cpp:41:
 /usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
  # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
                                                                                     ^
@@ -38,13 +34,11 @@ In file included from /usr/include/boost/iostreams/detail/is_dereferenceable.hpp
                  from /usr/include/boost/iostreams/stream.hpp:21,
                  from ../gnuplot-iostream.h:80,
                  from ../functions.hpp:21,
-                 from ../nodelist.hpp:24,
-                 from ../pointlist.hpp:15,
-                 from ../pointlist.cpp:10:
+                 from ../pointpatterntool.cpp:41:
 /usr/include/boost/type_traits/detail/template_arity_spec.hpp:13:84: Anmerkung: #pragma message: NOTE: Use of this header (template_arity_spec.hpp) is deprecated
  # pragma message("NOTE: Use of this header (template_arity_spec.hpp) is deprecated")
                                                                                     ^
 g++ -o pointpatterntool coordinate.o functions.o node.o nodelist.o pointlist.o pointpatterntool.o -lboost_iostreams -lboost_system -lboost_filesystem -lCGAL_Core -lCGAL -lgmp 
 
-16:56:26 Build Finished (took 11s.99ms)
+17:08:56 Build Finished (took 6s.897ms)
 
