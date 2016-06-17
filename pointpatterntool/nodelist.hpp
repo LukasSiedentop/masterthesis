@@ -20,8 +20,11 @@
 
 #include "coordinate.hpp"
 #include "node.hpp"
-//#include "pointlist.hpp"
+#include "pointlist.hpp"
 #include "functions.hpp"
+
+// forward declare pointlist
+class pointlist;
 
 /**
  * Datastructure to hold points of a pattern. Methods for analysis (like distance to neighbours distribution, hyperuniformity,...) of the pattern are provided here.
@@ -33,11 +36,11 @@ private:
 	std::string name;
 	// Thou shalt not inherit from STL
 	std::vector<class node*> list;
-	// Bounding box
+	// Axis Aligned Bounding box
 	coordinate min, max;
 
-	// underlying pointpattern this nodelist is generated from
-	//pointlist pointpattern;
+	// TODO: underlying pointpattern this nodelist is generated from
+	pointlist* pointpattern;
 
 	//bool isPeriodic() const;
 	void setDensity(double density);
@@ -48,15 +51,15 @@ private:
 	// distance from midpoint (0,0) to ellipse defined by its (not half) axes w and h. Theta in radians.
 	double r(double theta, double w, double h);
 
-
 	// counts the point within a given sphere
-	int pointsInside(const std::vector<coordinate>& points, const coordinate& mid, const double r) const;
+		int pointsInside(const std::vector<coordinate>& points, const coordinate& mid, const double r) const;
+
 	// gives a copy of this nodelist repeated nx times in x-direction, ny times in y-, nz times in z-direction
-	nodelist extendList(int nx, int ny, int nz);
+	// TODO: nodelist extendList(int nx, int ny, int nz);
 public:
 	nodelist();
 	// constructs empty list
-	nodelist(bool periodicity, std::string name);
+	nodelist(bool periodicity, std::string name, pointlist* pp=nullptr);
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice.
 	nodelist(int pattern, bool periodicity);
 
@@ -121,10 +124,13 @@ public:
 	void writeMEEP();
 	// Writes the pattern in scheme code to be interpreted by MPB as a dielectric written by the Nanoscribe unit (Elliptical rods).
 	void writeMPB();
+	// gives the representation of this lists nodes as a pointlist
+	pointlist getPointlist();
 
 	/* TODO:
 	 * Filling fraction (interpolate,...)
 	 * write gwl with walls and stuff
+	 * get pointpattern and put hyperuniformity there...
 	 */
 };
 

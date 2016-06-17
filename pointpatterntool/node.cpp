@@ -140,6 +140,8 @@ void node::scaleAnisotropic(double ax, double ay, double az) {
 }
 
 void node::addNeighbour(node* n, coordinate ownShifter, coordinate foreignShifter ) {
+	// TODO: is not yet fully elegant and working, as the neighbours are added uniquely, but the fact that one neighbour can have multiple shifters is neglected.
+
 	if (this->isNeighbour(n) || (this->equals(n))) {
 		return;
 	}

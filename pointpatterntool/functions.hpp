@@ -20,7 +20,7 @@
 
 #include "gnuplot-iostream.h"
 #include "nodelist.hpp"
-#include "coordinate.hpp"
+//#include "coordinate.hpp"
 
 
 //#include <CGAL/IO/Geomview_stream.h>

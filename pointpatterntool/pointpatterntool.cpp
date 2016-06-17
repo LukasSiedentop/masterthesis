@@ -38,11 +38,10 @@
 
 #include <boost/tuple/tuple.hpp>
 
+#include "coordinate.hpp"
 #include "functions.hpp"
 #include "nodelist.hpp"
 #include "pointlist.hpp"
-
-#include "coordinate.hpp"
 
 // nonono, is not good!
 //using namespace std;
@@ -206,9 +205,8 @@ nodelist* readglassfile(const char* points, std::string name) {
 	}
 
 	// pointpattern data structure
-	pointlist* list = new pointlist(coordinate(L, (unsigned int) 3), true,
-			name);
-	//list->setBox(coordinate(L, (unsigned int) 3));
+	coordinate extend = coordinate(L, (unsigned int) 3);
+	pointlist* list = new pointlist(extend / -2, extend / 2, true, name);
 
 	// position, velocity and radius of the particle
 	double x, y, z, vx, vy, vz, r;
@@ -496,8 +494,8 @@ void compareLists(std::vector<nodelist*>& lists) {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char* argv[]) {
-	std::cout << "Pointpatterns are to be characterized. Here we go!"
-			<< std::endl;
+	 std::cout << "Pointpatterns are to be characterised. Here we go!"
+	 			<< std::endl;
 
 	std::vector<nodelist*> lists;
 
@@ -506,8 +504,8 @@ int main(int argc, char* argv[]) {
 
 	//pointlist pointpattern = pointlist(3, false);
 
-	pointlist pointpattern = pointlist(3, true);
-	lists.push_back(pointpattern.decorate());
+	//pointlist pointpattern = pointlist(3, true);
+	//lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*

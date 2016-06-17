@@ -10,16 +10,16 @@
 //using namespace std;
 
 nodelist::nodelist() :
-		periodic(0), name(""), min(coordinate()), max(coordinate()) {
+		periodic(0), name(""), min(coordinate()), max(coordinate()), pointpattern(nullptr) {
 }
 
-nodelist::nodelist(bool periodicity, std::string n) :
-		periodic(periodicity), name(n), min(coordinate()), max(coordinate()) {
+nodelist::nodelist(bool periodicity, std::string n, pointlist* pp) :
+		periodic(periodicity), name(n), min(coordinate()), max(coordinate()), pointpattern(pp) {
 }
 
 nodelist::nodelist(int pattern, bool periodicity) :
 		periodic(periodicity), min(coordinate(-5, -5, -5)), max(
-				coordinate(5, 5, 5)) {
+				coordinate(5, 5, 5)), pointpattern(nullptr) {
 	std::cout
 			<< "Warning! Decorated pattern is not created via underlying point pattern but directly."
 			<< std::endl;
@@ -247,6 +247,7 @@ double nodelist::r(double theta, double w, double h) {
 									+ h * h * cos(theta) * cos(theta)));
 }
 
+// TODO: to be put in pointlist
 int nodelist::pointsInside(const std::vector<coordinate>& points,
 		const coordinate& mid, const double r) const {
 	if (r == 0) {
@@ -270,6 +271,7 @@ int nodelist::pointsInside(const std::vector<coordinate>& points,
 	}
 	return ctr;
 }
+
 /*
  nodelist nodelist::extendList(int nx, int ny, int nz) {
  double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
@@ -446,25 +448,6 @@ coordinate nodelist::getShifter(coordinate point) {
 	}
 	//std::cout << "WARNING: shifter vector requested for a point outside the once periodically continued box." << std::endl;
 	return coordinate(0, 0, 0);
-	// ensure that point lies in between boundaries if periodic
-
-
-	/*unsigned int nBoxes = 100;
-	for (unsigned int n = 1; n < nBoxes; n++) {
-		if (n > 1) {
-			std::cout
-					<< "Note: No Shifter vector found; requested point may be "
-					<< n << " boxes away..." << std::endl;
-		}*/
-
-
-	/*}
-	std::cout << "Note: no shifting vector was found for point "
-			<< point.toString() << " into the box " << min.toString() << ", "
-			<< max.toString() << " despite looking for shifters over " << nBoxes
-			<< " boxes. Return zero Shifter." << std::endl;
-
-	return coordinate(0, 0, 0);*/
 }
 
 std::vector<coordinate> nodelist::getShifters() {
@@ -528,7 +511,7 @@ std::string nodelist::listStats(const std::string commentDelimeter) {
 double nodelist::normalize() {
 	// stats(lengthDistribution())[1]
 
-	// only for agapornis! TODO: function to set scaling for each direction...
+	// only for agapornis!
 	/*
 	 double resX = 9.067; // nm/px
 	 double resY = 9.067; // nm/px
@@ -657,6 +640,9 @@ std::vector<double> nodelist::angleDistribution() {
 
 std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		unsigned int n) {
+
+	//return getPointlist().hyperuniformity(nr, n);
+
 	// radiusincrement + maximal radius
 	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
 			rMax / nr;
@@ -1168,6 +1154,15 @@ void nodelist::writeMPB() {
 			<< std::endl;
 }
 
+pointlist nodelist::getPointlist() {
+	pointlist ptlist = pointlist(min, max, periodic, name);
+	for (std::vector<node*>::iterator nodeIter = list.begin();
+				nodeIter != list.end(); ++nodeIter) {
+		ptlist.add((*nodeIter)->getPosition());
+	}
+	return ptlist;
+}
+
 std::vector<node*>::iterator nodelist::begin() {
 	return list.begin();
 }
@@ -1185,11 +1180,7 @@ void nodelist::setEdgenodes(double distance) {
 node& nodelist::operator [](int i) {
 	return *list[i];
 }
-/*
- const node& nodelist::operator [](const int i) const {
- return &list[i];
- }
- */
+
 int nodelist::size() {
 	return list.size();
 }
@@ -1218,44 +1209,6 @@ std::vector<std::vector<double> > nodelist::getGnuplotMatrix() {
 				data.push_back(emptyLine);
 			}
 		}
-
-		// neighboursiteration
-		/*		for (std::vector<node*>::iterator neighIter =
-		 (*nodeIter)->getNeighbours()->begin();
-		 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
-
-		 // get target link
-		 coordinate linkTarget(std::numeric_limits<double>::infinity(),
-		 std::numeric_limits<double>::infinity(),
-		 std::numeric_limits<double>::infinity());
-		 if (periodic) {
-
-		 double distSqr = std::numeric_limits<double>::infinity();
-		 coordinate diff;
-
-		 std::vector<coordinate> shifters = getShifters();
-		 for (std::vector<coordinate>::iterator shifter =
-		 shifters.begin(); shifter != shifters.end();
-		 ++shifter) {
-		 diff = (((*neighIter)->getPosition()) + (*shifter))
-		 - ((*nodeIter)->getPosition());
-		 if (diff.lengthSqr() < distSqr) {
-		 distSqr = diff.lengthSqr();
-		 linkTarget =
-		 (((*neighIter)->getPosition()) + (*shifter));
-		 }
-		 }
-
-		 } else {
-		 linkTarget = (*neighIter)->getPosition();
-		 }
-
-		 data.push_back(*(*nodeIter)->getPosition().getVector());
-		 data.push_back(*linkTarget.getVector());
-
-		 data.push_back(emptyLine);
-
-		 }*/
 	}
 	return data;
 }
@@ -1270,7 +1223,7 @@ std::vector<std::vector<double> > nodelist::getEdgelinksGnuplotMatrix() {
 	// nodesiteration
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
-		// neighboursiteration TODO: still an error somewhere... possibly in the shifter assigning
+		// neighboursiteration
 		for (unsigned int n = 0; n < (*nodeIter)->countNeighbours(); n++) {
 
 			coordinate shifter = (*nodeIter)->getNeighbourShifters()->at(n);
@@ -1284,43 +1237,6 @@ std::vector<std::vector<double> > nodelist::getEdgelinksGnuplotMatrix() {
 
 				data.push_back(emptyLine);
 			}
-			/*
-
-			 for (std::vector<node*>::iterator neighIter =
-			 (*nodeIter)->getNeighbours()->begin();
-			 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
-
-			 // get target link
-			 coordinate linkTarget(std::numeric_limits<double>::infinity(),
-			 std::numeric_limits<double>::infinity(),
-			 std::numeric_limits<double>::infinity());
-
-			 double distSqr = std::numeric_limits<double>::infinity();
-			 coordinate diff;
-
-			 coordinate usedShifter = coordinate(0, 0, 0);
-
-			 // shift the neighbour with the periodic boundary conditions until its closest to the node
-			 std::vector<coordinate> shifters = getShifters();
-			 for (std::vector<coordinate>::iterator shifter = shifters.begin();
-			 shifter != shifters.end(); ++shifter) {
-			 diff = (((*neighIter)->getPosition()) + (*shifter))
-			 - ((*nodeIter)->getPosition());
-			 if (diff.lengthSqr() < distSqr) {
-			 distSqr = diff.lengthSqr();
-			 linkTarget = (((*neighIter)->getPosition()) + (*shifter));
-			 usedShifter = (*shifter);
-			 }
-			 }
-
-			 // exclude the zero shifter
-			 if (usedShifter != coordinate(0, 0, 0)) {
-			 data.push_back(*(*nodeIter)->getPosition().getVector());
-			 data.push_back(*linkTarget.getVector());
-
-			 data.push_back(emptyLine);
-			 }
-			 */
 		}
 	}
 	return data;
@@ -1331,4 +1247,3 @@ void nodelist::deleteEntries() {
 		delete (*n);
 	}
 }
-

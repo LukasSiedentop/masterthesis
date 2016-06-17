@@ -61,46 +61,50 @@ typedef PDT::Periodic_point Periodic_point;
 typedef PDT::Offset Offset;
 typedef PDT::Tetrahedron Tetrahedron;
 
+// forward declare nodelist
+class nodelist;
+
 class pointlist {
 private:
 	bool periodic;
 
-	// sidelengths
-	coordinate extend;
+	// the domain the pattern lies within as an axis aligned bounding box
+	coordinate min, max;
 
 	std::string name;
 
 	std::vector<class coordinate*> list;
 
-	// returns the points of a given periodic data structure cell, periodically shifted such that the original cell is centred
-	//std::vector<Point3> getPoints(PDT::Cell_iterator cell, PDT PD3d);
-	// returns true if at least one vertice is in the original domain
-	//bool withinOriginalDomain(PDT::Cell_iterator cell, PDT PD3d);
-
-	// calculates the centroid of a given tetrahedron and returns it as a coordinate
-	//coordinate centroid(const Tetrahedron tet) const;
-
-	// returns the centres of neighbouring tetrahedra
-	//std::vector<coordinate> getNeighbourcentres(Point3 t_bd, PDT PD3d) const;
+	// returns the given periodic point as a point symmetrically around the original domain
 	Point3 getPoint(Periodic_point pt, PDT PD3d);
+	// counts the point within a given sphere
+		int pointsInside(const std::vector<coordinate>& points, const coordinate& mid, const double r) const;
 public:
 	pointlist();
-	pointlist(coordinate box, bool periodicity, std::string n);
+	pointlist(coordinate boxMin, coordinate boxMax, bool periodicity, std::string n);
 	// constructs a pattern (density of points 1, within 10^3 cubicle) with: pattern=1 - random points, pattern=2 - points arranged in a diamond lattice, pattern=3 - explicit testpoints.
 	pointlist(int pattern, bool periodicity);
 
-	void setBox(coordinate box);
+	//void setExtend(coordinate ext);
+	coordinate getExtend() const;
 
+	// number of points
 	unsigned int size() const;
 
 	// Adds a point at the given coordinate if none exists there
+	void add(coordinate pos);
 	void add(double x, double y, double z);
 	void deleteEntries();
 
+	// scales the domain together with its points by the given factor
 	void scaleList(double a);
 
 	// returns the decorated pattern, constructed with the design protocol by Florescu et. al. 2009 (PNAS)
 	nodelist* decorate();
+
+	// calculates the hyperuniformity of the pattern
+	std::vector<std::vector<double> > hyperuniformity(unsigned int nr=50, unsigned int n=100);
+
 
 	// draw the pointlist in geomview
 	//void drawGeomview();
