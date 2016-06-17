@@ -506,7 +506,7 @@ int main(int argc, char* argv[]) {
 
 	//pointlist pointpattern = pointlist(3, false);
 
-	pointlist pointpattern = pointlist(1, true);
+	pointlist pointpattern = pointlist(3, true);
 	lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern

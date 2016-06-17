@@ -104,7 +104,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		// point set large enough so that there are no self edges
 
 		list.push_back(new coordinate(0, 0, 0));
-/*
+
 		list.push_back(new coordinate(-1, -1, -1));
 		list.push_back(new coordinate(-1, -1, 1));
 		list.push_back(new coordinate(-1, 1, -1));
@@ -113,7 +113,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 		list.push_back(new coordinate(1, -1, 1));
 		list.push_back(new coordinate(1, 1, -1));
 		list.push_back(new coordinate(1, 1, 1));
-*/
+
 		extend = coordinate(5, 5, 5);
 
 		break;
@@ -213,7 +213,7 @@ nodelist* pointlist::decorate() {
 	nodelist* nlist = new nodelist(periodic, name);
 	nlist->setMins(min);
 	nlist->setMaxs(max);
-/*
+
 	// initialize geomview for visulaization
 	CGAL::Geomview_stream gv(
 			CGAL::Bbox_3(min.x(), min.y(), min.z(), max.x(), max.y(), max.z()));
@@ -221,7 +221,7 @@ nodelist* pointlist::decorate() {
 	// gv.set_trace(true);
 	gv.set_bg_color(CGAL::Color(0, 200, 200));
 	gv.clear();
-*/
+
 	if (periodic) {
 
 		// uses http://doc.cgal.org/latest/Periodic_3_triangulation_3/index.html
@@ -238,13 +238,13 @@ nodelist* pointlist::decorate() {
 		for (std::vector<coordinate*>::iterator c = list.begin();
 				c != list.end(); ++c) {
 			PD3d.insert(Point3((*c)->x(), (*c)->y(), (*c)->z()));
-			/*
+
 			// verification
 			if (list.size() < 100) {
 				gv
 						<< Sphere3(Point3((*c)->x(), (*c)->y(), (*c)->z()),
 								(double) 0.005);
-			}*/
+			}
 			++show_progress;
 		}
 
@@ -271,17 +271,25 @@ nodelist* pointlist::decorate() {
 
 		// TODO: speed up the process by iterating through cells and skip the locate part?
 		for (PDT::Periodic_tetrahedron_iterator ptit =
-				PD3d.periodic_tetrahedra_begin(PDT::UNIQUE_COVER_DOMAIN);
-				ptit != PD3d.periodic_tetrahedra_end(PDT::UNIQUE_COVER_DOMAIN);
-				++ptit) {
-			pt = (*ptit);
+						PD3d.periodic_tetrahedra_begin(PDT::UNIQUE_COVER_DOMAIN);
+						ptit != PD3d.periodic_tetrahedra_end(PDT::UNIQUE_COVER_DOMAIN);
+						++ptit) {
+/*
+			for (PDT::All_cells_iterator cit =
+							PD3d.all_cells_begin();
+							cit != PD3d.all_cells_end();
+							++cit) {
+			*/
+
+			// get tetrahedron
+			pt = *ptit;
 
 			// Convert the current Periodic_tetrahedron in T^3 to a Tetrahedron in R^3
 			tet = PD3d.construct_tetrahedron(pt);
 
 			// calculate centre
-			nodePoint = CGAL::centroid(tet.vertex(0), tet.vertex(1), tet.vertex(2),
-						tet.vertex(3));
+			nodePoint = CGAL::centroid(tet.vertex(0), tet.vertex(1), tet.vertex(2),tet.vertex(3));
+			//nodePoint = CGAL::centroid(getPoint(PD3d.periodic_point(cit->vertex(0)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(1)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(2)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(3)), PD3d));
 			nodeCentre = coordinate(nodePoint.x(), nodePoint.y(), nodePoint.z());
 
 			// don't evaluate tetrahedron if its centroid is not in the original volume
@@ -294,46 +302,57 @@ nodelist* pointlist::decorate() {
 
 			// get cell for the current nodepoint. Most timeconsuming part.
 			cell = PD3d.locate(nodePoint);
+			std::cout << "located cell offset 0 " << cell->offset(0) << std::endl;
+			std::cout << "located cell offset 1 " << cell->offset(1) << std::endl;
+			std::cout << "located cell offset 2 " << cell->offset(2) << std::endl;
+			std::cout << "located cell offset 3 " << cell->offset(3) << std::endl;
+			cell = ptit.get_cell();
+			std::cout << "cell offset 0 " << cell->offset(0) << std::endl;
+			std::cout << "cell offset 1 " << cell->offset(1) << std::endl;
+			std::cout << "cell offset 2 " << cell->offset(2) << std::endl;
+			std::cout << "cell offset 3 " << cell->offset(3) << std::endl;
 
-			// get neighbouring tetrahedra list: function taking the PD3d and the current tetrahedron. Neighbour is found when three out of four vertices are the same. Calculate centre and add neighbourhoos to nodelist.
-			//std::vector<coordinate> neighPoints = getNeighbourcentres(pt, PD3d);
-/*
 			// **************** debugging *************
 
 			std::cout << "Iterated tetrahedron + centre" << std::endl;
 			gv << CGAL::RED;
+			//tet = PD3d.construct_tetrahedron(getPoint(PD3d.periodic_point(cit->vertex(0)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(1)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(2)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(3)), PD3d));
 			gv << Sphere3(tet.vertex(0), 0.01);
 			gv << Sphere3(tet.vertex(1), 0.01);
 			gv << Sphere3(tet.vertex(2), 0.01);
 			gv << Sphere3(tet.vertex(3), 0.01);
-			gv << Sphere3(nodePoint, 0.05);
-
-			gv << CGAL::GREEN;
 			gv << tet;
+			gv << CGAL::GREEN;
+			gv << Sphere3(nodePoint, 0.2);
 
 			std::cout << "Continue with Enter." << std::endl;
 			std::cin.get();
 
-			gv << CGAL::BLUE;
+			//gv << CGAL::BLUE;
 
-			std::cout << "tetrahedron + centre from cell" << std::endl;
-			gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(0)), PD3d),0.1);
-			gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(1)), PD3d),0.1);
-			gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(2)), PD3d),0.1);
-			gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(3)), PD3d),0.1);
+			//std::cout << "tetrahedron + centre from cell" << std::endl;
+			//gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(0)), PD3d),0.1);
+			//gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(1)), PD3d),0.1);
+			//gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(2)), PD3d),0.1);
+			//gv << Sphere3(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(3)), PD3d),0.1);
 			//gv << Sphere3(PD3d.point(PD3d.periodic_point(PD3d.locate(pt)->vertex(0))),0.1);
 
-			gv << Sphere3(CGAL::centroid(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(0)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(1)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(2)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(3)), PD3d)),0.5);
+			//gv << Sphere3(CGAL::centroid(getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(0)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(1)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(2)), PD3d), getPoint(PD3d.periodic_point(PD3d.locate(nodePoint)->vertex(3)), PD3d)),0.5);
 
-			std::cout << "Continue with Enter." << std::endl;
-			std::cin.get();
+			//std::cout << "Continue with Enter." << std::endl;
+			//std::cin.get();
 			// **************** debugging *************
 
-*/
+
 			// neighbouriteration
 			for (int i = 0; i<4 ; i++) {
 				// get current neighbouring cell
 				neighbourCell = cell->neighbor(i);
+
+				std::cout << "neighbourCell offset 0 " << neighbourCell->offset(0) << std::endl;
+				std::cout << "neighbourCell offset 1 " << neighbourCell->offset(1) << std::endl;
+				std::cout << "neighbourCell offset 2 " << neighbourCell->offset(2) << std::endl;
+				std::cout << "neighbourCell offset 3 " << neighbourCell->offset(3) << std::endl;
 
 				// construct neighbouring tetrahedron midpoint (by applying the periodicity as in the periodicpointpatterntool)
 				neighbourPoint = CGAL::centroid(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d));
@@ -348,29 +367,29 @@ nodelist* pointlist::decorate() {
 						nlist->getShifter(neighbourCentre));
 				neighbour->addNeighbour(n, nlist->getShifter(neighbourCentre),
 						nlist->getShifter(nodeCentre));
-/*
+
 
 				// **************** debugging *************
-				std::cout << "neighbour " << n << "tetrahedron + centre from cell" << std::endl;
+				std::cout << "neighbour " << i << "tetrahedron + centre from cell" << std::endl;
 				gv << CGAL::YELLOW;
 				gv << Sphere3(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d),0.02);
 				gv << Sphere3(getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d),0.02);
 				gv << Sphere3(getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d),0.02);
 				gv << Sphere3(getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d),0.02);
 
-				Tetrahedron neighTet = PD3d.construct_tetrahedron(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d));
+				Tetrahedron neighTet = PD3d.construct_tetrahedron(PD3d.construct_periodic_3_tetrahedron(getPoint(PD3d.periodic_point(neighbourCell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(neighbourCell->vertex(3)), PD3d)));
 				gv << neighTet;
 
-				gv << CGAL::GREEN;
+				gv << CGAL::BLUE;
 				gv << Sphere3(neighbourPoint,0.2);
 
 				std::cout << "Continue with Enter." << std::endl;
 				std::cin.get();
-				// **************** debugging **************/
+				// **************** debugging *************
 			}
 
 			// **************** debugging *************
-			//gv.clear();
+			gv.clear();
 			// **************** debugging *************
 			++show_progress;
 			count++;
