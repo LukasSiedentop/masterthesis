@@ -97,9 +97,9 @@ public:
 	friend coordinate operator/(const coordinate& lhs, const double& divisor);
 
 	// checks whether this coordinate resides within the given axis aligned bounding box
-	bool insideAABB(const coordinate min, const coordinate max) const;
+	bool insideAABB(const coordinate& min, const coordinate& max) const;
 	// checks whether this point is within the given cube
-	bool insideAABB(const coordinate mid, const double r) const;
+	bool insideAABB(const coordinate& mid, const double& r) const;
 
 	// get positions
 	double x() const;
@@ -112,7 +112,7 @@ public:
 	double max() const;
 
 	// TODO: const?
-	double euklidian(coordinate point) const;
+	double euklidian(coordinate& point) const;
 	double lengthSqr() const;
 	double length() const;
 
@@ -128,9 +128,9 @@ public:
 	// cross-product
 	static coordinate cpr(const coordinate& a, const coordinate& b);
 
+	// TODO: unnecessary when stored shifter vector is used
 	// Gives the shortest vector from a to b, considering the given shifting vectors for periodic boundary conditions.
-	static coordinate getVec(const coordinate& a, const coordinate& b,
-			std::vector<coordinate> shifters);
+	static coordinate getVec(const coordinate& a, const coordinate& b, std::vector<coordinate> shifters);
 };
 
 #endif /* COORDINATE_HPP_ */

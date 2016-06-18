@@ -1,5 +1,5 @@
 /*
- * templates.hpp
+  * templates.hpp
  *
  *  Created on: 03.08.2015
  *      Author: Lukas Siedentop
@@ -213,5 +213,11 @@ void plotHyperuniformity(std::vector<std::vector<std::vector<double> > > data,
 void plot3D(std::vector<std::vector<std::vector<double> > > data, std::vector<std::string> names,
 		const std::string xlabel = "x", const std::string ylabel = "y",
 		const std::string zlabel = "z", const std::string style = "w l");
+
+/**
+ * Plots the given 1D data, e.g. S(q).
+ */
+void plot1D(std::vector<std::vector<std::vector<double> > > data, std::vector<std::string> names,
+		const std::string xlabel = "x", const std::string ylabel = "y", const std::string style = "w l");
 
 #endif /* NODELIST_HPP_ */

@@ -66,6 +66,7 @@ double node::euklidianPeriodic(node* node) {
 // Wenn die Länge größer als die Featuresize ist...
 	double length = differenceVec.length();
 	if (list->getMaxFeatureSize() < length) {
+		// TODO: use stored shifter vector. Redo getshifters.
 		differenceVec = coordinate::getVec(position, node->getPosition(),
 				list->getShifters());
 		length = differenceVec.length();
@@ -97,7 +98,7 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 	double len2sqr = vec2.lengthSqr();
 
 	double maxFeatureSize = list->getLengths().lengthSqr() / 4;
-
+// TODO: use stored shifter vector. Redo getshifters.
 	if ((len1sqr > maxFeatureSize) || (len2sqr > maxFeatureSize)) {
 		vec1 = coordinate::getVec(position, nodeA->getPosition(),
 				list->getShifters());

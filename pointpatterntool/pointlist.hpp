@@ -103,8 +103,10 @@ public:
 	nodelist* decorate();
 
 	// calculates the hyperuniformity of the pattern
-	std::vector<std::vector<double> > hyperuniformity(unsigned int nr=50, unsigned int n=100);
+	std::vector<std::vector<double> > hyperuniformity(const unsigned int nr=50, const unsigned int n=100) const;
 
+	// calculates the structure factor of the pattern
+	std::vector<std::vector<double> > structurefactor(const unsigned int nq=50) const;
 
 	// draw the pointlist in geomview
 	//void drawGeomview();

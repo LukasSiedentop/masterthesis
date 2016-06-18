@@ -380,3 +380,40 @@ void plot3D(std::vector<std::vector<std::vector<double> > > datas, std::vector<s
 	std::cout << "Continue with Enter." << std::endl;
 	std::cin.get();
 }
+
+void plot1D(std::vector<std::vector<std::vector<double> > > data, std::vector<std::string> names,
+		const std::string xlabel, const std::string ylabel, const std::string style) {
+	Gnuplot gp;
+		gp << "reset\n";
+
+		gp << "set xlabel '" << xlabel << "'\n";
+		gp << "set ylabel '" << ylabel << "'\n";
+
+		gp << "set key noenhanced\n";
+
+		// Farben
+		std::vector<std::string> colors = getColors();
+
+		// Plotstring bauen und an Gnuplot schicken
+		std::stringstream plotstring;
+		plotstring << "plot ";
+		for (unsigned i = 0; i < data.size(); i++) {
+			plotstring << "'-' " << style << " lt rgb '" << colors[i] << "' t '"
+					<< names[i] << "'";
+			if (i != data.size() - 1) {
+				plotstring << ",";
+			}
+		}
+		gp << plotstring.str() << "\n";
+
+		// Daten senden
+		for (std::vector<std::vector<std::vector<double> > >::iterator dat = data.begin();
+				dat != data.end(); ++dat) {
+
+			gp.send1d(*dat);
+			// TODO: end points ge connected... why?
+		}
+
+		std::cout << "Continue with Enter." << std::endl;
+		std::cin.get();
+}

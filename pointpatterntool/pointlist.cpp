@@ -128,7 +128,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 	std::cout << name << " point pattern generated." << std::endl;
 }
 
-Point3 pointlist::getPoint(const Periodic_point& pt, const PDT& PD3d) const{
+Point3 pointlist::getPoint(const Periodic_point& pt, const PDT& PD3d) const {
 	CGAL::Periodic_3_offset_3 offset = pt.second;
 
 	for (unsigned int i = 0; i < 3; i++) {
@@ -520,113 +520,142 @@ nodelist* pointlist::decorate() {
 	return nlist;
 }
 /*
-std::vector<std::vector<double> > pointlist::hyperuniformity(unsigned int nr,
-		unsigned int n) {
-	// radiusincrement + maximal radius TODO: mid?!
-	double rMax = periodic ? getExtend().min() : getExtend().min() / 3, dr =
-			rMax / nr;
+ std::vector<std::vector<double> > pointlist::hyperuniformity(unsigned int nr,
+ unsigned int n) {
+ // radiusincrement + maximal radius TODO: mid?!
+ double rMax = periodic ? getExtend().min() : getExtend().min() / 3, dr =
+ rMax / nr;
 
-	// datastructure to save the number of points in each sphere
-	std::vector<std::vector<double> > data;
-	data.resize(nr);
-	for (unsigned int i = 0; i < nr; ++i) {
-		data[i].resize(n);
-		// do not calculate radius=0
-		data[0][i] = 0;
-	}
+ // datastructure to save the number of points in each sphere
+ std::vector<std::vector<double> > data;
+ data.resize(nr);
+ for (unsigned int i = 0; i < nr; ++i) {
+ data[i].resize(n);
+ // do not calculate radius=0
+ data[0][i] = 0;
+ }
 
-	clock_t t;
-	t = clock();
+ clock_t t;
+ t = clock();
 
-	// seed for generation of random numbers
-	srand(time(NULL));
+ // seed for generation of random numbers
+ srand(time(NULL));
 
-	// midpoint of sphere
-	coordinate mid;
+ // midpoint of sphere
+ coordinate mid;
 
-	if (periodic) {
-		// precalculate extended pattern
-		std::vector<coordinate> shifters = getExtend().getShifters();
-		std::vector<coordinate> extendedPattern;
-		for (std::vector<coordinate>::iterator shifter = shifters.begin();
-				shifter != shifters.end(); ++shifter) {
-			for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
-					++n) {
-				extendedPattern.push_back(n + (*shifter));
-			}
-		}
+ if (periodic) {
+ // precalculate extended pattern
+ std::vector<coordinate> shifters = getExtend().getShifters();
+ std::vector<coordinate> extendedPattern;
+ for (std::vector<coordinate>::iterator shifter = shifters.begin();
+ shifter != shifters.end(); ++shifter) {
+ for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
+ ++n) {
+ extendedPattern.push_back(n + (*shifter));
+ }
+ }
 
-		// iteration over n spheres
-		boost::progress_display show_progress(n);
-		for (unsigned int i = 0; i < n; i++) {
-			// Choose the centre of the sphere such that it is somewhere within the whole pattern.
-			mid = (coordinate(3) - 0.5) * getExtend();
+ // iteration over n spheres
+ boost::progress_display show_progress(n);
+ for (unsigned int i = 0; i < n; i++) {
+ // Choose the centre of the sphere such that it is somewhere within the whole pattern.
+ mid = (coordinate(3) - 0.5) * getExtend();
 
-			// iteration over radius: count points within sphere
-			for (unsigned int j = 1; j < nr; j++) {
-				data[j][i] = pointsInside(extendedPattern, mid, j * dr);
-			}
+ // iteration over radius: count points within sphere
+ for (unsigned int j = 1; j < nr; j++) {
+ data[j][i] = pointsInside(extendedPattern, mid, j * dr);
+ }
 
-			++show_progress;
-		}
-	} else {
-		// get patterns coordinates
-		std::vector<coordinate> pattern;
-		for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
-				++n) {
-			pattern.push_back(**n);
-		}
+ ++show_progress;
+ }
+ } else {
+ // get patterns coordinates
+ std::vector<coordinate> pattern;
+ for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
+ ++n) {
+ pattern.push_back(**n);
+ }
 
-		double r; //, rSqr;
-		// iteration over radius
-		boost::progress_display show_progress(nr);
-		for (unsigned int j = 0; j < nr; j++) {
-			r = j * dr;
-			//rSqr = r * r;
-			// iteration over n spheres
-			for (unsigned int i = 0; i < n; i++) {
-				// Choose the center of the sphere such that it is somewhere within the whole pattern.
-				mid = (coordinate(3) - 0.5) * (getExtend() - 2 * r);
+ double r; //, rSqr;
+ // iteration over radius
+ boost::progress_display show_progress(nr);
+ for (unsigned int j = 0; j < nr; j++) {
+ r = j * dr;
+ //rSqr = r * r;
+ // iteration over n spheres
+ for (unsigned int i = 0; i < n; i++) {
+ // Choose the center of the sphere such that it is somewhere within the whole pattern.
+ mid = (coordinate(3) - 0.5) * (getExtend() - 2 * r);
 
-				data[j][i] = pointsInside(pattern, mid, r);
-			}
-			++show_progress;
-		}
-	}
-	t = clock() - t;
-	std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
-			<< "s to calculate the hyperuniformity of pattern " << name << "."
-			<< std::endl;
+ data[j][i] = pointsInside(pattern, mid, r);
+ }
+ ++show_progress;
+ }
+ }
+ t = clock() - t;
+ std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
+ << "s to calculate the hyperuniformity of pattern " << name << "."
+ << std::endl;
 
-	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
-	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
-	std::vector<double> expectedValue;
-	expectedValue.resize(nr);
+ //cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
+ // Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
+ std::vector<double> expectedValue;
+ expectedValue.resize(nr);
+ // iteration over radius
+ for (unsigned int j = 0; j < nr; j++) {
+ // iteration over sphere
+ for (unsigned int i = 0; i < n; i++) {
+ expectedValue[j] += data[j][i];
+ }
+ expectedValue[j] = expectedValue[j] / n;
+ //cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
+ }
+
+ // Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
+ std::vector<std::vector<double> > variance;
+ variance.resize(nr);
+ // iteration over radius
+ for (unsigned int j = 0; j < nr; j++) {
+ variance[j].resize(2);
+ variance[j][0] = j * dr;
+
+ // iteration over sphere
+ for (unsigned int i = 0; i < n; i++) {
+ variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
+ }
+ variance[j][1] = variance[j][1] / n;
+ }
+
+ return variance;
+ }
+ */
+
+std::vector<std::vector<double> > pointlist::structurefactor(
+		const unsigned int nq) const {
+	// TODO: generate lists of wave vectors q, randomly distributed on spheres of different radii
+	std::vector<std::vector<std::vector<double> > > qs;
+
+	// TODO: calculate sum exp(iqr) for each q vector and average value for qs of same length:
+
+	std::vector<std::vector<double> > sq;
+	sq.resize(nq);
 	// iteration over radius
-	for (unsigned int j = 0; j < nr; j++) {
-		// iteration over sphere
-		for (unsigned int i = 0; i < n; i++) {
-			expectedValue[j] += data[j][i];
-		}
-		expectedValue[j] = expectedValue[j] / n;
-		//cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
+	for (unsigned int q = 0; q < nq; q++) {
+		sq[q].resize(2);
 	}
 
-	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
-	std::vector<std::vector<double> > variance;
-	variance.resize(nr);
-	// iteration over radius
-	for (unsigned int j = 0; j < nr; j++) {
-		variance[j].resize(2);
-		variance[j][0] = j * dr;
+	// test data for plotting
 
-		// iteration over sphere
-		for (unsigned int i = 0; i < n; i++) {
-			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
-		}
-		variance[j][1] = variance[j][1] / n;
-	}
-
-	return variance;
+	sq[0][0] = 0; // q
+	sq[0][1] = 0; // S(q)
+	sq[1][0] = 1; // q
+	sq[1][1] = 0.5; // S(q)
+	sq[2][0] = 2; // q
+	sq[2][1] = 0.5; // S(q)
+	sq[3][0] = 3; // q
+	sq[3][1] = 1; // S(q)
+	sq[4][0] = 4; // q
+	sq[4][1] = 5; // S(q)
+	return sq;
 }
-*/

@@ -78,6 +78,8 @@ int gui() {
 	std::cout << "17 - read glass file" << std::endl;
 	std::cout << "18 - read hpu file" << std::endl;
 
+	std::cout << "19 - calculate structure factor of nodelist" << std::endl;
+
 	std::cout << "0 - Nothing." << std::endl;
 	std::cout << "---------------------------------------------------"
 			<< std::endl;
@@ -504,8 +506,8 @@ int main(int argc, char* argv[]) {
 
 	//pointlist pointpattern = pointlist(3, false);
 
-	pointlist pointpattern = pointlist(3, true);
-	lists.push_back(pointpattern.decorate());
+	pointlist pointpattern = pointlist(1, true);
+		lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*
@@ -797,6 +799,26 @@ int main(int argc, char* argv[]) {
 							"/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Left.dat",
 							"/home/lukas/data/pointpatterns/decorated/hpu/collaborators/HPU_Chi_4C_Chi_0.13_NP_1000_UC_Points_Right.dat",
 							true, "HPU"));
+
+			break;
+		}
+
+		case 19: {
+			std::cout
+					<< "Calculate structure factor"
+					<< std::endl;
+
+			// TODO: gui questioning the wanted range, estimate based on characteristic lenght
+			std::vector<std::string> names;
+			std::vector<std::vector<std::vector<double> > > sqs;
+			for (std::vector<nodelist*>::iterator list = lists.begin();
+					list != lists.end(); ++list) {
+				sqs.push_back((*list)->getPointlist().structurefactor());
+				names.push_back((*list)->getName());
+			}
+
+			plot1D(sqs, names, "wave vector q", "structure factor S(q)");
+
 
 			break;
 		}

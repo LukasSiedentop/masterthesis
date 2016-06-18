@@ -139,7 +139,7 @@ std::string coordinate::toString(const std::string begin,
 	return stream.str();
 }
 
-bool coordinate::insideAABB(const coordinate min, const coordinate max) const {
+bool coordinate::insideAABB(const coordinate& min, const coordinate& max) const {
 	if (x()>max.x()) return false;
 	if (x()<min.x()) return false;
 	if (y()>max.y()) return false;
@@ -148,7 +148,7 @@ bool coordinate::insideAABB(const coordinate min, const coordinate max) const {
 	if (z()<min.z()) return false;
 	return true;
 }
-bool coordinate::insideAABB(const coordinate mid, const double r) const {
+bool coordinate::insideAABB(const coordinate& mid, const double& r) const {
 	return (fabs(x() - mid[0]) < r) && (fabs(y() - mid[1]) < r)
 			&& (fabs(z() - mid[2]) < r);
 }
@@ -179,7 +179,7 @@ double coordinate::max() const {
 	return maximum;
 }
 
-double coordinate::euklidian(coordinate point) const {
+double coordinate::euklidian(coordinate& point) const {
 	return coordinate(*this - point).length();
 }
 
