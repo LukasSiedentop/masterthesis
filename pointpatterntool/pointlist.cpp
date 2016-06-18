@@ -128,7 +128,7 @@ pointlist::pointlist(int pattern, bool periodicity) :
 	std::cout << name << " point pattern generated." << std::endl;
 }
 
-Point3 pointlist::getPoint(Periodic_point pt, PDT PD3d) {
+Point3 pointlist::getPoint(const Periodic_point& pt, const PDT& PD3d) const{
 	CGAL::Periodic_3_offset_3 offset = pt.second;
 
 	for (unsigned int i = 0; i < 3; i++) {

@@ -76,7 +76,7 @@ private:
 	std::vector<class coordinate*> list;
 
 	// returns the given periodic point as a point symmetrically around the original domain
-	Point3 getPoint(Periodic_point pt, PDT PD3d);
+	Point3 getPoint(const Periodic_point& pt, const PDT& PD3d) const;
 	// counts the point within a given sphere
 		int pointsInside(const std::vector<coordinate>& points, const coordinate& mid, const double r) const;
 public:
