@@ -4,7 +4,7 @@
  *  Created on: 24.07.2015
  *      Author: Lukas Siedentop
  */
-
+// Constructors: https://en.wikipedia.org/wiki/Rule_of_three_(C%2B%2B_programming)
 /*
  * Comments should say "why", not "what".
  *
@@ -245,11 +245,9 @@ void gnuplotPattern(std::vector<nodelist*>& lists) {
 		datas.push_back((*list)->getGnuplotMatrix());
 		names.push_back((*list)->getName());
 
-		if ((*list)->isPeriodic()) {
-			std::cout << "get edge links" << std::endl;
-			datas.push_back((*list)->getEdgelinksGnuplotMatrix());
-			names.push_back((*list)->getName() + "_edgelinks");
-		}
+		datas.push_back((*list)->getEdgelinksGnuplotMatrix());
+		names.push_back((*list)->getName() + "_edgelinks");
+
 	}
 
 	plot3D(datas, names);
@@ -497,21 +495,20 @@ void compareLists(std::vector<nodelist*>& lists) {
  */
 int main(int argc, char* argv[]) {
 	/*
-		coordinate vec1(1,0,0);
-		coordinate vec2(1,0,0);
-		std::cout << "scp:" << vec1.scp(vec2) << std::endl;
-		std::cout << "acos(scp):" << acos(vec1.scp(vec2)) << std::endl;
-		std::cout << "180/pi:" << ((180.0) / M_PI) << std::endl;
-		std::cout << "vec1.lengthSqr():" << vec1.lengthSqr() << std::endl;
-		std::cout << "vec2.lengthSqr():" << vec2.lengthSqr() << std::endl;
-		std::cout << "angle:" << ((180.0) / M_PI) * vec1.angle(vec2) << std::endl;
-	return 1;
-*/
+	 coordinate vec1(1,0,0);
+	 coordinate vec2(1,0,0);
+	 std::cout << "scp:" << vec1.scp(vec2) << std::endl;
+	 std::cout << "acos(scp):" << acos(vec1.scp(vec2)) << std::endl;
+	 std::cout << "180/pi:" << ((180.0) / M_PI) << std::endl;
+	 std::cout << "vec1.lengthSqr():" << vec1.lengthSqr() << std::endl;
+	 std::cout << "vec2.lengthSqr():" << vec2.lengthSqr() << std::endl;
+	 std::cout << "angle:" << ((180.0) / M_PI) * vec1.angle(vec2) << std::endl;
+	 return 1;
+	 */
 	std::cout << "Pointpatterns are to be characterised. Here we go!"
-	 			<< std::endl;
+			<< std::endl;
 
 	std::vector<nodelist*> lists;
-
 
 	// 1: poisson, 2: diamond, 3: test
 	//lists.push_back(new nodelist(3, true));
@@ -519,7 +516,7 @@ int main(int argc, char* argv[]) {
 	//pointlist pointpattern = pointlist(3, false);
 
 	pointlist pointpattern = pointlist(1, true);
-		lists.push_back(pointpattern.decorate());
+	lists.push_back(pointpattern.decorate());
 
 	// No arguments given -> generate diamond and random point pattern
 	/*
@@ -816,9 +813,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		case 19: {
-			std::cout
-					<< "Calculate structure factor"
-					<< std::endl;
+			std::cout << "Calculate structure factor" << std::endl;
 
 			// TODO: gui questioning the wanted range, estimate based on characteristic lenght
 			std::vector<std::string> names;
@@ -830,7 +825,6 @@ int main(int argc, char* argv[]) {
 			}
 
 			plot1D(sqs, names, "wave vector q", "structure factor S(q)");
-
 
 			break;
 		}

@@ -362,21 +362,8 @@ node* nodelist::add(coordinate pos) {
 
 node* nodelist::add(double x, double y, double z) {
 
+	// get position of the given node shifted into the original domain
 	coordinate newPos = coordinate(x, y, z) + getShifter(coordinate(x, y, z));
-	/*
-	 // ensure that point lies in between boundaries if periodic
-	 if (periodic) {
-	 std::vector<coordinate> shifters = getShifters();
-	 for (std::vector<coordinate>::iterator shifter = shifters.begin();
-	 shifter != shifters.end(); ++shifter) {
-	 // as bounding box: choose the right shifter where all components are in t
-	 if ((newPos + (*shifter)).insideAABB(min, max)) {
-	 newPos = (*shifter) + coordinate(x, y, z);
-	 break;
-	 }
-	 }
-	 }
-	 */
 
 	// check if point at given position exist
 	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
@@ -439,7 +426,6 @@ coordinate nodelist::getShifter(coordinate point) {
 		std::vector<coordinate> shifters = getShifters();
 		for (std::vector<coordinate>::iterator shifter = shifters.begin();
 				shifter != shifters.end(); ++shifter) {
-			//coordinate largeShifter = (*shifter) * n;
 			// as bounding box: choose the right shifter where all components are in t
 			if ((point + (*shifter)).insideAABB(min, max)) {
 				return (*shifter);
@@ -604,10 +590,14 @@ std::vector<double> nodelist::angleDistribution() {
 						// vec1: BA, vec2: BC
 						// -> calculate angle between BA and BC at n1.
 						// TODO: to be tested & verified!
-						coordinate vec1 =
-								(*nodeIter)->getPosition() - (*nodeIter)->getShiftedNeighbourposition(n1);
+						coordinate vec1 = (*nodeIter)->getPosition()
+								- (*nodeIter)->getShiftedNeighbourposition(n1);
 
-						coordinate vec2 = (*nodeIter)->getNeighbour(n1)->getShiftedNeighbourposition(n2) - (*nodeIter)->getShiftedNeighbourposition(n1);
+						coordinate vec2 =
+								(*nodeIter)->getNeighbour(n1)->getShiftedNeighbourposition(
+										n2)
+										- (*nodeIter)->getShiftedNeighbourposition(
+												n1);
 
 						data.push_back(((180.0) / M_PI) * vec1.angle(vec2));
 					}
@@ -628,117 +618,10 @@ std::vector<double> nodelist::angleDistribution() {
 
 std::vector<std::vector<double> > nodelist::hyperuniformity(unsigned int nr,
 		unsigned int n) {
-
-	//return getPointlist().hyperuniformity(nr, n);
-
-	// radiusincrement + maximal radius
-	double rMax = periodic ? getLengths().min() : getLengths().min() / 3, dr =
-			rMax / nr;
-
-	// datastructure to save the number of points in each sphere
-	std::vector<std::vector<double> > data;
-	data.resize(nr);
-	for (unsigned int i = 0; i < nr; ++i) {
-		data[i].resize(n);
-		// do not calculate radius=0
-		data[0][i] = 0;
-	}
-
-	clock_t t;
-	t = clock();
-
-	// seed for generation of random numbers
-	srand(time(NULL));
-
-	// midpoint of sphere
-	coordinate mid;
-
-	if (periodic) {
-		// precalculate extended pattern
-		std::vector<coordinate> shifters = getShifters();
-		std::vector<coordinate> extendedPattern;
-		for (std::vector<coordinate>::iterator shifter = shifters.begin();
-				shifter != shifters.end(); ++shifter) {
-			for (std::vector<node*>::iterator n = list.begin(); n != list.end();
-					++n) {
-				extendedPattern.push_back((*n)->getPosition() + *shifter);
-			}
-		}
-
-		// iteration over n spheres
-		boost::progress_display show_progress(n);
-		for (unsigned int i = 0; i < n; i++) {
-			// Choose the centre of the sphere such that it is somewhere within the whole pattern.
-			mid = (coordinate(3) - 0.5) * getLengths();
-
-			// iteration over radius: count points within sphere
-			for (unsigned int j = 1; j < nr; j++) {
-				data[j][i] = pointsInside(extendedPattern, mid, j * dr);
-			}
-
-			++show_progress;
-		}
-	} else {
-		// get patterns coordinates
-		std::vector<coordinate> pattern;
-		for (std::vector<node*>::iterator n = list.begin(); n != list.end();
-				++n) {
-			pattern.push_back((*n)->getPosition());
-		}
-
-		double r; //, rSqr;
-		// iteration over radius
-		boost::progress_display show_progress(nr);
-		for (unsigned int j = 0; j < nr; j++) {
-			r = j * dr;
-			//rSqr = r * r;
-			// iteration over n spheres
-			for (unsigned int i = 0; i < n; i++) {
-				// Choose the center of the sphere such that it is somewhere within the whole pattern.
-				mid = (coordinate(3) - 0.5) * (getLengths() - 2 * r);
-
-				data[j][i] = pointsInside(pattern, mid, r);
-			}
-			++show_progress;
-		}
-	}
-	t = clock() - t;
-	std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
-			<< "s to calculate the hyperuniformity of pattern " << name << "."
-			<< std::endl;
-
-	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
-	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
-	std::vector<double> expectedValue;
-	expectedValue.resize(nr);
-	// iteration over radius
-	for (unsigned int j = 0; j < nr; j++) {
-		// iteration over sphere
-		for (unsigned int i = 0; i < n; i++) {
-			expectedValue[j] += data[j][i];
-		}
-		expectedValue[j] = expectedValue[j] / n;
-		//cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
-	}
-
-	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
-	std::vector<std::vector<double> > variance;
-	variance.resize(nr);
-	// iteration over radius
-	for (unsigned int j = 0; j < nr; j++) {
-		variance[j].resize(2);
-		variance[j][0] = j * dr;
-
-		// iteration over sphere
-		for (unsigned int i = 0; i < n; i++) {
-			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
-		}
-		variance[j][1] = variance[j][1] / n;
-	}
-
-	return variance;
+	return getPointlist().hyperuniformity(nr, n);
 }
 
+// TODO!
 void nodelist::writeCoordinates() {
 	std::stringstream fileNameStream;
 	fileNameStream << "./data/points_" << name << ".csv";
@@ -1035,7 +918,6 @@ void nodelist::writeMPB() {
 		stream.precision(4);
 
 		// Cylinders for rods
-		//double radius = 0.2685;
 		stream
 				<< (*nodeIter)->getPosition().toString(
 						"(make sphere (material polymer) (center (c->l ", " ",
@@ -1043,16 +925,6 @@ void nodelist::writeMPB() {
 
 		for (unsigned int nn = 0; nn < (*nodeIter)->countNeighbours(); nn++) {
 
-			/*
-			 for (std::vector<node*>::iterator neighIter =
-			 (*nodeIter)->getNeighbours()->begin();
-			 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
-			 */
-			// cylinder only if not connected over boundary
-			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			//if ((!periodic) || ((*nodeIter)->euklidian((*neighIter)) < getMaxFeatureSize())) {
-			// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
-			//coordinate axis = (*nodeIter)->getPosition() - (*neighIter)->getPosition();
 			coordinate axis = (*nodeIter)->getPosition()
 					- (*nodeIter)->getShiftedNeighbourposition(nn);
 
@@ -1068,8 +940,6 @@ void nodelist::writeMPB() {
 			stream << "(make cylinder (material polymer) (center (c->l "
 					<< center << ")) (radius rad) (height " << height
 					<< ") (axis " << axis.toString("(c->l ", " ", ")") << ")) ";
-
-			//}
 		}
 
 		// Ellipsoid Approximation (apparently too big ctl file for meep...)
@@ -1187,9 +1057,9 @@ std::vector<std::vector<double> > nodelist::getGnuplotMatrix() {
 		for (unsigned int n = 0; n < (*nodeIter)->countNeighbours(); n++) {
 
 			coordinate shifter = (*nodeIter)->getNeighbourShifters()->at(n);
-			// do not plot links over the boundary
+			// do not plot links over the boundary or edgenodes
 			if ((*nodeIter)->getNeighbourShifters()->at(n)
-					== coordinate(0, 0, 0)) {
+					== coordinate(0, 0, 0) && !(*nodeIter)->isEdgenode()) {
 				data.push_back(*(*nodeIter)->getPosition().getVector());
 				data.push_back(
 						*((*nodeIter)->getNeighbours()->at(n)->getPosition()
@@ -1209,20 +1079,45 @@ std::vector<std::vector<double> > nodelist::getEdgelinksGnuplotMatrix() {
 	}
 
 	std::vector<std::vector<double> > data;
+
+	// in the non-periodic case, edgelinks are links to edgenodes
+	if (!periodic) {
+		// nodesiteration
+		for (std::vector<node*>::iterator nodeIter = list.begin();
+				nodeIter != list.end(); ++nodeIter) {
+			if ((*nodeIter)->isEdgenode()) {
+				// neighboursiteration
+				for (unsigned int n = 0; n < (*nodeIter)->countNeighbours();
+						n++) {
+
+					// its only a link over the boundary if there's not the 0-shifter...
+					if (!periodic || (*nodeIter)->getNeighbourShifters()->at(n)
+							!= coordinate(0, 0, 0)) {
+						data.push_back(*(*nodeIter)->getPosition().getVector());
+						data.push_back(
+								*(*nodeIter)->getNeighbours()->at(n)->getPosition().getVector());
+
+						data.push_back(emptyLine);
+					}
+				}
+			}
+
+		}
+		return data;
+	}
+
 	// nodesiteration
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
 		// neighboursiteration
 		for (unsigned int n = 0; n < (*nodeIter)->countNeighbours(); n++) {
-
-			coordinate shifter = (*nodeIter)->getNeighbourShifters()->at(n);
 			// its only a link over the boundary if there's not the 0-shifter...
 			if ((*nodeIter)->getNeighbourShifters()->at(n)
 					!= coordinate(0, 0, 0)) {
 				data.push_back(*(*nodeIter)->getPosition().getVector());
+				//data.push_back(*((*nodeIter)->getNeighbours()->at(n)->getPosition()- shifter).getVector());
 				data.push_back(
-						*((*nodeIter)->getNeighbours()->at(n)->getPosition()
-								- shifter).getVector());
+						*((*nodeIter)->getShiftedNeighbourposition(n)).getVector());
 
 				data.push_back(emptyLine);
 			}

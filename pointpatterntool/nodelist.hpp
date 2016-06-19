@@ -39,7 +39,7 @@ private:
 	// Axis Aligned Bounding box
 	coordinate min, max;
 
-	// TODO: underlying pointpattern this nodelist is generated from
+	// underlying pointpattern this nodelist is generated from
 	pointlist* pointpattern;
 
 	//bool isPeriodic() const;
@@ -104,10 +104,8 @@ public:
 	std::vector<std::vector<double> > getEdgelinksGnuplotMatrix();
 	// Returns the Shifter vector necessary to shift a given point into the periodic bounadry
 	coordinate getShifter(coordinate point);
-	// Returns the 26 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
+	// Returns the 27 shifting vectors to continue the pattern periodically. TODO: n-Dimensional
 	std::vector<coordinate> getShifters();
-	// Returns the necessary shifting vectors to continue the pattern periodically such that a given box lies within the periodically continued pattern.
-	//std::vector<coordinate> getShifted(coordinate mid, double halfExtend);
 	// normalises the pattern to density of points=1, midpoint of bounding box = (0,0,0)
 	double normalize();
 	// returns statistics of the list
@@ -128,9 +126,9 @@ public:
 	pointlist getPointlist();
 
 	/* TODO:
-	 * Filling fraction (interpolate,...)
+	 * Filling fraction (interpolate & and use stuff done with dirk,...)
 	 * write gwl with walls and stuff
-	 * get pointpattern and put hyperuniformity there...
+	 * put hyperuniformity in pointlist...
 	 */
 };
 

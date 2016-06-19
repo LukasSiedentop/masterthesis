@@ -308,9 +308,12 @@ nodelist* pointlist::decorate() {
 		coordinate neighbourCentre;
 		node* neighbour;
 
+		std::cout << "is onesheeted:" << PD3d.is_triangulation_in_1_sheet()
+				<< std::endl;
+
 		// estimate duration
 		std::cout
-				<< "Calculate centroids (nodes) and links to attached tetrahedra (to neighbours)... Takes a lot of time!"
+				<< "Calculate centroids (nodes) and links to attached tetrahedra (to neighbours)..."
 				<< std::endl;
 		show_progress.restart(
 				std::distance(
@@ -324,11 +327,8 @@ nodelist* pointlist::decorate() {
 				PD3d.periodic_tetrahedra_begin(PDT::UNIQUE_COVER_DOMAIN);
 				ptit != PD3d.periodic_tetrahedra_end(PDT::UNIQUE_COVER_DOMAIN);
 				++ptit) {
-			// get cell: is apparently slower than localising the cell and theres a bug in the finding neighbour thing.
-//			cell = ptit.get_cell();
 			// get tetrahedron
 			pt = *ptit;
-//			pt = PD3d.construct_periodic_3_tetrahedron(getPoint(PD3d.periodic_point(cell->vertex(0)), PD3d), getPoint(PD3d.periodic_point(cell->vertex(1)), PD3d), getPoint(PD3d.periodic_point(cell->vertex(2)), PD3d), getPoint(PD3d.periodic_point(cell->vertex(3)), PD3d));
 
 			// Convert the current Periodic_tetrahedron in T^3 to a Tetrahedron in R^3
 			tet = PD3d.construct_tetrahedron(pt);
@@ -336,7 +336,6 @@ nodelist* pointlist::decorate() {
 			// calculate centre
 			nodePoint = CGAL::centroid(tet.vertex(0), tet.vertex(1),
 					tet.vertex(2), tet.vertex(3));
-			//nodePoint = CGAL::centroid(getPoint(PD3d.periodic_point(cit->vertex(0)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(1)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(2)), PD3d), getPoint(PD3d.periodic_point(cit->vertex(3)), PD3d));
 			nodeCentre = coordinate(nodePoint.x(), nodePoint.y(),
 					nodePoint.z());
 
@@ -507,6 +506,12 @@ nodelist* pointlist::decorate() {
 
 			++show_progress;
 		}
+		// set edgenodes
+		double characteristicLength = stats(nlist->lengthDistribution())[1] * 2;
+		std::cout << "Nodes farther away of the edge than "
+				<< characteristicLength << " are declared to be edgenodes."
+				<< std::endl;
+		nlist->setEdgenodes(characteristicLength);
 	}
 	t = clock() - t;
 	std::cout << "Took " << (((float) t) / CLOCKS_PER_SEC)
@@ -519,117 +524,116 @@ nodelist* pointlist::decorate() {
 	// **************** debugging *************
 	return nlist;
 }
-/*
- std::vector<std::vector<double> > pointlist::hyperuniformity(unsigned int nr,
- unsigned int n) {
- // radiusincrement + maximal radius TODO: mid?!
- double rMax = periodic ? getExtend().min() : getExtend().min() / 3, dr =
- rMax / nr;
 
- // datastructure to save the number of points in each sphere
- std::vector<std::vector<double> > data;
- data.resize(nr);
- for (unsigned int i = 0; i < nr; ++i) {
- data[i].resize(n);
- // do not calculate radius=0
- data[0][i] = 0;
- }
+std::vector<std::vector<double> > pointlist::hyperuniformity(unsigned int nr,
+		unsigned int n) const {
+	// radiusincrement + maximal radius
+	double rMax = periodic ? getExtend().min() : getExtend().min() / 3, dr =
+			rMax / nr;
 
- clock_t t;
- t = clock();
+	// datastructure to save the number of points in each sphere
+	std::vector<std::vector<double> > data;
+	data.resize(nr);
+	for (unsigned int i = 0; i < nr; ++i) {
+		data[i].resize(n);
+		// do not calculate radius=0
+		data[0][i] = 0;
+	}
 
- // seed for generation of random numbers
- srand(time(NULL));
+	clock_t t;
+	t = clock();
 
- // midpoint of sphere
- coordinate mid;
+	// seed for generation of random numbers
+	srand(time(NULL));
 
- if (periodic) {
- // precalculate extended pattern
- std::vector<coordinate> shifters = getExtend().getShifters();
- std::vector<coordinate> extendedPattern;
- for (std::vector<coordinate>::iterator shifter = shifters.begin();
- shifter != shifters.end(); ++shifter) {
- for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
- ++n) {
- extendedPattern.push_back(n + (*shifter));
- }
- }
+	// midpoint of sphere
+	coordinate mid;
 
- // iteration over n spheres
- boost::progress_display show_progress(n);
- for (unsigned int i = 0; i < n; i++) {
- // Choose the centre of the sphere such that it is somewhere within the whole pattern.
- mid = (coordinate(3) - 0.5) * getExtend();
+	if (periodic) {
+		// precalculate extended pattern
+		std::vector<coordinate> shifters = getExtend().getShifters();
+		std::vector<coordinate> extendedPattern;
+		for (std::vector<coordinate>::iterator shifter = shifters.begin();
+				shifter != shifters.end(); ++shifter) {
+			for (std::vector<coordinate*>::const_iterator n = list.begin();
+					n != list.end(); ++n) {
+				extendedPattern.push_back(*(*n) + (*shifter));
+			}
+		}
 
- // iteration over radius: count points within sphere
- for (unsigned int j = 1; j < nr; j++) {
- data[j][i] = pointsInside(extendedPattern, mid, j * dr);
- }
+		// iteration over n spheres
+		boost::progress_display show_progress(n);
+		for (unsigned int i = 0; i < n; i++) {
+			// Choose the centre of the sphere such that it is somewhere within the whole pattern.
+			mid = (coordinate(3) - 0.5) * getExtend();
 
- ++show_progress;
- }
- } else {
- // get patterns coordinates
- std::vector<coordinate> pattern;
- for (std::vector<coordinate*>::iterator n = list.begin(); n != list.end();
- ++n) {
- pattern.push_back(**n);
- }
+			// iteration over radius: count points within sphere
+			for (unsigned int j = 1; j < nr; j++) {
+				data[j][i] = pointsInside(extendedPattern, mid, j * dr);
+			}
 
- double r; //, rSqr;
- // iteration over radius
- boost::progress_display show_progress(nr);
- for (unsigned int j = 0; j < nr; j++) {
- r = j * dr;
- //rSqr = r * r;
- // iteration over n spheres
- for (unsigned int i = 0; i < n; i++) {
- // Choose the center of the sphere such that it is somewhere within the whole pattern.
- mid = (coordinate(3) - 0.5) * (getExtend() - 2 * r);
+			++show_progress;
+		}
+	} else {
+		// get patterns coordinates
+		std::vector<coordinate> pattern;
+		for (std::vector<coordinate*>::const_iterator n = list.begin();
+				n != list.end(); ++n) {
+			pattern.push_back(**n);
+		}
 
- data[j][i] = pointsInside(pattern, mid, r);
- }
- ++show_progress;
- }
- }
- t = clock() - t;
- std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
- << "s to calculate the hyperuniformity of pattern " << name << "."
- << std::endl;
+		double r; //, rSqr;
+		// iteration over radius
+		boost::progress_display show_progress(nr);
+		for (unsigned int j = 0; j < nr; j++) {
+			r = j * dr;
+			//rSqr = r * r;
+			// iteration over n spheres
+			for (unsigned int i = 0; i < n; i++) {
+				// Choose the center of the sphere such that it is somewhere within the whole pattern.
+				mid = (coordinate(3) - 0.5) * (getExtend() - 2 * r);
 
- //cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
- // Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
- std::vector<double> expectedValue;
- expectedValue.resize(nr);
- // iteration over radius
- for (unsigned int j = 0; j < nr; j++) {
- // iteration over sphere
- for (unsigned int i = 0; i < n; i++) {
- expectedValue[j] += data[j][i];
- }
- expectedValue[j] = expectedValue[j] / n;
- //cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
- }
+				data[j][i] = pointsInside(pattern, mid, r);
+			}
+			++show_progress;
+		}
+	}
+	t = clock() - t;
+	std::cout << "It took " << (((float) t) / CLOCKS_PER_SEC)
+			<< "s to calculate the hyperuniformity of pattern " << name << "."
+			<< std::endl;
 
- // Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
- std::vector<std::vector<double> > variance;
- variance.resize(nr);
- // iteration over radius
- for (unsigned int j = 0; j < nr; j++) {
- variance[j].resize(2);
- variance[j][0] = j * dr;
+	//cout << "Radius" << char(9) << "Volumen" << char(9) << "Erwartungswert" << char(9) << "Verhältnis" << endl;
+	// Calculate the expected value (of numbers of points within sphere) of each radius. Should roughly be equal to the numberdensity times volume of the sphere.
+	std::vector<double> expectedValue;
+	expectedValue.resize(nr);
+	// iteration over radius
+	for (unsigned int j = 0; j < nr; j++) {
+		// iteration over sphere
+		for (unsigned int i = 0; i < n; i++) {
+			expectedValue[j] += data[j][i];
+		}
+		expectedValue[j] = expectedValue[j] / n;
+		//cout << dr*j << char(9) << 4/3 * M_PI * pow(dr*j, 3) << char(9) << expectedValue[j] << char(9) << expectedValue[j]/(4/3 * M_PI * pow(dr*j, 3)) << endl;
+	}
 
- // iteration over sphere
- for (unsigned int i = 0; i < n; i++) {
- variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
- }
- variance[j][1] = variance[j][1] / n;
- }
+	// Calculate variance for each radius. variance[i][j], (i,j) = (rows,colums) = (radius, variance(radius))
+	std::vector<std::vector<double> > variance;
+	variance.resize(nr);
+	// iteration over radius
+	for (unsigned int j = 0; j < nr; j++) {
+		variance[j].resize(2);
+		variance[j][0] = j * dr;
 
- return variance;
- }
- */
+		// iteration over sphere
+		for (unsigned int i = 0; i < n; i++) {
+			variance[j][1] += pow((data[j][i] - expectedValue[j]), 2);
+		}
+		variance[j][1] = variance[j][1] / n;
+	}
+
+	return variance;
+}
 
 std::vector<std::vector<double> > pointlist::structurefactor(
 		const unsigned int nq) const {
