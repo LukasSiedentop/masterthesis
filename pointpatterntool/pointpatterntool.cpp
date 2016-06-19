@@ -496,10 +496,22 @@ void compareLists(std::vector<nodelist*>& lists) {
  * Hier wird ausgeführt was gewählt wurde.
  */
 int main(int argc, char* argv[]) {
-	 std::cout << "Pointpatterns are to be characterised. Here we go!"
+	/*
+		coordinate vec1(1,0,0);
+		coordinate vec2(1,0,0);
+		std::cout << "scp:" << vec1.scp(vec2) << std::endl;
+		std::cout << "acos(scp):" << acos(vec1.scp(vec2)) << std::endl;
+		std::cout << "180/pi:" << ((180.0) / M_PI) << std::endl;
+		std::cout << "vec1.lengthSqr():" << vec1.lengthSqr() << std::endl;
+		std::cout << "vec2.lengthSqr():" << vec2.lengthSqr() << std::endl;
+		std::cout << "angle:" << ((180.0) / M_PI) * vec1.angle(vec2) << std::endl;
+	return 1;
+*/
+	std::cout << "Pointpatterns are to be characterised. Here we go!"
 	 			<< std::endl;
 
 	std::vector<nodelist*> lists;
+
 
 	// 1: poisson, 2: diamond, 3: test
 	//lists.push_back(new nodelist(3, true));

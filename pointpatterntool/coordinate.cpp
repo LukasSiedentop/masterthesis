@@ -179,7 +179,7 @@ double coordinate::max() const {
 	return maximum;
 }
 
-double coordinate::euklidian(coordinate& point) const {
+double coordinate::euklidian(const coordinate& point) const {
 	return coordinate(*this - point).length();
 }
 
@@ -193,6 +193,10 @@ double coordinate::lengthSqr() const {
 
 double coordinate::length() const {
 	return sqrt(lengthSqr());
+}
+
+double coordinate::angle(const coordinate& b) const {
+	return acos(this->scp(b) / sqrt(this->lengthSqr() * b.lengthSqr()));
 }
 
 std::vector<coordinate> coordinate::getShifters() {
@@ -210,11 +214,19 @@ std::vector<coordinate> coordinate::getShifters() {
 	}
 	return shifters;
 }
-
+/*
 double coordinate::scp(const coordinate &a, const coordinate &b) {
 	double scp = 0;
 	for (unsigned i = 0; i < a.dimensions(); i++) {
 		scp += a[i] * b[i];
+	}
+	return scp;
+}*/
+
+double coordinate::scp(const coordinate &b) const{
+	double scp = 0;
+	for (unsigned i = 0; i < this->dimensions(); i++) {
+		scp += (*this)[i] * b[i];
 	}
 	return scp;
 }
@@ -223,7 +235,7 @@ coordinate coordinate::cpr(const coordinate &a, const coordinate &b) {
 	return coordinate((a[1] * b[2] - a[2] * b[1]), (a[2] * b[0] - a[0] * b[2]),
 			(a[0] * b[1] - a[1] * b[0]));
 }
-
+/*
 coordinate coordinate::getVec(const coordinate & a, const coordinate & b,
 		std::vector<coordinate> shifters) {
 	coordinate vec = a - b;
@@ -244,7 +256,7 @@ coordinate coordinate::getVec(const coordinate & a, const coordinate & b,
 
 	// Error
 	return vec;
-}
+}*/
 
 coordinate operator+(const coordinate& lhs, const coordinate& rhs) {
 	return coordinate(lhs) += rhs;

@@ -48,10 +48,22 @@ std::vector<class coordinate>* node::getNeighbourShifters() {
 	return &neighbourShifter;
 }
 
+coordinate* node::getNeighbourShifter(const unsigned int i) {
+	return &neighbourShifter[i];
+}
+
+coordinate node::getShiftedNeighbourposition(const unsigned int& i) const{
+	return neighbours[i]->getPosition() - neighbourShifter[i];
+}
+
 std::vector<class node*>* node::getNeighbours() {
 	return &neighbours;
 }
 
+node* node::getNeighbour(const unsigned int i) {
+	return neighbours[i];
+}
+/*
 double node::euklidian(node* node) {
 	return euklidian(node->getPosition());
 }
@@ -85,7 +97,7 @@ double node::angle(node * nodeA, node * nodeB) {
 	double len1sqr = vec1.lengthSqr();
 	double len2sqr = vec2.lengthSqr();
 
-	double skp = coordinate::scp(vec1, vec2);
+	double skp = vec1.scp(vec2);//coordinate::scp(vec1, vec2);
 
 	return acos(skp / sqrt(len1sqr * len2sqr));
 }
@@ -114,7 +126,7 @@ double node::anglePeriodic(node* nodeA, node* nodeB) {
 // Winkel ausgeben
 	return acos(skp / sqrt(len1sqr * len2sqr));
 }
-
+*/
 unsigned int node::countNeighbours() {
 	if (neighbours.size()!=neighbourShifter.size()){
 		std::cout << "Error: not as many shifters as neighbours!" << std::endl;

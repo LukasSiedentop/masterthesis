@@ -35,15 +35,20 @@ public:
 	bool isEdgenode();
 	coordinate getPosition() const;
 	std::vector<class node*>* getNeighbours();
+	node* getNeighbour(const unsigned int i);
 	std::vector<class coordinate>* getNeighbourShifters();
+	coordinate* getNeighbourShifter(const unsigned int i);
+	coordinate getShiftedNeighbourposition(const unsigned int& i) const;
 	bool isNeighbour(node* node);
 	// sets the neighbourhood, together with a given shifter if the link lies over the boundary. Takes the shifters of this point and the given point and calculates from that the shifter of the link.
 	void addNeighbour(node* n, coordinate ownShifter = coordinate(0, 0, 0), coordinate foreignShifter = coordinate(0, 0, 0));
+	/*
 	double euklidian(node* node);
 	double euklidian(coordinate point);
 	double euklidianPeriodic(node* node);
 	double angle(node* nodeA, node* nodeB);
 	double anglePeriodic(node* nodeA, node* nodeB);
+	*/
 	unsigned int countNeighbours();
 	void shift(coordinate shifter);
 	void scale(double a);

@@ -10,11 +10,13 @@
 //using namespace std;
 
 nodelist::nodelist() :
-		periodic(0), name(""), min(coordinate()), max(coordinate()), pointpattern(nullptr) {
+		periodic(0), name(""), min(coordinate()), max(coordinate()), pointpattern(
+				nullptr) {
 }
 
 nodelist::nodelist(bool periodicity, std::string n, pointlist* pp) :
-		periodic(periodicity), name(n), min(coordinate()), max(coordinate()), pointpattern(pp) {
+		periodic(periodicity), name(n), min(coordinate()), max(coordinate()), pointpattern(
+				pp) {
 }
 
 nodelist::nodelist(int pattern, bool periodicity) :
@@ -360,22 +362,21 @@ node* nodelist::add(coordinate pos) {
 
 node* nodelist::add(double x, double y, double z) {
 
-	coordinate newPos = coordinate(x, y, z)+getShifter(coordinate(x, y, z));
-/*
-	// ensure that point lies in between boundaries if periodic
-	if (periodic) {
-		std::vector<coordinate> shifters = getShifters();
-		for (std::vector<coordinate>::iterator shifter = shifters.begin();
-				shifter != shifters.end(); ++shifter) {
-			// as bounding box: choose the right shifter where all components are in t
-			if ((newPos + (*shifter)).insideAABB(min, max)) {
-				newPos = (*shifter) + coordinate(x, y, z);
-				break;
-			}
-		}
-	}
-*/
-
+	coordinate newPos = coordinate(x, y, z) + getShifter(coordinate(x, y, z));
+	/*
+	 // ensure that point lies in between boundaries if periodic
+	 if (periodic) {
+	 std::vector<coordinate> shifters = getShifters();
+	 for (std::vector<coordinate>::iterator shifter = shifters.begin();
+	 shifter != shifters.end(); ++shifter) {
+	 // as bounding box: choose the right shifter where all components are in t
+	 if ((newPos + (*shifter)).insideAABB(min, max)) {
+	 newPos = (*shifter) + coordinate(x, y, z);
+	 break;
+	 }
+	 }
+	 }
+	 */
 
 	// check if point at given position exist
 	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
@@ -454,34 +455,34 @@ std::vector<coordinate> nodelist::getShifters() {
 	return getLengths().getShifters();
 }
 /*
-std::vector<coordinate> nodelist::getShifted(coordinate mid,
-		double halfExtend) {
-	std::vector<coordinate> shifted;
+ std::vector<coordinate> nodelist::getShifted(coordinate mid,
+ double halfExtend) {
+ std::vector<coordinate> shifted;
 
-	// boxlength
-	double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
+ // boxlength
+ double lx = getLengths()[0], ly = getLengths()[1], lz = getLengths()[2];
 
-	// go through all combinations, but only if one edge of the given box is not within the pattern...
-	for (int ix = -1; ix < 2; ix++) {
-		if ((fabs(mid[0] + (ix * halfExtend)) >= fabs(ix * (lx / 2.0)))) {
-			for (int iy = -1; iy < 2; iy++) {
-				if ((fabs(mid[1] + (iy * halfExtend)) >= fabs(iy * (ly / 2.0)))) {
-					for (int iz = -1; iz < 2; iz++) {
-						if ((fabs(mid[2] + (iz * halfExtend))
-								>= fabs(iz * (lz / 2.0)))) {
-							// ... add the shifting vector (Shift sphere contrary to pattern!)
-							shifted.push_back(
-									mid
-											- coordinate(ix * lx, iy * ly,
-													iz * lz));
-						}
-					}
-				}
-			}
-		}
-	}
-	return shifted;
-}*/
+ // go through all combinations, but only if one edge of the given box is not within the pattern...
+ for (int ix = -1; ix < 2; ix++) {
+ if ((fabs(mid[0] + (ix * halfExtend)) >= fabs(ix * (lx / 2.0)))) {
+ for (int iy = -1; iy < 2; iy++) {
+ if ((fabs(mid[1] + (iy * halfExtend)) >= fabs(iy * (ly / 2.0)))) {
+ for (int iz = -1; iz < 2; iz++) {
+ if ((fabs(mid[2] + (iz * halfExtend))
+ >= fabs(iz * (lz / 2.0)))) {
+ // ... add the shifting vector (Shift sphere contrary to pattern!)
+ shifted.push_back(
+ mid
+ - coordinate(ix * lx, iy * ly,
+ iz * lz));
+ }
+ }
+ }
+ }
+ }
+ }
+ return shifted;
+ }*/
 
 std::string nodelist::listStats(const std::string commentDelimeter) {
 	std::stringstream stream;
@@ -563,18 +564,10 @@ std::vector<double> nodelist::lengthDistribution() {
 		// exclude distances between edgendoes
 		if (!(*n)->isEdgenode()) {
 			// neighboursiteration
-			for (std::vector<node*>::iterator nn =
-					(*n)->getNeighbours()->begin();
-					nn != (*n)->getNeighbours()->end(); ++nn) {
-				if (periodic) {
-					data.push_back((*n)->euklidianPeriodic((*nn)));
-				} else {
-					data.push_back((*n)->euklidian((*nn)));
-					// if the neighbour is an edgenode, put the distance twice, as later every second distance is taken
-					if ((*nn)->isEdgenode()) {
-						data.push_back((*n)->euklidian((*nn)));
-					}
-				}
+			for (unsigned int nn = 0; nn < (*n)->countNeighbours(); nn++) {
+				data.push_back(
+						(*n)->getPosition().euklidian(
+								(*n)->getShiftedNeighbourposition(nn)));
 			}
 		}
 	}
@@ -597,31 +590,26 @@ std::vector<double> nodelist::angleDistribution() {
 			nodeIter != list.end(); ++nodeIter) {
 		if (!(*nodeIter)->isEdgenode()) {
 			// neighboursiteration
-			for (std::vector<node*>::iterator neighIter1 =
-					(*nodeIter)->getNeighbours()->begin();
-					neighIter1 != (*nodeIter)->getNeighbours()->end();
-					++neighIter1) {
-
+			for (unsigned int n1 = 0; n1 < (*nodeIter)->countNeighbours();
+					n1++) {
 				// neighbours of neighboursiteration
-				for (std::vector<node*>::iterator neighIter2 =
-						(*neighIter1)->getNeighbours()->begin();
-						neighIter2 != (*neighIter1)->getNeighbours()->end();
-						++neighIter2) {
+				for (unsigned int n2 = 0;
+						n2 < (*nodeIter)->getNeighbour(n1)->countNeighbours();
+						n2++) {
 					// don't calculate angles with itself
-					if (!(*nodeIter)->equals(*neighIter2)) {
-						if (periodic) {
-							data.push_back(
-									((180.0) / M_PI)
-											* (*neighIter1)->anglePeriodic(
-													(*nodeIter),
-													(*neighIter2)));
-						} else {
+					if (!(*nodeIter)->equals(
+							(*nodeIter)->getNeighbour(n1)->getNeighbour(n2))) {
 
-							data.push_back(
-									((180.0) / M_PI)
-											* (*neighIter1)->angle((*nodeIter),
-													(*neighIter2)));
-						}
+						// point A, B, C: node, n1, n2
+						// vec1: BA, vec2: BC
+						// -> calculate angle between BA and BC at n1.
+						// TODO: to be tested & verified!
+						coordinate vec1 =
+								(*nodeIter)->getPosition() - (*nodeIter)->getShiftedNeighbourposition(n1);
+
+						coordinate vec2 = (*nodeIter)->getNeighbour(n1)->getShiftedNeighbourposition(n2) - (*nodeIter)->getShiftedNeighbourposition(n1);
+
+						data.push_back(((180.0) / M_PI) * vec1.angle(vec2));
 					}
 				}
 			}
@@ -1030,6 +1018,7 @@ void nodelist::writeMEEP() {
 			<< std::endl;
 }
 
+// TODO: validate...
 void nodelist::writeMPB() {
 
 	const char outfileName[] = "./data/mpb-dielectric.ctl";
@@ -1052,35 +1041,35 @@ void nodelist::writeMPB() {
 						"(make sphere (material polymer) (center (c->l ", " ",
 						")) (radius rad)) ");
 
-		for (std::vector<node*>::iterator neighIter =
-				(*nodeIter)->getNeighbours()->begin();
-				neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+		for (unsigned int nn = 0; nn < (*nodeIter)->countNeighbours(); nn++) {
 
+			/*
+			 for (std::vector<node*>::iterator neighIter =
+			 (*nodeIter)->getNeighbours()->begin();
+			 neighIter != (*nodeIter)->getNeighbours()->end(); ++neighIter) {
+			 */
 			// cylinder only if not connected over boundary
 			// !a || (a && b) == !a || b (a - periodic, b - link goes over edge)
-			if ((!periodic)
-					|| ((*nodeIter)->euklidian((*neighIter))
-							< getMaxFeatureSize())) {
+			//if ((!periodic) || ((*nodeIter)->euklidian((*neighIter)) < getMaxFeatureSize())) {
+			// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
+			//coordinate axis = (*nodeIter)->getPosition() - (*neighIter)->getPosition();
+			coordinate axis = (*nodeIter)->getPosition()
+					- (*nodeIter)->getShiftedNeighbourposition(nn);
 
-				// e2 (width), orthogonal to e3 (height) and e1 (length = connecting vector) => cross product
-				coordinate axis = (*nodeIter)->getPosition()
-						- (*neighIter)->getPosition();
+			// length = length of connecvting vector
+			double height = axis.length();
 
-				// length = length of connecvting vector
-				double height = axis.length();
+			// center: middpoint of points
+			std::string center =
+					(((*nodeIter)->getPosition() + axis) / 2).toString("", " ",
+							"");
 
-				// center: middpoint of points
-				std::string center = (((*nodeIter)->getPosition()
-						+ (*neighIter)->getPosition()) / 2).toString("", " ",
-						"");
+			// cylinder from a to b TODO: do not draw the one from b to a...
+			stream << "(make cylinder (material polymer) (center (c->l "
+					<< center << ")) (radius rad) (height " << height
+					<< ") (axis " << axis.toString("(c->l ", " ", ")") << ")) ";
 
-				// cylinder from a to b TODO: den zurück nicht...
-				stream << "(make cylinder (material polymer) (center (c->l "
-						<< center << ")) (radius rad) (height " << height
-						<< ") (axis " << axis.toString("(c->l ", " ", ")")
-						<< ")) ";
-
-			}
+			//}
 		}
 
 		// Ellipsoid Approximation (apparently too big ctl file for meep...)
@@ -1157,7 +1146,7 @@ void nodelist::writeMPB() {
 pointlist nodelist::getPointlist() {
 	pointlist ptlist = pointlist(min, max, periodic, name);
 	for (std::vector<node*>::iterator nodeIter = list.begin();
-				nodeIter != list.end(); ++nodeIter) {
+			nodeIter != list.end(); ++nodeIter) {
 		ptlist.add((*nodeIter)->getPosition());
 	}
 	return ptlist;

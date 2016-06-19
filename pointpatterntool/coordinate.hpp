@@ -111,10 +111,12 @@ public:
 	// Returns the maximal component of the coordinate.
 	double max() const;
 
-	// TODO: const?
-	double euklidian(coordinate& point) const;
+	double euklidian(const coordinate& point) const;
 	double lengthSqr() const;
 	double length() const;
+
+	// returns the angle between this and the given vector in radians
+	double angle(const coordinate& b) const;
 
 	// returns the shifters from this coordinate
 	std::vector<coordinate> getShifters();
@@ -122,15 +124,16 @@ public:
 	// returns the CGAL point
 	//Triangulation::Point getPoint() const;
 
-	// dot-product
-	static double scp(const coordinate& a, const coordinate& b);
+	// dot-product etween two vectors this and b
+	//static double scp(const coordinate& a, const coordinate& b);
+	double scp(const coordinate& b) const;
 
 	// cross-product
 	static coordinate cpr(const coordinate& a, const coordinate& b);
 
 	// TODO: unnecessary when stored shifter vector is used
 	// Gives the shortest vector from a to b, considering the given shifting vectors for periodic boundary conditions.
-	static coordinate getVec(const coordinate& a, const coordinate& b, std::vector<coordinate> shifters);
+	//static coordinate getVec(const coordinate& a, const coordinate& b, std::vector<coordinate> shifters);
 };
 
 #endif /* COORDINATE_HPP_ */
