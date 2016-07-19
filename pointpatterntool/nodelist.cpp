@@ -521,21 +521,11 @@ double nodelist::normalize() {
 std::vector<double> nodelist::neighbourDistribution() {
 	std::vector<double> data;
 
-	int counter;
-
 	// nodesiteration
 	for (std::vector<node*>::iterator it = list.begin(); it != list.end();
 			++it) {
 		if (!(*it)->isEdgenode()) {
-			counter = 0;
-			// neighboursiteration
-			for (std::vector<node*>::iterator neighIt =
-					(*it)->getNeighbours()->begin();
-					neighIt != (*it)->getNeighbours()->end(); ++neighIt) {
-				counter++;
-			}
-
-			data.push_back(counter);
+			data.push_back((*it)->countNeighbours());
 		}
 	}
 
@@ -571,6 +561,8 @@ std::vector<double> nodelist::lengthDistribution() {
 std::vector<double> nodelist::angleDistribution() {
 	std::vector<double> data;
 
+	coordinate vec1, vec2;
+
 	// nodesiteration
 	for (std::vector<node*>::iterator nodeIter = list.begin();
 			nodeIter != list.end(); ++nodeIter) {
@@ -579,25 +571,19 @@ std::vector<double> nodelist::angleDistribution() {
 			for (unsigned int n1 = 0; n1 < (*nodeIter)->countNeighbours();
 					n1++) {
 				// neighbours of neighboursiteration
-				for (unsigned int n2 = 0;
-						n2 < (*nodeIter)->getNeighbour(n1)->countNeighbours();
+				for (unsigned int n2 = 0; n2 < (*nodeIter)->countNeighbours();
 						n2++) {
 					// don't calculate angles with itself
-					if (!(*nodeIter)->equals(
-							(*nodeIter)->getNeighbour(n1)->getNeighbour(n2))) {
+					if (n2 != n1) {
 
-						// point A, B, C: node, n1, n2
+						// point A, B, C: n1, node, n2
 						// vec1: BA, vec2: BC
-						// -> calculate angle between BA and BC at n1.
-						// TODO: to be tested & verified!
-						coordinate vec1 = (*nodeIter)->getPosition()
+						// -> calculate angle between BA and BC at node.
+						vec1 = (*nodeIter)->getPosition()
 								- (*nodeIter)->getShiftedNeighbourposition(n1);
 
-						coordinate vec2 =
-								(*nodeIter)->getNeighbour(n1)->getShiftedNeighbourposition(
-										n2)
-										- (*nodeIter)->getShiftedNeighbourposition(
-												n1);
+						vec2 = (*nodeIter)->getPosition()
+								- (*nodeIter)->getShiftedNeighbourposition(n2);
 
 						data.push_back(((180.0) / M_PI) * vec1.angle(vec2));
 					}
@@ -1091,8 +1077,9 @@ std::vector<std::vector<double> > nodelist::getEdgelinksGnuplotMatrix() {
 						n++) {
 
 					// its only a link over the boundary if there's not the 0-shifter...
-					if (!periodic || (*nodeIter)->getNeighbourShifters()->at(n)
-							!= coordinate(0, 0, 0)) {
+					if (!periodic
+							|| (*nodeIter)->getNeighbourShifters()->at(n)
+									!= coordinate(0, 0, 0)) {
 						data.push_back(*(*nodeIter)->getPosition().getVector());
 						data.push_back(
 								*(*nodeIter)->getNeighbours()->at(n)->getPosition().getVector());

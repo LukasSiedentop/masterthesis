@@ -128,7 +128,6 @@ public:
 	/* TODO:
 	 * Filling fraction (interpolate & and use stuff done with dirk,...)
 	 * write gwl with walls and stuff
-	 * put hyperuniformity in pointlist...
 	 */
 };
 

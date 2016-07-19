@@ -661,5 +661,8 @@ std::vector<std::vector<double> > pointlist::structurefactor(
 	sq[3][1] = 1; // S(q)
 	sq[4][0] = 4; // q
 	sq[4][1] = 5; // S(q)
+
+	std::cout << "not yet implemented, return dummy function" << std::endl;
+
 	return sq;
 }
